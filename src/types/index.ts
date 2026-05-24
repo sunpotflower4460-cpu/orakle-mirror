@@ -74,6 +74,20 @@ export interface GeminiHistoryEntry {
   parts: GeminiHistoryPart[];
 }
 
+// ─── Chat Message(プロバイダ非依存の内部表現) ──────────
+export type ChatRole = 'system' | 'developer' | 'user' | 'assistant';
+
+export interface ChatMessage {
+  role: ChatRole;
+  content: string;
+}
+
+// Gemini 出力形式(既存の GeminiHistoryEntry と systemInstruction を合わせた形)
+export interface GeminiPayload {
+  contents: GeminiHistoryEntry[];
+  systemInstruction: { parts: GeminiHistoryPart[] };
+}
+
 // ─── Capacitor Plugin Mocks ────────────────────────────
 // Phase 6 で実プラグインに差し替える際、これらのインターフェースは
 // 実プラグインの型と互換になるよう設計されている
