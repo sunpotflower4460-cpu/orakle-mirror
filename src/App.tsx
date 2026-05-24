@@ -1,3 +1,5 @@
+// @ts-nocheck
+// このファイルは Phase 4 で段階的に TS 化する。それまでは型チェックを無効化する。
 ```react
 import React, { useState, useRef, useEffect, useCallback, useMemo, useLayoutEffect } from 'react';
 import {

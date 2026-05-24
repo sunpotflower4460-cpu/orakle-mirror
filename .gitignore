@@ -20,6 +20,8 @@ Env
 node_modules
 dist
 dist-ssr
+.vite
+*.tsbuildinfo
 *.local
 
 iOS(Phase 2 以降で利用)
