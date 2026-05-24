@@ -13,9 +13,11 @@
     "jsx": "react-jsx",
     "strict": false,
     "noImplicitAny": false,
+    "strictNullChecks": false,
     "noUnusedLocals": false,
     "noUnusedParameters": false,
     "noFallthroughCasesInSwitch": true,
+    "forceConsistentCasingInFileNames": true,
     "allowJs": true
   },
   "include": ["src"],
