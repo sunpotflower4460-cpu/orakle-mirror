@@ -15,26 +15,38 @@ Orakle Mirror — Agent Working Rules
 - 収益モデル: 無料 3 回/日 + 月額サブスクリプション(RevenueCat 経由)
 - ターゲット OS: iOS 15 以降(Capacitor 6 想定)
 
-2. 現状のコード構造(Phase 0 時点)
+2. 現状のコード構造 (Phase 4.8 完了時点)
 
-- ルートに App.jsx(約 1100 行)が単独で存在する単一ファイル構成
-- ビルドツール未導入(Vite は Phase 1 で導入)
-- TypeScript 未導入(Phase 4 で段階的導入)
-- 依存ライブラリは react, react-dom, lucide-react のみ
-- Capacitor プラグインはすべて App.jsx 内のインラインモック(isMock: true フラグ付き)
+- Vite + React 18 + TypeScript (strict: true)
+- Capacitor 6 統合済み (ios/ ディレクトリ生成済み、プラグインはモック)
+- ファイル分割完了 (src/components, src/constants, src/lib, src/styles, src/types, src/dev)
+- プロンプト構造: 二段階受信処理 (Stage 1 純粋受信 → Stage 2 識別と調律)
+  - src/lib/prompt.ts: buildReceptionMessages / buildDiscernmentMessages
+  - src/lib/api.ts: fetchOracleTwoStage / callLLMWithSampling
+- LLM プロバイダ: Gemini (gemini-2.5-flash-preview-09-2025)
+  - 開発時: VITE_GEMINI_API_KEY で直接呼び出し
+  - 本番時: VITE_BACKEND_URL 経由で BFF 呼び出し (Phase 5 で実装)
+- Capacitor プラグインはすべて src/lib/capacitorMocks.ts のモック (Phase 6 で差し替え)
 - ストレージキー: LS_KEY = 'oracle_mirror_v16'
+- 旧 API / 旧プロンプトは @deprecated 状態で残存 (Phase 5.5 で削除予定)
 
-3. フェーズ構成(全体像)
+3. フェーズ構成 (全体像)
 
 | Phase | 目的 | 状態 |
 |-------|------|------|
-| 0 | エージェント運用基盤の整備 | このフェーズ |
-| 1 | Vite + React + TypeScript 移行 | 未着手 |
-| 2 | Capacitor 統合・iOS プロジェクト生成 | 未着手 |
-| 3 | ファイル分割(ロジック変更なし) | 未着手 |
-| 4 | TypeScript 化・型定義 | 未着手 |
-| 5 | セキュリティ(API キー隠蔽・BFF 化) | 未着手 |
-| 6 | IAP 実装(RevenueCat 実装差し替え) | 未着手 |
+| 0 | エージェント運用基盤の整備 | 完了 |
+| 1 | Vite + React + TypeScript 移行 | 完了 |
+| 2 | Capacitor 統合・iOS プロジェクト生成 | 完了 |
+| 3 | ファイル分割 (ロジック変更なし) | 完了 |
+| 4 | TypeScript 型定義整備 | 完了 |
+| 4.5 | 4 層プロンプト構造 (system/developer/user/assistant) | 完了 |
+| 4.6 | 二段階受信処理 (純粋受信 → 識別と調律) | 完了 |
+| 4.6.1 | ドキュメント同期と検証雛形作成 | 完了 |
+| 4.7 | TypeScript strict モード化 | 完了 |
+| 4.8 | 本番安全ガードと旧コード整理 | 完了 |
+| 5 | セキュリティ (API キー隠蔽・BFF 化) | 未着手 |
+| 5.5 | プロバイダ抽象化 (Gemini ↔ OpenAI 切替・旧コード削除) | 未着手 |
+| 6 | IAP 実装 (RevenueCat 実装差し替え) | 未着手 |
 | 7 | 審査前クリーンアップ | 未着手 |
 | 8 | CI/CD・リリース準備 | 未着手 |
 

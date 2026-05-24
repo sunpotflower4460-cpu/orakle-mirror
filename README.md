@@ -6,9 +6,17 @@ Oracle Mirror
 
 現在の状態
 
-Phase 0(エージェント運用基盤整備)完了。  
-Phase 1(Vite + React + TypeScript 移行)完了。  
-次は Phase 2(Capacitor 統合)。
+- Phase 0 (エージェント運用基盤整備) 完了
+- Phase 1 (Vite + React + TypeScript 移行) 完了
+- Phase 2 (Capacitor 統合・iOS プロジェクト生成) 完了
+- Phase 3 (ファイル分割) 完了
+- Phase 4 (TypeScript 型定義整備) 完了
+- Phase 4.5 (4 層プロンプト構造への移行) 完了
+- Phase 4.6 (二段階受信処理: 純粋受信 → 識別と調律) 完了
+- Phase 4.6.1 (ドキュメント同期と検証記録) 完了
+- Phase 4.7 (TypeScript strict モード化) 完了
+- Phase 4.8 (本番安全ガードと旧コード整理) 完了
+- 次は Phase 5 (Cloudflare Workers BFF 構築)
 
 プロジェクト構成(計画)
 
@@ -75,20 +83,50 @@ npm run typecheck
 
 ```text
 .
+├── AGENTS.md
+├── README.md
+├── capacitor.config.ts
+├── docs/
+│   ├── PHASE-4-6-VERIFICATION.md
+│   └── PHASE-4-8-CLEANUP.md
 ├── index.html
 ├── package.json
 ├── tsconfig.json
+├── tsconfig.node.json
 ├── vite.config.ts
-├── src/
-│   ├── main.tsx
-│   ├── App.tsx        # Phase 4 で TS 化予定(現在 @ts-nocheck)
-│   └── vite-env.d.ts
-└── ios/               # Phase 2 で生成予定
+├── ios/
+└── src/
+    ├── App.tsx
+    ├── MainApp.tsx
+    ├── main.tsx
+    ├── vite-env.d.ts
+    ├── components/
+    │   ├── ErrorBoundary.tsx
+    │   ├── HelpModal.tsx
+    │   ├── OracleBubble.tsx
+    │   ├── SubscribeModal.tsx
+    │   └── Toast.tsx
+    ├── constants/
+    │   ├── cards.ts
+    │   ├── modes.tsx
+    │   └── personas.tsx
+    ├── dev/
+    │   └── promptAB.ts
+    ├── lib/
+    │   ├── api.ts
+    │   ├── audio.ts
+    │   ├── capacitorMocks.ts
+    │   ├── clipboard.ts
+    │   ├── constants.ts
+    │   ├── env.ts
+    │   ├── prompt.ts
+    │   └── react-compat.ts
+    ├── styles/
+    │   └── globals.ts
+    └── types/
+        ├── global.d.ts
+        └── index.ts
 ```
-
-進行中のフェーズ
-
-Phase 1 完了。次は Phase 2(Capacitor 統合)。
 
 ## iOS ビルド手順
 
