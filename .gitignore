@@ -1,0 +1,29 @@
+OS / Editor
+.DS_Store
+Thumbs.db
+.vscode/*
+!.vscode/extensions.json
+.idea
+
+Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+Env
+.env
+.env.local
+.env.*.local
+
+念のため将来のため
+node_modules
+dist
+dist-ssr
+*.local
+
+iOS(Phase 2 以降で利用)
+ios/App/Pods
+ios/App/App/public
+ios/DerivedData
+ios/.xcode.env.local
