@@ -10,12 +10,14 @@ import { PERSONAS } from '../constants/personas';
 import { MODES } from '../constants/modes';
 import {
   buildChatMessages,
+  buildReceptionDeveloper,
   buildDiscernmentMessages,
   buildReceptionMessages,
+  buildSystemCore,
   buildSystemPrompt,
 } from '../lib/prompt';
-import { buildHistory, fetchOracleTwoStage, fetchPreviewAPI, fetchPreviewAPIv2 } from '../lib/api';
-import type { Mode, OracleCard, Persona } from '../types';
+import { buildHistory, fetchOracleTwoStage, fetchPreviewAPI, fetchPreviewAPIv2, toGeminiPayload } from '../lib/api';
+import type { ChatMessage, Message, Mode, OracleCard, Persona } from '../types';
 
 const TEST_CASES: Array<{ label: string; query: string; mode: Mode; cards: OracleCard[] }> = [
   {
@@ -55,7 +57,18 @@ const TEST_CASES: Array<{ label: string; query: string; mode: Mode; cards: Oracl
 ];
 
 export const runABComparison = async (): Promise<void> => {
-  const results: Array<{ label: string; query: string; a: string; b: string; c: string }> = [];
+  const results: Array<{
+    label: string;
+    query: string;
+    a: string;
+    b: string;
+    c: string;
+    cPatternRaw: string;
+    cPatternFinal: string;
+    dPatternRaw: string;
+    dPatternFinal: string;
+  }> = [];
+  let isGeminiPayloadLogged = false;
 
   for (const testCase of TEST_CASES) {
     const { label, query, mode, cards } = testCase;
@@ -67,15 +80,77 @@ export const runABComparison = async (): Promise<void> => {
     const phase45Messages = buildChatMessages(persona, mode, cards, [], query);
     const phase45Text = await fetchPreviewAPIv2(phase45Messages); // B
 
-    const receptionMsgs = buildReceptionMessages(persona, mode, cards, [], query);
-    const twoStage = await fetchOracleTwoStage(
-      receptionMsgs,
+    const cReceptionMsgs = buildReceptionMessagesWithoutTuning(persona, mode, cards, [], query);
+    const cTwoStage = await fetchOracleTwoStage(
+      cReceptionMsgs,
       (raw) => buildDiscernmentMessages(persona, raw),
     ); // C
 
-    results.push({ label, query, a: oldText, b: phase45Text, c: twoStage.final });
-    console.log(`\n=== ${label}: ${query} ===\n[A]\n${oldText}\n\n[B]\n${phase45Text}\n\n[C]\n${twoStage.final}`);
+    const dReceptionMsgs = buildReceptionMessages(persona, mode, cards, [], query);
+    if (!isGeminiPayloadLogged) {
+      const payload = toGeminiPayload(dReceptionMsgs);
+      console.log('[D] Gemini payload (first run):', payload);
+      isGeminiPayloadLogged = true;
+    }
+    const dTwoStage = await fetchOracleTwoStage(
+      dReceptionMsgs,
+      (raw) => buildDiscernmentMessages(persona, raw),
+    ); // D
+
+    results.push({
+      label,
+      query,
+      a: oldText,
+      b: phase45Text,
+      c: cTwoStage.final,
+      cPatternRaw: cTwoStage.raw,
+      cPatternFinal: cTwoStage.final,
+      dPatternRaw: dTwoStage.raw,
+      dPatternFinal: dTwoStage.final,
+    });
+    console.log(
+      `\n=== ${label}: ${query} ===\n[A]\n${oldText}\n\n[B]\n${phase45Text}\n\n[C] Stage1 raw\n${cTwoStage.raw}\n\n[C] Final\n${cTwoStage.final}\n\n[D] Stage1 raw\n${dTwoStage.raw}\n\n[D] Final\n${dTwoStage.final}`
+    );
   }
 
   (window as any).__abResults = results;
+};
+
+const buildReceptionMessagesWithoutTuning = (
+  persona: Persona,
+  mode: Mode,
+  cards: OracleCard[],
+  history: Message[],
+  userInput: string
+): ChatMessage[] => {
+  const systemCore = buildSystemCore();
+  const receptionDev = buildReceptionDeveloper(persona, mode, cards);
+
+  const historyMsgs: ChatMessage[] = history
+    .filter((m) => typeof m.text === 'string' && m.text.trim())
+    .map((m) => ({
+      role: m.role === 'model' ? 'assistant' : 'user',
+      content: m.text,
+    }));
+
+  const alternated: ChatMessage[] = [];
+  for (const m of historyMsgs) {
+    const last = alternated[alternated.length - 1];
+    if (last && last.role === m.role) continue;
+    alternated.push(m);
+  }
+
+  while (alternated.length > 0 && alternated[alternated.length - 1].role !== 'user') {
+    alternated.pop();
+  }
+  if (alternated.length > 0 && alternated[alternated.length - 1].role === 'user') {
+    alternated.pop();
+  }
+
+  return [
+    { role: 'system', content: systemCore },
+    { role: 'developer', content: receptionDev },
+    ...alternated,
+    { role: 'user', content: userInput },
+  ];
 };
