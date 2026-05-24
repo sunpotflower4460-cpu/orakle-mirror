@@ -89,3 +89,42 @@ npm run typecheck
 進行中のフェーズ
 
 Phase 1 完了。次は Phase 2(Capacitor 統合)。
+
+## iOS ビルド手順
+
+### 前提環境
+
+- macOS(Apple Silicon 推奨)
+- Xcode 15 以降
+- CocoaPods(`sudo gem install cocoapods` または Homebrew)
+- Node.js 20 系
+
+### 初回セットアップ
+
+```bash
+npm install
+npm run build
+npx cap sync ios
+```
+
+### 開発サイクル
+
+Web 側のコードを変更したあと、iOS シミュレータ/実機で確認する流れ:
+
+```bash
+npm run ios:sync    # Web ビルド + iOS への同期
+npm run ios:open    # Xcode を起動
+```
+
+Xcode で:
+
+1. App ターゲットを選択
+2. Signing & Capabilities で開発チームを選択(Phase 2 時点では個人 Apple ID で可)
+3. シミュレータ(iPhone 15 Pro など)または実機を選んで Run
+
+### よくあるトラブル
+
+- `pod install` が失敗する: `cd ios/App && pod repo update && pod install`
+- ビルドキャッシュが原因のエラー: `npx cap sync ios --force` で再同期
+- Module not found 系: `cd ios/App && pod install` を実行し直す
+- 実機で「信頼されていない開発者」エラー: 設定 → 一般 → VPN とデバイス管理 から開発者を信頼

@@ -29,3 +29,6 @@ ios/App/Pods
 ios/App/App/public
 ios/DerivedData
 ios/.xcode.env.local
+ios/App/build
+*.xcuserstate
+xcuserdata/
