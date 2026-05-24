@@ -100,7 +100,12 @@ export const buildAmbienceAcceptance = (persona: Persona): string => {
 // ────────────────────────────────────────────────────────
 // 全体組み立て:四層 + 対話履歴 + 今回の問い
 // ────────────────────────────────────────────────────────
-/** @deprecated Use buildReceptionMessages + buildDiscernmentMessages instead. Will be removed in Phase 5.5. */
+/**
+ * @deprecated Phase 5.5 のプロバイダ抽象化完了時に削除予定。
+ * 本番コード (MainApp.tsx) からは参照されていない。
+ * 現在は src/dev/promptAB.ts での A/B/C 比較のためだけに残存。
+ * Use buildReceptionMessages + buildDiscernmentMessages instead.
+ */
 export const buildChatMessages = (
   persona: Persona,
   mode: Mode,
@@ -330,7 +335,12 @@ export const buildDiscernmentMessages = (
 // @deprecated Phase 5.5 完了時に削除予定
 // Phase 4.5 では buildChatMessages を使用すること
 // ────────────────────────────────────────────────────────
-/** @deprecated Use buildChatMessages instead. Will be removed in Phase 5.5. */
+/**
+ * @deprecated Phase 5.5 のプロバイダ抽象化完了時に削除予定。
+ * 本番コード (MainApp.tsx) からは参照されていない。
+ * 現在は src/dev/promptAB.ts での A/B/C 比較のためだけに残存。
+ * Use buildChatMessages instead.
+ */
 export const buildSystemPrompt = (persona: Persona, mode: Mode, drawnCards: OracleCard[] = []): string => {
   let cardContext = '';
   if (mode.id === 'card' && drawnCards && drawnCards.length > 0) {

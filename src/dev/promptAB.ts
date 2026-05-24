@@ -1,5 +1,10 @@
 // Phase 4.5 検証用: 旧プロンプトと新プロンプトの A/B 比較ハーネス
 // 本番には含めない。Phase 5.5 完了時に削除する想定。
+// このファイルは開発時のみ実行可能。本番ビルドでは tree-shaking で除外される。
+// vite.config.ts で /src/dev/ ディレクトリを本番ビルドから除外している。
+if (import.meta.env.PROD) {
+  throw new Error('[Oracle Mirror] dev/promptAB.ts must not be executed in production');
+}
 
 import { PERSONAS } from '../constants/personas';
 import { MODES } from '../constants/modes';

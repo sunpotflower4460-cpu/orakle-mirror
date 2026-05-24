@@ -11,10 +11,31 @@ import type {
 
 // ─── Backend API Logic ───────────────────────────────────────────────────────
 
-/** @deprecated Use fetchBackendAPIv2(messages, sampling) instead. Will be removed in Phase 5.5. */
+const BACKEND_URL_PLACEHOLDER = 'https://api.your-backend.com/oracle';
+
+const getBackendUrl = (): string => {
+  try {
+    return (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_BACKEND_URL) || BACKEND_URL_PLACEHOLDER;
+  } catch {
+    return BACKEND_URL_PLACEHOLDER;
+  }
+};
+
+/**
+ * @deprecated Phase 5.5 のプロバイダ抽象化完了時に削除予定。
+ * 本番コード (MainApp.tsx) からは参照されていない。
+ * 現在は src/dev/promptAB.ts での A/B/C 比較のためだけに残存。
+ * Use callLLMWithSampling (Stage 1/2 内部呼び出し経由) or fetchOracleTwoStage instead.
+ */
 export const fetchBackendAPI = async (history: GeminiHistoryEntry[], systemPrompt: string): Promise<string> => {
   // 【重要】本番環境では、GeminiAPIキーを隠蔽するためのプロキシサーバー(Cloudflare Workers等)のURLを指定してください
-  const API_URL = 'https://api.your-backend.com/oracle';
+  const API_URL = getBackendUrl();
+  if (import.meta.env.PROD && API_URL === BACKEND_URL_PLACEHOLDER) {
+    throw new Error(
+      '[Oracle Mirror] VITE_BACKEND_URL が未設定のまま本番ビルドされています。' +
+      'Phase 5 で BFF を構築後、本番環境変数に設定してください。'
+    );
+  }
   const res = await fetch(API_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -25,7 +46,12 @@ export const fetchBackendAPI = async (history: GeminiHistoryEntry[], systemPromp
   return data.text;
 };
 
-/** @deprecated Use fetchPreviewAPIv2(messages, sampling) instead. Will be removed in Phase 5.5. */
+/**
+ * @deprecated Phase 5.5 のプロバイダ抽象化完了時に削除予定。
+ * 本番コード (MainApp.tsx) からは参照されていない。
+ * 現在は src/dev/promptAB.ts での A/B/C 比較のためだけに残存。
+ * Use callLLMWithSampling (Stage 1/2 内部呼び出し経由) or fetchOracleTwoStage instead.
+ */
 export const fetchPreviewAPI = async (history: GeminiHistoryEntry[], systemPrompt: string): Promise<string> => {
   const GEMINI_MODEL = 'gemini-2.5-flash-preview-09-2025';
   const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
@@ -73,7 +99,12 @@ export const fetchPreviewAPI = async (history: GeminiHistoryEntry[], systemPromp
   throw new Error('Unreachable');
 };
 
-/** @deprecated Use buildChatMessages instead. Will be removed in Phase 5.5. */
+/**
+ * @deprecated Phase 5.5 のプロバイダ抽象化完了時に削除予定。
+ * 本番コード (MainApp.tsx) からは参照されていない。
+ * 現在は src/dev/promptAB.ts での A/B/C 比較のためだけに残存。
+ * Use buildReceptionMessages + buildDiscernmentMessages instead.
+ */
 export const buildHistory = (messages: Message[], newUserText: string): GeminiHistoryEntry[] => {
   const history: GeminiHistoryEntry[] = messages
     .filter((m) => typeof m.text === 'string' && m.text.trim().length > 0)
@@ -140,7 +171,12 @@ const extractGeminiText = (data: GeminiResponse): string => {
   return (data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts && data.candidates[0].content.parts[0] && data.candidates[0].content.parts[0].text) || '…沈黙…';
 };
 
-/** @deprecated Use callLLMWithSampling(messages, sampling) instead. Will be removed in Phase 5.5. */
+/**
+ * @deprecated Phase 5.5 のプロバイダ抽象化完了時に削除予定。
+ * 本番コード (MainApp.tsx) からは参照されていない。
+ * 現在は src/dev/promptAB.ts での A/B/C 比較のためだけに残存。
+ * Use callLLMWithSampling instead.
+ */
 export const fetchPreviewAPIv2 = async (
   messages: ChatMessage[],
   sampling: SamplingParams = DEFAULT_SAMPLING,
@@ -185,16 +221,28 @@ export const fetchPreviewAPIv2 = async (
   throw new Error('Unreachable');
 };
 
-/** @deprecated Use callLLMWithSampling(messages, sampling) instead. Will be removed in Phase 5.5. */
+/**
+ * @deprecated Phase 5.5 のプロバイダ抽象化完了時に削除予定。
+ * 本番コード (MainApp.tsx) からは参照されていない。
+ * 現在は src/dev/promptAB.ts での A/B/C 比較のためだけに残存。
+ * Use callLLMWithSampling instead.
+ */
 export const fetchBackendAPIv2 = async (
   messages: ChatMessage[],
   sampling: SamplingParams = DEFAULT_SAMPLING,
 ): Promise<string> => {
-  const API_URL = 'https://api.your-backend.com/oracle';
+  const backendUrl = getBackendUrl();
+
+  if (import.meta.env.PROD && backendUrl === BACKEND_URL_PLACEHOLDER) {
+    throw new Error(
+      '[Oracle Mirror] VITE_BACKEND_URL が未設定のまま本番ビルドされています。' +
+      'Phase 5 で BFF を構築後、本番環境変数に設定してください。'
+    );
+  }
 
   for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
     try {
-      const res = await fetch(API_URL, {
+      const res = await fetch(backendUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ messages, sampling }),
