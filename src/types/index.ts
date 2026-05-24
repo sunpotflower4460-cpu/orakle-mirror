@@ -173,3 +173,21 @@ export interface BrowserPlugin {
   isMock?: boolean;
   open(options: { url: string }): Promise<void>;
 }
+
+export interface RawTransmission {
+  raw: string;
+  receivedAt: number;
+}
+
+export interface TwoStageResult {
+  raw: string;
+  final: string;
+  receptionMs: number;
+  discernmentMs: number;
+}
+
+export type SamplingParams = {
+  temperature: number;
+  topP: number;
+  topK?: number;
+};

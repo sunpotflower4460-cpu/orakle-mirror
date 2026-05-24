@@ -11,13 +11,13 @@ import { ORACLE_CARDS, getRandomCards } from './constants/cards';
 import { MODES } from './constants/modes';
 import { PERSONAS } from './constants/personas';
 import { LS_KEY, genId, FREE_LIMIT, MAX_ROOMS } from './lib/constants';
-import { buildChatMessages } from './lib/prompt';
+import { buildDiscernmentMessages, buildReceptionMessages } from './lib/prompt';
 import { clip } from './lib/clipboard';
 import { getAudioContext, playMagicSound } from './lib/audio';
 import { IS_PROD, USE_JS_KEYBOARD_PADDING } from './lib/env';
 import { safeStartTransition } from './lib/react-compat';
 import { Preferences, Share, Purchases, SplashScreen, Keyboard, StatusBar } from './lib/capacitorMocks';
-import { fetchBackendAPIv2, fetchPreviewAPIv2 } from './lib/api';
+import { fetchOracleTwoStage } from './lib/api';
 import { Toast } from './components/Toast';
 import { SubscribeModal } from './components/SubscribeModal';
 import { HelpModal } from './components/HelpModal';
@@ -358,12 +358,6 @@ export function MainApp() {
     });
   }, []);
 
-  const callAPI = useCallback(async (chatMessages) => {
-    return IS_PROD
-      ? await fetchBackendAPIv2(chatMessages)
-      : await fetchPreviewAPIv2(chatMessages);
-  }, []);
-
   const handleSend = useCallback(async () => {
     const text = input.trim();
     if (!text || isLoadingRef.current || regenIdRef.current) return;
@@ -388,7 +382,7 @@ export function MainApp() {
     let drawnCards = [];
     if (mode.id === 'card') drawnCards = getRandomCards(2);
 
-    const messages = buildChatMessages(persona, mode, drawnCards, currentMessages, userMsg.text);
+    const receptionMsgs = buildReceptionMessages(persona, mode, drawnCards, currentMessages, userMsg.text);
 
     setStorage(prev => {
       let newOrder = prev.roomOrder.includes(targetRoomId) ? prev.roomOrder : [targetRoomId, ...prev.roomOrder];
@@ -416,7 +410,18 @@ export function MainApp() {
     if (isNewRoom) setActiveRoomId(targetRoomId);
 
     try {
-      const aiText = await callAPI(messages);
+      const result = await fetchOracleTwoStage(
+        receptionMsgs,
+        (raw) => buildDiscernmentMessages(persona, raw),
+      );
+      const aiText = result.final;
+      if (import.meta.env.DEV) {
+        console.log('[Oracle Mirror] raw transmission:', result.raw);
+        console.log('[Oracle Mirror] timings:', {
+          reception: result.receptionMs,
+          discernment: result.discernmentMs,
+        });
+      }
       const aiMsg  = { id: genId(), role: 'model', text: aiText, personaId: persona.id, modeId: mode.id, drawnCards };
       
       setStorage(prev => {
@@ -464,7 +469,7 @@ export function MainApp() {
       setInput(text);
     }
     finally { setIsLoading(false); }
-  }, [input, activeRoomId, persona, mode, callAPI, incrementUsage]);
+  }, [input, activeRoomId, persona, mode, incrementUsage]);
 
   const handleSwitch = useCallback(async (msgIdx, targetPersonaId) => {
     if (isLoadingRef.current || regenIdRef.current || !activeRoomId) return;
@@ -505,7 +510,7 @@ export function MainApp() {
       return;
     }
     
-    const chatMessages = buildChatMessages(
+    const receptionMsgs = buildReceptionMessages(
       targetPersona,
       targetMode,
       drawnCards,
@@ -514,7 +519,18 @@ export function MainApp() {
     );
 
     try {
-      const aiText = await callAPI(chatMessages);
+      const result = await fetchOracleTwoStage(
+        receptionMsgs,
+        (raw) => buildDiscernmentMessages(targetPersona, raw),
+      );
+      const aiText = result.final;
+      if (import.meta.env.DEV) {
+        console.log('[Oracle Mirror] raw transmission:', result.raw);
+        console.log('[Oracle Mirror] timings:', {
+          reception: result.receptionMs,
+          discernment: result.discernmentMs,
+        });
+      }
       
       setStorage(prev => {
         const room = prev.rooms[activeRoomId];
@@ -537,7 +553,7 @@ export function MainApp() {
     } catch (e) { setError(e.message); }
     finally { setRegenId(null); }
 
-  }, [activeRoomId, callAPI, incrementUsage, showToast]);
+  }, [activeRoomId, incrementUsage, showToast]);
 
   const handleDeleteRoom = useCallback((roomId, e) => {
     e.stopPropagation();
