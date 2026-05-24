@@ -1,8 +1,7 @@
-// @ts-nocheck
 
 // ─── Constants & Database ────────────────────────────────────────────────────
 
-export const GLOBAL_STYLES = `
+export const GLOBAL_STYLES: string = `
   :root {
     --sat: env(safe-area-inset-top, 0px);
     --sar: env(safe-area-inset-right, 0px);

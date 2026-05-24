@@ -1,6 +1,6 @@
-// @ts-nocheck
+import type { OracleCard } from '../types';
 
-export const ORACLE_CARDS = [
+export const ORACLE_CARDS: readonly OracleCard[] = [
   { name: '星の巡礼', meaning: '遠い導き、宿命、絶望の中の希望の光' },
   { name: '静寂の泉', meaning: '内観、深い浄化、立ち止まることの力' },
   { name: '燃ゆる羽', meaning: '再生、情熱、古い殻や過去を燃やし尽くす' },
@@ -51,7 +51,7 @@ export const ORACLE_CARDS = [
   { name: '宇宙のへその緒', meaning: '根源（ソース）との繋がり、絶対的な安心感、無限の供給' }
 ];
 
-export const getRandomCards = (num = 2) => {
+export const getRandomCards = (num = 2): OracleCard[] => {
   if (ORACLE_CARDS.length === 0) return [];
   const clampedNum = Math.min(Math.max(0, num), ORACLE_CARDS.length);
   const arr = [...ORACLE_CARDS];

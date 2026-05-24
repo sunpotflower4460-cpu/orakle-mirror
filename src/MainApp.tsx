@@ -1,5 +1,4 @@
-// @ts-nocheck
-// このファイルは Phase 4 で段階的に TS 化する。それまでは型チェックを無効化する。
+// このファイルは Phase 4.7 で TS strict 化済み。
 import React, { useState, useRef, useEffect, useCallback, useMemo, useLayoutEffect } from 'react';
 import {
   Wind, Loader2, Menu,
@@ -7,7 +6,7 @@ import {
   Trash2, AlertCircle, Lock, Unlock
 } from 'lucide-react';
 import { GLOBAL_STYLES } from './styles/globals';
-import { ORACLE_CARDS, getRandomCards } from './constants/cards';
+import { getRandomCards } from './constants/cards';
 import { MODES } from './constants/modes';
 import { PERSONAS } from './constants/personas';
 import { LS_KEY, genId, FREE_LIMIT, MAX_ROOMS } from './lib/constants';
@@ -22,12 +21,13 @@ import { Toast } from './components/Toast';
 import { SubscribeModal } from './components/SubscribeModal';
 import { HelpModal } from './components/HelpModal';
 import { OracleBubble } from './components/OracleBubble';
+import type { Storage, OracleCard, Message, PersonaId } from './types';
 
 // ─── Main App ─────────────────────────────────────────────────────────────────
 export function MainApp() {
-  const [isStorageLoaded, setIsStorageLoaded] = useState(false);
-  const [storage,         setStorage]         = useState({ rooms: {}, roomOrder: [] });
-  const [keyboardPadding, setKeyboardPadding] = useState('0px');
+  const [isStorageLoaded, setIsStorageLoaded] = useState<boolean>(false);
+  const [storage,         setStorage]         = useState<Storage>({ rooms: {}, roomOrder: [] });
+  const [keyboardPadding, setKeyboardPadding] = useState<string>('0px');
   
   const storageRef = useRef(storage);
   useLayoutEffect(() => { storageRef.current = storage; }, [storage]);
@@ -42,35 +42,35 @@ export function MainApp() {
     Preferences.set({ key: LS_KEY, value: JSON.stringify(storage) }).catch(console.error);
   }, [storage, isStorageLoaded]);
 
-  const [isPremium,          setIsPremium]          = useState(false);
-  const [usageCount,         setUsageCount]         = useState(0);
-  const [lastUsageDate,      setLastUsageDate]      = useState('');
-  const [showSubscribeModal, setShowSubscribeModal] = useState(false);
-  const [isPurchasing,       setIsPurchasing]       = useState(false);
+  const [isPremium,          setIsPremium]          = useState<boolean>(false);
+  const [usageCount,         setUsageCount]         = useState<number>(0);
+  const [lastUsageDate,      setLastUsageDate]      = useState<string>('');
+  const [showSubscribeModal, setShowSubscribeModal] = useState<boolean>(false);
+  const [isPurchasing,       setIsPurchasing]       = useState<boolean>(false);
 
-  const [activeRoomId, setActiveRoomId] = useState(null);
-  const [input,        setInput]        = useState('');
-  const [isLoading,    setIsLoading]    = useState(false);
+  const [activeRoomId, setActiveRoomId] = useState<string | null>(null);
+  const [input,        setInput]        = useState<string>('');
+  const [isLoading,    setIsLoading]    = useState<boolean>(false);
   
   const isLoadingRef = useRef(isLoading);
   useLayoutEffect(() => { isLoadingRef.current = isLoading; }, [isLoading]);
 
-  const [sidebarOpen,  setSidebarOpen]  = useState(false);
-  const [showHelp,     setShowHelp]     = useState(false);
-  const [toast,        setToast]        = useState(null);
+  const [sidebarOpen,  setSidebarOpen]  = useState<boolean>(false);
+  const [showHelp,     setShowHelp]     = useState<boolean>(false);
+  const [toast,        setToast]        = useState<string | null>(null);
   const [persona,      setPersona]      = useState(PERSONAS.lumina);
   const [mode,         setMode]         = useState(MODES.PURE);
-  const [copiedId,     setCopiedId]     = useState(null);
-  const [regenId,      setRegenId]      = useState(null);
-  const [error,        setError]        = useState(null);
+  const [copiedId,     setCopiedId]     = useState<string | null>(null);
+  const [regenId,      setRegenId]      = useState<string | null>(null);
+  const [error,        setError]        = useState<string | null>(null);
 
   const regenIdRef = useRef(regenId);
   useLayoutEffect(() => { regenIdRef.current = regenId; }, [regenId]);
 
-  const textareaRef    = useRef(null);
-  const messagesEndRef = useRef(null);
-  const mainRef        = useRef(null);
-  const asideRef       = useRef(null);
+  const textareaRef    = useRef<HTMLTextAreaElement>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const mainRef        = useRef<HTMLElement>(null);
+  const asideRef       = useRef<HTMLElement>(null);
 
   useEffect(() => {
     const href = 'https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@300;400;700&display=swap';
@@ -108,11 +108,11 @@ export function MainApp() {
   const touchStartX = useRef(0);
   const touchStartY = useRef(0);
   useEffect(() => {
-    const handleTouchStart = (e) => { 
+    const handleTouchStart = (e: TouchEvent) => { 
       touchStartX.current = e.touches[0].clientX; 
       touchStartY.current = e.touches[0].clientY; 
     };
-    const handleTouchEnd = (e) => {
+    const handleTouchEnd = (e: TouchEvent) => {
       const deltaX = e.changedTouches[0].clientX - touchStartX.current;
       const deltaY = Math.abs(e.changedTouches[0].clientY - touchStartY.current);
       // スワイプ判定領域を 40 -> 50 に拡大し、iOSネイティブの戻るジェスチャーとの競合を緩和
@@ -220,7 +220,7 @@ export function MainApp() {
     setLastUsageDate(today);
   }, [isPremium]);
 
-  const showToast = useCallback((msg) => { setToast(msg); }, []);
+  const showToast = useCallback((msg: string) => { setToast(msg); }, []);
   const clearToast = useCallback(() => { setToast(null); }, []);
 
   const handleSubscribe = useCallback(async () => {
@@ -240,8 +240,9 @@ export function MainApp() {
         showToast('無限の導きが解放されました');
         setShowSubscribeModal(false);
       }
-    } catch (e) {
-      if (e.code !== 'PURCHASE_CANCELLED') showToast('購入処理に失敗しました');
+    } catch (e: unknown) {
+      const err = e as { code?: string };
+      if (err.code !== 'PURCHASE_CANCELLED') showToast('購入処理に失敗しました');
     } finally {
       setIsPurchasing(false);
     }
@@ -325,12 +326,12 @@ export function MainApp() {
     el.style.height = Math.min(el.scrollHeight, 120) + 'px';
   }, [input]);
 
-  const copiedTimerRef = useRef(null);
+  const copiedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => {
     return () => { if (copiedTimerRef.current) clearTimeout(copiedTimerRef.current); };
   }, []);
 
-  const handleCopy = useCallback(async (text, id) => {
+  const handleCopy = useCallback(async (text: string, id?: string): Promise<void> => {
     const ok = await clip(text);
     if (!ok) {
       showToast('コピーに失敗しました');
@@ -373,13 +374,13 @@ export function MainApp() {
 
     const targetRoomId = activeRoomId || genId();
     const isNewRoom = !activeRoomId;
-    const userMsg = { id: genId(), role: 'user', text };
+    const userMsg: Message = { id: genId(), role: 'user', text };
     
     const currentMessages = activeRoomId && currentStorage.rooms[activeRoomId] 
       ? currentStorage.rooms[activeRoomId].messages 
       : [];
 
-    let drawnCards = [];
+    let drawnCards: OracleCard[] = [];
     if (mode.id === 'card') drawnCards = getRandomCards(2);
 
     const receptionMsgs = buildReceptionMessages(persona, mode, drawnCards, currentMessages, userMsg.text);
@@ -422,7 +423,7 @@ export function MainApp() {
           discernment: result.discernmentMs,
         });
       }
-      const aiMsg  = { id: genId(), role: 'model', text: aiText, personaId: persona.id, modeId: mode.id, drawnCards };
+      const aiMsg: Message  = { id: genId(), role: 'model', text: aiText, personaId: persona.id, modeId: mode.id, drawnCards };
       
       setStorage(prev => {
         const room = prev.rooms[targetRoomId];
@@ -442,8 +443,8 @@ export function MainApp() {
       playMagicSound();
       incrementUsage();
 
-    } catch (e) { 
-      setError(e.message); 
+    } catch (e: unknown) { 
+      setError(e instanceof Error ? e.message : '天との接続でエラーが発生しました'); 
       setStorage(prev => {
         const room = prev.rooms[targetRoomId];
         if (!room) return prev;
@@ -471,7 +472,7 @@ export function MainApp() {
     finally { setIsLoading(false); }
   }, [input, activeRoomId, persona, mode, incrementUsage]);
 
-  const handleSwitch = useCallback(async (msgIdx, targetPersonaId) => {
+  const handleSwitch = useCallback(async (msgIdx: number, targetPersonaId: PersonaId): Promise<void> => {
     if (isLoadingRef.current || regenIdRef.current || !activeRoomId) return;
 
     if (!canUseOracleRef.current) {
@@ -489,10 +490,10 @@ export function MainApp() {
     getAudioContext();
 
     const targetPersona = PERSONAS[targetPersonaId];
-    const targetMode    = (targetMsg.modeId && MODES[targetMsg.modeId.toUpperCase()]) || MODES.PURE;
+    const targetMode    = (targetMsg.modeId && MODES[targetMsg.modeId.toUpperCase() as 'PURE' | 'CARD']) || MODES.PURE;
     const drawnCards    = targetMsg.drawnCards || [];
 
-    setRegenId(targetMsg.id || msgIdx);
+    setRegenId(targetMsg.id || String(msgIdx));
     
     const previousMessages = currentMessages.slice(0, msgIdx);
     
@@ -550,12 +551,12 @@ export function MainApp() {
       playMagicSound();
       incrementUsage();
 
-    } catch (e) { setError(e.message); }
+    } catch (e: unknown) { setError(e instanceof Error ? e.message : '天との接続でエラーが発生しました'); }
     finally { setRegenId(null); }
 
   }, [activeRoomId, incrementUsage, showToast]);
 
-  const handleDeleteRoom = useCallback((roomId, e) => {
+  const handleDeleteRoom = useCallback((roomId: string, e: React.MouseEvent<HTMLButtonElement>): void => {
     e.stopPropagation();
     setStorage(prev => {
       const rooms = { ...prev.rooms };
@@ -576,7 +577,7 @@ export function MainApp() {
   useEffect(() => {
     if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return;
     const mql = window.matchMedia('(hover: hover) and (pointer: fine)');
-    const handler = (e) => { isPhysicalKeyboardRef.current = e.matches; };
+    const handler = (e: MediaQueryListEvent) => { isPhysicalKeyboardRef.current = e.matches; };
     isPhysicalKeyboardRef.current = mql.matches;
     if (mql.addEventListener) {
       mql.addEventListener('change', handler);
@@ -587,7 +588,7 @@ export function MainApp() {
     }
   }, []);
 
-  const handleKeyDown = useCallback((e) => {
+  const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey && isPhysicalKeyboardRef.current) { 
       e.preventDefault(); 
       if (isLocked) {
@@ -795,7 +796,7 @@ export function MainApp() {
             )}
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 28 }}>
-              {messages.map((msg, idx) => {
+              {messages.map((msg: Message, idx: number) => {
                 const isUser = msg.role === 'user';
                 return (
                   <div key={msg.id || idx} style={{ display: 'flex', justifyContent: isUser ? 'flex-end' : 'flex-start' }}>

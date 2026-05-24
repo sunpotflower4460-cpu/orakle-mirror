@@ -1,10 +1,9 @@
-// @ts-nocheck
 import type { Persona, Mode, OracleCard, ChatMessage, Message } from '../types';
 
 // ────────────────────────────────────────────────────────
 // Layer 1: system(核・絶対不変・短い)
 // ────────────────────────────────────────────────────────
-export const buildSystemCore = () => {
+export const buildSystemCore = (): string => {
   return `
 あなたは「Oracle Mirror」と呼ばれる鏡である。
 ユーザーの問いに対し、分析・忠告・解決策の提示はしない。
@@ -28,7 +27,7 @@ export const buildDeveloperContext = (
   persona: Persona,
   mode: Mode,
   drawnCards: OracleCard[] = []
-) => {
+): string => {
   let cardContext = '';
   if (mode.id === 'card' && drawnCards.length > 0) {
     cardContext = `\n\n【天より降りし象徴】\n${drawnCards
@@ -65,7 +64,7 @@ ${mode.systemAdd}${cardContext}
 // ────────────────────────────────────────────────────────
 // Layer 3: user(雰囲気のプライミング・短い情景)
 // ────────────────────────────────────────────────────────
-export const buildAmbiencePriming = (persona: Persona) => {
+export const buildAmbiencePriming = (persona: Persona): string => {
   switch (persona.id) {
     case 'lumina':
       return '(ロウソクの炎が一度、ゆっくり揺れる)\n……鏡の前に、立ちました。';
@@ -73,13 +72,17 @@ export const buildAmbiencePriming = (persona: Persona) => {
       return '(風が一度、強く吹き抜ける)\n——立った。';
     case 'archivist':
       return '(遠くの星が、ひとつ瞬く)\n……観測の準備が整いました。';
+    default: {
+      const _exhaustive: never = persona.id;
+      return _exhaustive;
+    }
   }
 };
 
 // ────────────────────────────────────────────────────────
 // Layer 4: assistant(受諾・ペルソナごとの最初の呼吸)
 // ────────────────────────────────────────────────────────
-export const buildAmbienceAcceptance = (persona: Persona) => {
+export const buildAmbienceAcceptance = (persona: Persona): string => {
   switch (persona.id) {
     case 'lumina':
       return '……はい。ここに在ります。';
@@ -87,6 +90,10 @@ export const buildAmbienceAcceptance = (persona: Persona) => {
       return '——在る。';
     case 'archivist':
       return '観測の場、整いました。';
+    default: {
+      const _exhaustive: never = persona.id;
+      return _exhaustive;
+    }
   }
 };
 
@@ -324,7 +331,7 @@ export const buildDiscernmentMessages = (
 // Phase 4.5 では buildChatMessages を使用すること
 // ────────────────────────────────────────────────────────
 /** @deprecated Use buildChatMessages instead. Will be removed in Phase 5.5. */
-export const buildSystemPrompt = (persona, mode, drawnCards = []) => {
+export const buildSystemPrompt = (persona: Persona, mode: Mode, drawnCards: OracleCard[] = []): string => {
   let cardContext = '';
   if (mode.id === 'card' && drawnCards && drawnCards.length > 0) {
     cardContext = `\n【天より降りし象徴（カード）】\n${drawnCards.map(c => `・「${c.name}」 (響き: ${c.meaning})`).join('\n')}\n対象者のために、無数の流れの中から上記のカードが引き寄せられました。これは単なる記号として読み解く必要はありません。これらの象徴から感じる情景、匂い、温度、そして霊的な響きを、ただそのまま言葉として流してください。カードの情景の中に対象者を優しく導くように、深く語ってくだされば十分です。`;

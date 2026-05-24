@@ -191,3 +191,19 @@ export type SamplingParams = {
   topP: number;
   topK?: number;
 };
+
+// ─── Gemini API Response ───────────────────────────────
+export interface GeminiResponseCandidate {
+  content: {
+    parts: { text: string }[];
+  };
+}
+
+export interface GeminiResponse {
+  candidates?: GeminiResponseCandidate[];
+}
+
+// ─── API Error ─────────────────────────────────────────
+export interface FatalError extends Error {
+  fatal?: boolean;
+}

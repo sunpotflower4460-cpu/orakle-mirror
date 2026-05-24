@@ -1,13 +1,19 @@
-// @ts-nocheck
 import React, { useState, useEffect } from 'react';
 import { Loader2, Lock, Unlock, RefreshCw } from 'lucide-react';
 import { Purchases } from '../lib/capacitorMocks';
 
-export function SubscribeModal({ onClose, onSubscribe, onRestore, isPurchasing }) {
+interface SubscribeModalProps {
+  onClose: () => void;
+  onSubscribe: () => Promise<void>;
+  onRestore: () => Promise<void>;
+  isPurchasing: boolean;
+}
+
+export function SubscribeModal({ onClose, onSubscribe, onRestore, isPurchasing }: SubscribeModalProps) {
   const [price, setPrice] = useState('取得中...');
 
   useEffect(() => {
-    const handleEsc = (e) => { if (e.key === 'Escape') onClose(); };
+    const handleEsc = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
     document.addEventListener('keydown', handleEsc);
     return () => document.removeEventListener('keydown', handleEsc);
   }, [onClose]);

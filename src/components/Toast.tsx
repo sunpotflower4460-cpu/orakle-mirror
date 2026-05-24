@@ -1,9 +1,13 @@
-// @ts-nocheck
 import React, { useEffect } from 'react';
 
 // ─── UI Components ────────────────────────────────────────────────────────────
 
-export function Toast({ message, onDone }) {
+interface ToastProps {
+  message: string;
+  onDone: () => void;
+}
+
+export function Toast({ message, onDone }: ToastProps) {
   useEffect(() => { const t = setTimeout(onDone, 2000); return () => clearTimeout(t); }, [onDone]);
   return (
     <div role="status" aria-live="polite" style={{
