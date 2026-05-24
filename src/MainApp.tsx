@@ -11,13 +11,13 @@ import { ORACLE_CARDS, getRandomCards } from './constants/cards';
 import { MODES } from './constants/modes';
 import { PERSONAS } from './constants/personas';
 import { LS_KEY, genId, FREE_LIMIT, MAX_ROOMS } from './lib/constants';
-import { buildSystemPrompt } from './lib/prompt';
+import { buildChatMessages } from './lib/prompt';
 import { clip } from './lib/clipboard';
 import { getAudioContext, playMagicSound } from './lib/audio';
 import { IS_PROD, USE_JS_KEYBOARD_PADDING } from './lib/env';
 import { safeStartTransition } from './lib/react-compat';
 import { Preferences, Share, Purchases, SplashScreen, Keyboard, StatusBar } from './lib/capacitorMocks';
-import { fetchBackendAPI, fetchPreviewAPI, buildHistory } from './lib/api';
+import { fetchBackendAPIv2, fetchPreviewAPIv2 } from './lib/api';
 import { Toast } from './components/Toast';
 import { SubscribeModal } from './components/SubscribeModal';
 import { HelpModal } from './components/HelpModal';
@@ -358,10 +358,10 @@ export function MainApp() {
     });
   }, []);
 
-  const callAPI = useCallback(async (history, systemPrompt) => {
+  const callAPI = useCallback(async (chatMessages) => {
     return IS_PROD
-      ? await fetchBackendAPI(history, systemPrompt)
-      : await fetchPreviewAPI(history, systemPrompt);
+      ? await fetchBackendAPIv2(chatMessages)
+      : await fetchPreviewAPIv2(chatMessages);
   }, []);
 
   const handleSend = useCallback(async () => {
@@ -384,8 +384,11 @@ export function MainApp() {
     const currentMessages = activeRoomId && currentStorage.rooms[activeRoomId] 
       ? currentStorage.rooms[activeRoomId].messages 
       : [];
-      
-    const history = buildHistory(currentMessages, userMsg.text);
+
+    let drawnCards = [];
+    if (mode.id === 'card') drawnCards = getRandomCards(2);
+
+    const messages = buildChatMessages(persona, mode, drawnCards, currentMessages, userMsg.text);
 
     setStorage(prev => {
       let newOrder = prev.roomOrder.includes(targetRoomId) ? prev.roomOrder : [targetRoomId, ...prev.roomOrder];
@@ -412,11 +415,8 @@ export function MainApp() {
 
     if (isNewRoom) setActiveRoomId(targetRoomId);
 
-    let drawnCards = [];
-    if (mode.id === 'card') drawnCards = getRandomCards(2);
-
     try {
-      const aiText = await callAPI(history, buildSystemPrompt(persona, mode, drawnCards));
+      const aiText = await callAPI(messages);
       const aiMsg  = { id: genId(), role: 'model', text: aiText, personaId: persona.id, modeId: mode.id, drawnCards };
       
       setStorage(prev => {
@@ -505,10 +505,16 @@ export function MainApp() {
       return;
     }
     
-    const history = buildHistory(previousMessages, userTextToRegenerate);
+    const chatMessages = buildChatMessages(
+      targetPersona,
+      targetMode,
+      drawnCards,
+      previousMessages,
+      userTextToRegenerate
+    );
 
     try {
-      const aiText = await callAPI(history, buildSystemPrompt(targetPersona, targetMode, drawnCards));
+      const aiText = await callAPI(chatMessages);
       
       setStorage(prev => {
         const room = prev.rooms[activeRoomId];
