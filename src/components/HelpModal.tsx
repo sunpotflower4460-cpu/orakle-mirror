@@ -1,18 +1,21 @@
-// @ts-nocheck
 import React, { useEffect } from 'react';
 import { X } from 'lucide-react';
 import { MODES } from '../constants/modes';
 import { PERSONAS } from '../constants/personas';
 import { Browser } from '../lib/capacitorMocks';
 
-export function HelpModal({ onClose }) {
+interface HelpModalProps {
+  onClose: () => void;
+}
+
+export function HelpModal({ onClose }: HelpModalProps) {
   useEffect(() => {
-    const handleEsc = (e) => { if (e.key === 'Escape') onClose(); };
+    const handleEsc = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
     document.addEventListener('keydown', handleEsc);
     return () => document.removeEventListener('keydown', handleEsc);
   }, [onClose]);
 
-  const openLink = (url) => {
+  const openLink = (url: string) => {
     Browser.open({ url }).catch(() => window.open(url, '_blank', 'noopener,noreferrer'));
   };
 

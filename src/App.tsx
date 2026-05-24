@@ -1,5 +1,4 @@
-// @ts-nocheck
-// このファイルは Phase 4 で段階的に TS 化する。それまでは型チェックを無効化する。
+// このファイルは Phase 4 で段階的に TS 化した。
 import React from 'react';
 
 /* ========================================================================
@@ -27,7 +26,7 @@ import React from 'react';
 import { MainApp } from './MainApp';
 import { ErrorBoundary } from './components/ErrorBoundary';
 
-export default function App() {
+export default function App(): JSX.Element {
   return (
     <ErrorBoundary>
       <MainApp />

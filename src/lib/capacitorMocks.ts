@@ -1,4 +1,3 @@
-// @ts-nocheck
 // ─── Capacitor Plugins (Mock for Canvas environment) ──────────────────────────
 // 【本番環境】実際のプロジェクトでは以下のコメントアウトを外し、モックを削除してください。
 // import { Preferences } from '@capacitor/preferences';
@@ -9,8 +8,18 @@
 // import { StatusBar } from '@capacitor/status-bar';
 // import { Browser } from '@capacitor/browser';
 
+import type {
+  PreferencesPlugin,
+  SharePlugin,
+  PurchasesPlugin,
+  SplashScreenPlugin,
+  KeyboardPlugin,
+  StatusBarPlugin,
+  BrowserPlugin,
+} from '../types';
+
 // 本番ビルドでのモック外し忘れ防止用フラグを付与
-export const Preferences = {
+export const Preferences: PreferencesPlugin = {
   isMock: true,
   async get({ key }) { 
     try { return { value: localStorage.getItem(key) }; } catch (e) { return { value: null }; }
@@ -23,7 +32,7 @@ export const Preferences = {
   }
 };
 
-export const Share = {
+export const Share: SharePlugin = {
   isMock: true,
   async share(options) {
     if (navigator.share) {
@@ -32,7 +41,7 @@ export const Share = {
   }
 };
 
-export const Purchases = {
+export const Purchases: PurchasesPlugin = {
   isMock: true,
   async getOfferings() { 
     // App Store審査対応: ダミーの価格情報を返す
@@ -50,20 +59,20 @@ export const Purchases = {
   async restorePurchases() { return { customerInfo: { entitlements: { active: {} } } }; }
 };
 
-export const SplashScreen = { isMock: true, async hide() {} };
+export const SplashScreen: SplashScreenPlugin = { isMock: true, async hide() {} };
 
-export const Keyboard = {
+export const Keyboard: KeyboardPlugin = {
   isMock: true,
-  async addListener(eventName, callback) { return { remove: async () => {} }; }
+  async addListener(_eventName, _callback) { return { remove: async () => {} }; }
 };
 
-export const StatusBar = {
+export const StatusBar: StatusBarPlugin = {
   isMock: true,
-  async setBackgroundColor({ color }) {}
+  async setBackgroundColor({ color: _color }) {}
 };
 
 // 法的リンクを安全に開くためのBrowserモック
-export const Browser = {
+export const Browser: BrowserPlugin = {
   isMock: true,
   async open({ url }) { window.open(url, '_blank', 'noopener,noreferrer'); }
 };

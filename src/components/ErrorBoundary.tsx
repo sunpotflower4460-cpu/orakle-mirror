@@ -1,20 +1,28 @@
-// @ts-nocheck
-import React from 'react';
+import React, { Component, ReactNode, ErrorInfo } from 'react';
 import { AlertCircle } from 'lucide-react';
 
 // ─── Error Boundary ───────────────────────────────────────────────────────────
-export class ErrorBoundary extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = { hasError: false };
-  }
-  static getDerivedStateFromError(error) {
+
+interface ErrorBoundaryProps {
+  children: ReactNode;
+}
+
+interface ErrorBoundaryState {
+  hasError: boolean;
+}
+
+export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
+  state: ErrorBoundaryState = { hasError: false };
+
+  static getDerivedStateFromError(_error: Error): ErrorBoundaryState {
     return { hasError: true };
   }
-  componentDidCatch(error, errorInfo) {
+
+  componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
     console.error("Uncaught error:", error, errorInfo);
   }
-  render() {
+
+  render(): ReactNode {
     if (this.state.hasError) {
       return (
         <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: '#0f172a', color: '#f1f5f9', fontFamily: 'sans-serif', padding: 20, paddingTop: 'env(safe-area-inset-top, 20px)', textAlign: 'center' }}>

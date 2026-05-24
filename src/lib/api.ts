@@ -1,8 +1,9 @@
-// @ts-nocheck
 import type {
   ChatMessage,
+  FatalError,
   GeminiHistoryEntry,
   GeminiPayload,
+  GeminiResponse,
   Message,
   SamplingParams,
   TwoStageResult,
@@ -10,22 +11,48 @@ import type {
 
 // ─── Backend API Logic ───────────────────────────────────────────────────────
 
-/** @deprecated Use fetchBackendAPIv2(messages, sampling) instead. Will be removed in Phase 5.5. */
-export const fetchBackendAPI = async (history, systemPrompt) => {
+const BACKEND_URL_PLACEHOLDER = 'https://api.your-backend.com/oracle';
+
+const getBackendUrl = (): string => {
+  try {
+    return (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_BACKEND_URL) || BACKEND_URL_PLACEHOLDER;
+  } catch {
+    return BACKEND_URL_PLACEHOLDER;
+  }
+};
+
+/**
+ * @deprecated Phase 5.5 のプロバイダ抽象化完了時に削除予定。
+ * 本番コード (MainApp.tsx) からは参照されていない。
+ * 現在は src/dev/promptAB.ts での A/B/C 比較のためだけに残存。
+ * Use callLLMWithSampling (Stage 1/2 内部呼び出し経由) or fetchOracleTwoStage instead.
+ */
+export const fetchBackendAPI = async (history: GeminiHistoryEntry[], systemPrompt: string): Promise<string> => {
   // 【重要】本番環境では、GeminiAPIキーを隠蔽するためのプロキシサーバー(Cloudflare Workers等)のURLを指定してください
-  const API_URL = 'https://api.your-backend.com/oracle';
+  const API_URL = getBackendUrl();
+  if (import.meta.env.PROD && API_URL === BACKEND_URL_PLACEHOLDER) {
+    throw new Error(
+      '[Oracle Mirror] VITE_BACKEND_URL が未設定のまま本番ビルドされています。' +
+      'Phase 5 で BFF を構築後、本番環境変数に設定してください。'
+    );
+  }
   const res = await fetch(API_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ history, systemPrompt }),
   });
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
-  const data = await res.json();
+  const data = await res.json() as { text: string };
   return data.text;
 };
 
-/** @deprecated Use fetchPreviewAPIv2(messages, sampling) instead. Will be removed in Phase 5.5. */
-export const fetchPreviewAPI = async (history, systemPrompt) => {
+/**
+ * @deprecated Phase 5.5 のプロバイダ抽象化完了時に削除予定。
+ * 本番コード (MainApp.tsx) からは参照されていない。
+ * 現在は src/dev/promptAB.ts での A/B/C 比較のためだけに残存。
+ * Use callLLMWithSampling (Stage 1/2 内部呼び出し経由) or fetchOracleTwoStage instead.
+ */
+export const fetchPreviewAPI = async (history: GeminiHistoryEntry[], systemPrompt: string): Promise<string> => {
   const GEMINI_MODEL = 'gemini-2.5-flash-preview-09-2025';
   const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
 
@@ -54,29 +81,36 @@ export const fetchPreviewAPI = async (history, systemPrompt) => {
       });
 
       if (!res.ok) {
-        const e = await res.json().catch(() => ({}));
+        const e = await res.json().catch(() => ({})) as { error?: { message?: string } };
         const msg = (e.error && e.error.message) || `HTTP ${res.status}`;
-        const err = new Error(msg);
-        if (!RETRYABLE_STATUSES.has(res.status)) throw Object.assign(err, { fatal: true });
+        const err = new Error(msg) as FatalError;
+        if (!RETRYABLE_STATUSES.has(res.status)) { err.fatal = true; throw err; }
         throw err;
       }
-      const data = await res.json();
+      const data = await res.json() as GeminiResponse;
       return (data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts && data.candidates[0].content.parts[0] && data.candidates[0].content.parts[0].text) || '…沈黙…';
-    } catch (e) {
-      if (e.fatal) throw e;
+    } catch (e: unknown) {
+      const err = e as FatalError;
+      if (err.fatal) throw err;
       if (attempt >= maxRetries) throw new Error('天との接続が途切れました。少し時間をおいてから再び問いかけてください。');
       await new Promise((resolve) => setTimeout(resolve, delays[attempt]));
     }
   }
+  throw new Error('Unreachable');
 };
 
-/** @deprecated Use buildChatMessages instead. Will be removed in Phase 5.5. */
-export const buildHistory = (messages: Message[], newUserText: string) => {
-  const history = messages
+/**
+ * @deprecated Phase 5.5 のプロバイダ抽象化完了時に削除予定。
+ * 本番コード (MainApp.tsx) からは参照されていない。
+ * 現在は src/dev/promptAB.ts での A/B/C 比較のためだけに残存。
+ * Use buildReceptionMessages + buildDiscernmentMessages instead.
+ */
+export const buildHistory = (messages: Message[], newUserText: string): GeminiHistoryEntry[] => {
+  const history: GeminiHistoryEntry[] = messages
     .filter((m) => typeof m.text === 'string' && m.text.trim().length > 0)
-    .map((m) => ({ role: m.role === 'model' ? 'model' : 'user', parts: [{ text: m.text }] }));
+    .map((m) => ({ role: m.role === 'model' ? 'model' : 'user', parts: [{ text: m.text }] } as GeminiHistoryEntry));
 
-  const alternated = [];
+  const alternated: GeminiHistoryEntry[] = [];
   for (const m of history) {
     const last = alternated[alternated.length - 1];
     if (last && last.role === m.role) continue;
@@ -133,11 +167,16 @@ const getGeminiApiKey = (): string => {
   }
 };
 
-const extractGeminiText = (data: any): string => {
+const extractGeminiText = (data: GeminiResponse): string => {
   return (data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts && data.candidates[0].content.parts[0] && data.candidates[0].content.parts[0].text) || '…沈黙…';
 };
 
-/** @deprecated Use callLLMWithSampling(messages, sampling) instead. Will be removed in Phase 5.5. */
+/**
+ * @deprecated Phase 5.5 のプロバイダ抽象化完了時に削除予定。
+ * 本番コード (MainApp.tsx) からは参照されていない。
+ * 現在は src/dev/promptAB.ts での A/B/C 比較のためだけに残存。
+ * Use callLLMWithSampling instead.
+ */
 export const fetchPreviewAPIv2 = async (
   messages: ChatMessage[],
   sampling: SamplingParams = DEFAULT_SAMPLING,
@@ -162,17 +201,18 @@ export const fetchPreviewAPIv2 = async (
       });
 
       if (!res.ok) {
-        const e = await res.json().catch(() => ({}));
+        const e = await res.json().catch(() => ({})) as { error?: { message?: string } };
         const msg = (e.error && e.error.message) || `HTTP ${res.status}`;
-        const err = new Error(msg);
-        if (!RETRYABLE_STATUSES.has(res.status)) throw Object.assign(err, { fatal: true });
+        const err = new Error(msg) as FatalError;
+        if (!RETRYABLE_STATUSES.has(res.status)) { err.fatal = true; throw err; }
         throw err;
       }
 
-      const data = await res.json();
+      const data = await res.json() as GeminiResponse;
       return extractGeminiText(data);
-    } catch (e) {
-      if (e.fatal) throw e;
+    } catch (e: unknown) {
+      const err = e as FatalError;
+      if (err.fatal) throw err;
       if (attempt >= MAX_RETRIES) throw new Error('天との接続が途切れました。少し時間をおいてから再び問いかけてください。');
       await new Promise((resolve) => setTimeout(resolve, RETRY_DELAYS[attempt]));
     }
@@ -181,33 +221,46 @@ export const fetchPreviewAPIv2 = async (
   throw new Error('Unreachable');
 };
 
-/** @deprecated Use callLLMWithSampling(messages, sampling) instead. Will be removed in Phase 5.5. */
+/**
+ * @deprecated Phase 5.5 のプロバイダ抽象化完了時に削除予定。
+ * 本番コード (MainApp.tsx) からは参照されていない。
+ * 現在は src/dev/promptAB.ts での A/B/C 比較のためだけに残存。
+ * Use callLLMWithSampling instead.
+ */
 export const fetchBackendAPIv2 = async (
   messages: ChatMessage[],
   sampling: SamplingParams = DEFAULT_SAMPLING,
 ): Promise<string> => {
-  const API_URL = 'https://api.your-backend.com/oracle';
+  const backendUrl = getBackendUrl();
+
+  if (import.meta.env.PROD && backendUrl === BACKEND_URL_PLACEHOLDER) {
+    throw new Error(
+      '[Oracle Mirror] VITE_BACKEND_URL が未設定のまま本番ビルドされています。' +
+      'Phase 5 で BFF を構築後、本番環境変数に設定してください。'
+    );
+  }
 
   for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
     try {
-      const res = await fetch(API_URL, {
+      const res = await fetch(backendUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ messages, sampling }),
       });
 
       if (!res.ok) {
-        const e = await res.json().catch(() => ({}));
+        const e = await res.json().catch(() => ({})) as { error?: { message?: string } };
         const msg = (e.error && e.error.message) || `HTTP ${res.status}`;
-        const err = new Error(msg);
-        if (!RETRYABLE_STATUSES.has(res.status)) throw Object.assign(err, { fatal: true });
+        const err = new Error(msg) as FatalError;
+        if (!RETRYABLE_STATUSES.has(res.status)) { err.fatal = true; throw err; }
         throw err;
       }
 
-      const data = await res.json();
+      const data = await res.json() as { text: string };
       return data.text;
-    } catch (e) {
-      if (e.fatal) throw e;
+    } catch (e: unknown) {
+      const err = e as FatalError;
+      if (err.fatal) throw err;
       if (attempt >= MAX_RETRIES) throw new Error('天との接続が途切れました。少し時間をおいてから再び問いかけてください。');
       await new Promise((resolve) => setTimeout(resolve, RETRY_DELAYS[attempt]));
     }

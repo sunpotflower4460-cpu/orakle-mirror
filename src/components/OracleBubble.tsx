@@ -1,13 +1,23 @@
-// @ts-nocheck
 import React from 'react';
 import { Loader2, Sparkles, Copy, Check } from 'lucide-react';
 import { PERSONAS } from '../constants/personas';
 import { MODES } from '../constants/modes';
+import type { Message, PersonaId } from '../types';
 
-export const OracleBubble = React.memo(function OracleBubble({ msg, idx, copiedId, regeneratingId, onCopy, onSwitch }) {
-  const msgPersona = PERSONAS[msg.personaId] || PERSONAS.lumina;
-  const msgMode    = MODES[msg.modeId ? msg.modeId.toUpperCase() : ''] || MODES.PURE;
-  const isRegen    = regeneratingId === (msg.id || idx);
+interface OracleBubbleProps {
+  msg: Message;
+  idx: number;
+  copiedId: string | null;
+  regeneratingId: string | null;
+  onCopy: (text: string, id?: string) => Promise<void>;
+  onSwitch: (idx: number, targetPersonaId: PersonaId) => Promise<void>;
+}
+
+export const OracleBubble = React.memo(function OracleBubble({ msg, idx, copiedId, regeneratingId, onCopy, onSwitch }: OracleBubbleProps) {
+  const msgPersona = PERSONAS[msg.personaId ?? 'lumina'] || PERSONAS.lumina;
+  const msgMode    = MODES[msg.modeId ? (msg.modeId.toUpperCase() as 'PURE' | 'CARD') : 'PURE'] || MODES.PURE;
+  const msgId      = msg.id || String(idx);
+  const isRegen    = regeneratingId === msgId;
 
   return (
     <div style={{ width: '100%', animation: 'oracleReveal 1.2s cubic-bezier(0.16,1,0.3,1) forwards' }}>
@@ -61,10 +71,10 @@ export const OracleBubble = React.memo(function OracleBubble({ msg, idx, copiedI
                 }}>{px.icon}</button>
             ))}
           </div>
-          <button onClick={() => onCopy(msg.text, msg.id || idx)} aria-label="テキストをコピー" style={{
+          <button onClick={() => onCopy(msg.text, msgId)} aria-label="テキストをコピー" style={{
             minWidth: 44, minHeight: 44, borderRadius: 999, cursor: 'pointer', border: 'none', background: 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center',
-            color: copiedId === (msg.id || idx) ? '#22c55e' : '#cbd5e1', transition: 'color 0.2s'
-          }}>{copiedId === (msg.id || idx) ? <Check size={16}/> : <Copy size={16}/>}</button>
+            color: copiedId === msgId ? '#22c55e' : '#cbd5e1', transition: 'color 0.2s'
+          }}>{copiedId === msgId ? <Check size={16}/> : <Copy size={16}/>}</button>
         </div>
       </div>
     </div>

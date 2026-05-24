@@ -1,6 +1,5 @@
-// @ts-nocheck
 
-export const clip = async (text) => {
+export const clip = async (text: string): Promise<boolean> => {
   try {
     if (navigator.clipboard && navigator.clipboard.writeText) {
       await navigator.clipboard.writeText(text); return true;
