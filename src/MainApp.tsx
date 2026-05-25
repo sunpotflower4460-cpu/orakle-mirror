@@ -61,6 +61,7 @@ export function MainApp() {
   const [sidebarOpen,  setSidebarOpen]  = useState<boolean>(false);
   const [showHelp,     setShowHelp]     = useState<boolean>(false);
   const [showOnboarding, setShowOnboarding] = useState<boolean>(false);
+  const [inputFocused, setInputFocused] = useState<boolean>(false);
   const [toast,        setToast]        = useState<string | null>(null);
   const [persona,      setPersona]      = useState(PERSONAS.lumina);
   const [mode,         setMode]         = useState(MODES.PURE);
@@ -835,9 +836,13 @@ export function MainApp() {
               })}
 
               {isLoading && (
-                <div aria-busy="true" style={{ display: 'flex', justifyContent: 'flex-start', animation: 'fadeIn 0.3s ease' }}>
-                  <div style={{ padding: '20px 26px', background: 'rgba(255,255,255,0.95)', borderRadius: 24, border: `1px solid ${p.border}`, display: 'flex', alignItems: 'center', gap: 12 }}>
-                    <Loader2 size={16} style={{ color: p.accent, animation: 'spin 1s linear infinite' }}/>
+                <div aria-busy="true" style={{ display: 'flex', justifyContent: 'flex-start', animation: 'oracleReveal 0.6s cubic-bezier(0.16,1,0.3,1)' }}>
+                  <div style={{ padding: '20px 26px', background: 'rgba(255,255,255,0.95)', borderRadius: 24, border: `1px solid ${p.border}`, display: 'flex', alignItems: 'center', gap: 14, boxShadow: `0 8px 32px ${p.accent}12` }}>
+                    <div style={{ display: 'flex', gap: 5 }} aria-hidden="true">
+                      {[0, 1, 2].map(i => (
+                        <span key={i} style={{ width: 6, height: 6, borderRadius: 999, background: p.accent, animation: `breathe 1.4s ease-in-out ${i * 0.18}s infinite` }} />
+                      ))}
+                    </div>
                     <span style={{ fontSize: 11, color: '#94a3b8', letterSpacing: '0.15em' }}>{t('status.receiving')}</span>
                   </div>
                 </div>
@@ -866,16 +871,22 @@ export function MainApp() {
             : `8px calc(14px + var(--sar)) calc(12px + var(--sab)) calc(14px + var(--sal))`, 
           flexShrink: 0 
         }}>
-          <div style={{
+          <div className="input-shell" style={{
             display: 'flex', alignItems: 'flex-end', gap: 8, background: 'rgba(255,255,255,0.95)', backdropFilter: 'blur(8px)',
-            borderRadius: 28, padding: '8px 8px 8px 20px', border: `1px solid ${p.border}`,
-            boxShadow: `0 4px 24px ${p.accent}12, 0 1px 6px rgba(0,0,0,0.04)`, transition: 'box-shadow 0.4s, border-color 0.4s'
+            borderRadius: 28, padding: '8px 8px 8px 20px',
+            border: `1px solid ${inputFocused ? `${p.accent}66` : p.border}`,
+            transform: inputFocused ? 'translateY(-1px)' : 'translateY(0)',
+            boxShadow: inputFocused
+              ? `0 8px 34px ${p.accent}2e, 0 1px 6px rgba(0,0,0,0.05)`
+              : `0 4px 24px ${p.accent}12, 0 1px 6px rgba(0,0,0,0.04)`
           }}>
             <textarea
               ref={textareaRef}
               value={input}
               onChange={e => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
+              onFocus={() => setInputFocused(true)}
+              onBlur={() => setInputFocused(false)}
               placeholder={isLocked ? t('input.locked') : t('input.placeholder')}
               aria-label={t('a11y.messageInput')}
               rows={1}

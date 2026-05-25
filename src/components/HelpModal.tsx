@@ -34,7 +34,8 @@ export function HelpModal({ onClose }: HelpModalProps) {
       <div style={{
         background: '#fff', maxWidth: 420, width: '100%', maxHeight: '100%',
         borderRadius: 28, boxShadow: '0 32px 80px rgba(0,0,0,0.12)',
-        border: '1px solid #f1f5f9', overflowY: 'auto', padding: 28
+        border: '1px solid #f1f5f9', overflowY: 'auto', padding: 28,
+        animation: 'modalReveal 0.4s cubic-bezier(0.16,1,0.3,1)'
       }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20, paddingBottom: 14, borderBottom: '1px solid #f8fafc' }}>
           <h2 id="helpTitle" style={{ fontSize: 11, letterSpacing: '0.4em', fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', margin: 0 }}>Mirror Guide</h2>

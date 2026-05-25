@@ -60,7 +60,8 @@ export function Onboarding({ onComplete }: OnboardingProps) {
       <div style={{
         background: '#fff', maxWidth: 440, width: '100%', maxHeight: '100%',
         borderRadius: 28, boxShadow: '0 32px 80px rgba(0,0,0,0.12)', border: '1px solid #f1f5f9',
-        overflowY: 'auto', padding: 28, display: 'flex', flexDirection: 'column'
+        overflowY: 'auto', padding: 28, display: 'flex', flexDirection: 'column',
+        animation: 'modalReveal 0.45s cubic-bezier(0.16,1,0.3,1)'
       }}>
         {/* 言語切替(タイトルの時点で日本語／英語を選べる) */}
         <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 8 }}>
@@ -76,8 +77,8 @@ export function Onboarding({ onComplete }: OnboardingProps) {
           </div>
         </div>
 
-        {/* Step content(切替時に静かにフェード) */}
-        <div key={step} style={{ flex: 1, animation: 'fadeIn 0.45s ease', minHeight: 280, display: 'flex', flexDirection: 'column' }}>
+        {/* Step content(切替時に、鏡に像が結ぶように現れる) */}
+        <div key={step} style={{ flex: 1, animation: 'stepReveal 0.5s cubic-bezier(0.16,1,0.3,1)', minHeight: 280, display: 'flex', flexDirection: 'column' }}>
           {step === 0 && (
             <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flex: 1, gap: 8 }}>
               <div style={{ position: 'relative', marginBottom: 12 }}>
