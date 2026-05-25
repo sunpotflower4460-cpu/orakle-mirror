@@ -17,8 +17,7 @@ export const IS_PROD: boolean = (() => {
  * 本番: .env.production または Vite ビルド時の環境変数で
  *       https://oracle-mirror-bff.<subdomain>.workers.dev/oracle を指定
  *
- * 未設定の場合、本番ビルド時はランタイムでエラーを投げる
- * (callLLMWithSampling 側でチェック)。
+ * 未設定の場合、本番ビルドの実行時(ランタイム)に callLLMWithSampling 側でエラーを投げる。
  */
 export const BACKEND_URL: string =
   (typeof import.meta !== 'undefined'
@@ -47,8 +46,8 @@ export function isBackendUrlPlaceholder(): boolean {
   return PLACEHOLDER_TOKENS.some((t) => v.includes(t));
 }
 
-// 本番ビルドの起動時に開発者へ警告 (ブラウザ console)。
-// 起動時 fatal への昇格は Phase 7-3 の assertProductionReady() で対応予定。
+// 本番ビルドの起動時に開発者へ警告(ブラウザ console)。
+// ビルド時に止めたい場合は Phase 7-3 の assertProductionReady() 側で扱う。
 if (IS_PROD && isBackendUrlPlaceholder()) {
   // eslint-disable-next-line no-console
   console.warn(

@@ -243,8 +243,9 @@ export type KnownBackendErrorCode =
  * BFF が返しうるエラーコード型。
  * 既知コードの補完を保ちつつ、未知コードも文字列として受け付ける。
  *
- * 現状 buildUserFacingError はランタイムの switch + default フォールバック方式で
- * 文言を決定しており、型レベルの網羅性チェックは行っていない。
- * 厳密な網羅性検査は将来的に assertNever ベースの実装へ移行する場合に導入する。
+ * 現状 buildUserFacingError は string を受け、ランタイムの switch + default
+ * フォールバック方式で文言を決定しており、型レベル網羅性チェックは行っていない。
+ * 将来 assertNever ベースの厳密網羅性検査に移行する場合は、
+ * buildUserFacingError の引数型を KnownBackendErrorCode へ変更する。
  */
 export type BackendErrorCode = KnownBackendErrorCode | (string & {});
