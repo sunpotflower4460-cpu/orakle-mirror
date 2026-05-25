@@ -21,6 +21,7 @@ import { Toast } from './components/Toast';
 import { SubscribeModal } from './components/SubscribeModal';
 import { HelpModal } from './components/HelpModal';
 import { OracleBubble } from './components/OracleBubble';
+import { Onboarding } from './components/Onboarding';
 import { useT } from './i18n';
 import type { Storage, OracleCard, Message, PersonaId, Mode } from './types';
 
@@ -59,6 +60,7 @@ export function MainApp() {
 
   const [sidebarOpen,  setSidebarOpen]  = useState<boolean>(false);
   const [showHelp,     setShowHelp]     = useState<boolean>(false);
+  const [showOnboarding, setShowOnboarding] = useState<boolean>(false);
   const [toast,        setToast]        = useState<string | null>(null);
   const [persona,      setPersona]      = useState(PERSONAS.lumina);
   const [mode,         setMode]         = useState(MODES.PURE);
@@ -167,32 +169,39 @@ export function MainApp() {
       let parsedStorage = { rooms: {}, roomOrder: [] };
       let premiumStatus = false;
       let todayCount = 0;
+      let hasOnboarded = true;
       const today = new Date().toDateString();
 
       try {
         const { value: historyVal } = await Preferences.get({ key: LS_KEY });
         if (historyVal) parsedStorage = JSON.parse(historyVal);
-        
+
         const { value: premiumVal } = await Preferences.get({ key: 'app_is_premium' });
         premiumStatus = premiumVal === 'true';
-        
+
         const { value: usageVal } = await Preferences.get({ key: 'app_usage_data' });
         if (usageVal) {
           const parsed = JSON.parse(usageVal);
           if (parsed.date === today) todayCount = parsed.count || 0;
         }
 
+        // 既存ユーザー(対話履歴あり)には初回オンボーディングを出さない。
+        const hasExistingData = Array.isArray(parsedStorage.roomOrder) && parsedStorage.roomOrder.length > 0;
+        const { value: onboardedVal } = await Preferences.get({ key: 'app_onboarded' });
+        hasOnboarded = onboardedVal === 'true' || hasExistingData;
+
         const LEGACY_KEYS = Array.from({ length: 15 }, (_, i) => `oracle_mirror_v${i + 1}`);
         await Promise.allSettled(LEGACY_KEYS.map(key => Preferences.remove({ key })));
-      } catch (e) { 
-        console.error('Storage Init Error', e); 
+      } catch (e) {
+        console.error('Storage Init Error', e);
       }
-      
+
       safeStartTransition(() => {
         setStorage(parsedStorage);
         setIsPremium(premiumStatus);
         setUsageCount(todayCount);
         setLastUsageDate(today);
+        setShowOnboarding(!hasOnboarded);
         setIsStorageLoaded(true);
       });
     };
@@ -575,6 +584,12 @@ export function MainApp() {
     setActiveRoomId(null); setSidebarOpen(false); setError(null); setInput('');
   }, []);
 
+  const handleOnboardingComplete = useCallback((selectedPersona?: PersonaId) => {
+    Preferences.set({ key: 'app_onboarded', value: 'true' }).catch(console.error);
+    if (selectedPersona) setPersona(PERSONAS[selectedPersona]);
+    setShowOnboarding(false);
+  }, []);
+
   const isPhysicalKeyboardRef = useRef(false);
   useEffect(() => {
     if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return;
@@ -617,6 +632,7 @@ export function MainApp() {
       <style>{GLOBAL_STYLES}</style>
 
       {toast && <Toast message={toast} onDone={clearToast}/>}
+      {showOnboarding && <Onboarding onComplete={handleOnboardingComplete}/>}
       {showHelp && <HelpModal onClose={() => setShowHelp(false)}/>}
       {showSubscribeModal && <SubscribeModal onClose={() => setShowSubscribeModal(false)} onSubscribe={handleSubscribe} onRestore={handleRestore} isPurchasing={isPurchasing} />}
 

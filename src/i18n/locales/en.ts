@@ -82,6 +82,21 @@ export const en: Record<keyof typeof ja, string> = {
   'errorBoundary.body': 'Please reload the app.',
   'errorBoundary.reload': 'Reload',
 
+  // Onboarding (first-run)
+  'onboarding.concept.title': 'A mirror for your inner voice',
+  'onboarding.concept.body': 'Oracle Mirror is not a fortune-teller that hands you answers.\nIt is a quiet mirror that reflects the voice already within you.',
+  'onboarding.persona.title': 'Choose your mirror',
+  'onboarding.persona.body': 'Three mirrors reflect you in different light.\nYou can switch between them anytime.',
+  'onboarding.mode.title': 'How the dialogue flows',
+  'onboarding.mode.body': 'Choose one of two ways to receive your answer.',
+  'onboarding.ready.title': 'You are ready',
+  'onboarding.ready.body': 'Offer the question on your heart, gently, to the mirror.',
+  'onboarding.next': 'Next',
+  'onboarding.back': 'Back',
+  'onboarding.skip': 'Skip',
+  'onboarding.begin': 'Open the mirror',
+  'onboarding.progress': '{current} / {total}',
+
   // Personas (display)
   'persona.lumina.title': 'Embracing Love',
   'persona.zenith.title': 'Piercing Truth',

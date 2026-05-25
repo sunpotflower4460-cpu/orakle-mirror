@@ -82,6 +82,21 @@ export const ja = {
   'errorBoundary.body': 'お手数ですが、アプリを再読み込みしてください。',
   'errorBoundary.reload': '再読み込み',
 
+  // オンボーディング(初回体験)
+  'onboarding.concept.title': '内なる声を映す鏡',
+  'onboarding.concept.body': 'Oracle Mirror は、答えを与える占いではありません。\nあなたの内側にすでに在る声を、静かに映す鏡です。',
+  'onboarding.persona.title': '鏡を選ぶ',
+  'onboarding.persona.body': '3つの鏡が、それぞれ違う光であなたを映します。\nいつでも切り替えられます。',
+  'onboarding.mode.title': '対話の仕方',
+  'onboarding.mode.body': '問いの受け取り方を、2つから選べます。',
+  'onboarding.ready.title': '準備が整いました',
+  'onboarding.ready.body': '心に浮かんだ問いを、そっと鏡へ。',
+  'onboarding.next': '次へ',
+  'onboarding.back': '戻る',
+  'onboarding.skip': 'スキップ',
+  'onboarding.begin': '鏡を開く',
+  'onboarding.progress': '{current} / {total}',
+
   // ペルソナ(表示用。id/アクセントカラー/system プロンプトは constants/personas.tsx が源)
   'persona.lumina.title': '寄り添う愛',
   'persona.zenith.title': '真実を射抜く',
