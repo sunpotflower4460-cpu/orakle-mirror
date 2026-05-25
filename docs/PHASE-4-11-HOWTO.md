@@ -1,21 +1,29 @@
-# Phase 4.11 実機検証手順
+# Phase 4.11 実機検証手順（歴史的記録）
 
-> [!NOTE]
-> この手順は Phase 4.11 時点の検証記録です。Phase 5.5 で `src/dev/promptAB.ts`
-> と関連する Gemini 直叩き開発ツールは削除されており、現在のフロントエンドは
-> `VITE_BACKEND_URL` 経由で BFF のみを呼び出します。
+> [!IMPORTANT]
+> このドキュメントは Phase 4.11 時点の検証手順を歴史的記録として保存したものです。
+> Phase 5.5 で `src/dev/promptAB.ts` および以下のグローバル関数は削除されており、
+> 以下の手順は現在の main ブランチでは実行できません。
+>
+> - `runFullMatrixVerification()`
+> - `downloadMatrixResultAsJson()`
+> - `downloadMatrixResultAsMarkdown()`
+>
+> 現在のフロントエンドは `VITE_BACKEND_URL` 経由で BFF のみを呼び出します。
+> 同等のマトリクス検証が再び必要になった場合は、`src/dev/` ではなく `tools/`
+> 配下に BFF 経由の独立スクリプトとして別 Issue で再実装する想定です。
 
-## 前提
+## 当時の前提（参考）
 
-- Phase 4.11 までマージ済みであること
-- 現在の動作確認では `.env.local` に `VITE_BACKEND_URL` が設定されていること
+- Phase 4.11 までマージ済みであること（当時）
+- `.env.local` に `VITE_GEMINI_API_KEY` が設定されていること（当時、現在は不要）
 - Node 20、npm 10 環境
 
-## 手順
+## 当時の手順（参考、現在は実行不可）
 
 ### 1. 開発サーバー起動
 
-```bash
+```text
 npm install
 npm run dev
 ```
@@ -28,7 +36,7 @@ Chrome/Safari の DevTools を起動し、Console タブへ移動。
 
 ### 3. 30セル自動巡回を実行
 
-```js
+```text
 const result = await runFullMatrixVerification();
 ```
 
@@ -38,7 +46,7 @@ const result = await runFullMatrixVerification();
 
 ### 4. 結果ダウンロード
 
-```js
+```text
 downloadMatrixResultAsJson(result);
 downloadMatrixResultAsMarkdown(result);
 ```
@@ -63,12 +71,13 @@ JSON と Markdown が自動ダウンロードされる。
 
 判断結果は両ドキュメントの「採用判断」セクションにチェックを入れて記録。
 
-## トラブルシューティング
+## トラブルシューティング（当時の記録）
 
 ### runFullMatrixVerification is not defined と出る
 
-- 本番ビルドで実行している可能性。npm run dev で起動した開発サーバーで実行すること。
-- もしくは import.meta.env.DEV が false になっている。.env.local の NODE_ENV を確認。
+- Phase 5.5 以降の main ブランチでは削除済み関数のため、このエラーは仕様通り。
+- 当時の Phase 4.11 では本番ビルドで実行している可能性があり、`npm run dev`
+  で起動した開発サーバーで実行する前提だった。
 
 ### API レートリミット(429)が出る
 
@@ -78,4 +87,5 @@ JSON と Markdown が自動ダウンロードされる。
 
 ### 一部セルだけ実行したい
 
-- 現在は30セル一括のみ。個別実行が必要な場合は手動で buildReceptionMessages 等を呼ぶ。
+- 現在はこの検証系自体が削除済み。将来再導入する場合は `tools/` 配下の
+  BFF 経由スクリプトとして別 Issue で再設計する。
