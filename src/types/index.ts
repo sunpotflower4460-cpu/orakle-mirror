@@ -207,3 +207,44 @@ export interface GeminiResponse {
 export interface FatalError extends Error {
   fatal?: boolean;
 }
+
+/**
+ * BFF (Cloudflare Workers) のエラーレスポンス型。
+ * 成功時は { text: string }、失敗時は以下の構造。
+ */
+export interface BackendErrorResponse {
+  error: {
+    code: string;
+    message: string;
+  };
+}
+
+/**
+ * BFF が返しうる既知エラーコードの union。
+ * UPSTREAM_ERROR は Gemini 由来エラーを丸めたもの。
+ */
+export type KnownBackendErrorCode =
+  | 'ORIGIN_NOT_ALLOWED'
+  | 'UNSUPPORTED_MEDIA_TYPE'
+  | 'BODY_TOO_LARGE'
+  | 'INVALID_JSON'
+  | 'INVALID_BODY'
+  | 'INVALID_MESSAGES'
+  | 'TOO_MANY_MESSAGES'
+  | 'INVALID_MESSAGE_SHAPE'
+  | 'CONTENT_TOO_LONG'
+  | 'INVALID_SAMPLING'
+  | 'RATE_LIMITED'
+  | 'SERVER_MISCONFIGURED'
+  | 'UPSTREAM_ERROR'
+  | 'NOT_FOUND';
+
+/**
+ * BFF が返しうるエラーコード型。
+ * 既知コードの補完を保ちつつ、未知コードも文字列として受け付ける。
+ *
+ * 現状 buildUserFacingError はランタイムの switch + default フォールバック方式で
+ * 文言を決定しており、型レベルの網羅性チェックは行っていない。
+ * 厳密な網羅性検査は将来的に assertNever ベースの実装へ移行する場合に導入する。
+ */
+export type BackendErrorCode = KnownBackendErrorCode | (string & {});
