@@ -47,7 +47,8 @@ export function isBackendUrlPlaceholder(): boolean {
   return PLACEHOLDER_TOKENS.some((t) => v.includes(t));
 }
 
-// ビルド時に開発者へ警告(本番ビルドのみ)
+// 本番ビルドの起動時に開発者へ警告 (ブラウザ console)。
+// 起動時 fatal への昇格は Phase 7-3 の assertProductionReady() で対応予定。
 if (IS_PROD && isBackendUrlPlaceholder()) {
   // eslint-disable-next-line no-console
   console.warn(

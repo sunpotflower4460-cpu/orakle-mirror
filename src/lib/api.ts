@@ -346,7 +346,8 @@ export async function callLLMWithSampling(
     } catch (e: unknown) {
       const err = e as FatalError;
       if (err?.fatal) throw err;
-      lastError = err instanceof Error ? err : new Error('Network error');
+      lastCode = 'NETWORK_ERROR';
+      lastError = err instanceof Error ? err : new Error(String(e));
     }
 
     if (attempt < MAX_ATTEMPTS - 1) {
