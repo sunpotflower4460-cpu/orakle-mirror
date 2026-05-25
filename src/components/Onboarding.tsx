@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Compass, ArrowRight, ArrowLeft } from 'lucide-react';
 import { PERSONAS } from '../constants/personas';
 import { MODES } from '../constants/modes';
-import { useT } from '../i18n';
+import { LOCALES, useLocale } from '../i18n';
 import type { Mode, PersonaId } from '../types';
 
 interface OnboardingProps {
@@ -28,7 +28,7 @@ function MultiLine({ text }: { text: string }) {
 }
 
 export function Onboarding({ onComplete }: OnboardingProps) {
-  const t = useT();
+  const { locale, setLocale, t } = useLocale();
   const [step, setStep] = useState(0);
   const [selectedPersona, setSelectedPersona] = useState<PersonaId>('lumina');
 
@@ -62,6 +62,20 @@ export function Onboarding({ onComplete }: OnboardingProps) {
         borderRadius: 28, boxShadow: '0 32px 80px rgba(0,0,0,0.12)', border: '1px solid #f1f5f9',
         overflowY: 'auto', padding: 28, display: 'flex', flexDirection: 'column'
       }}>
+        {/* 言語切替(タイトルの時点で日本語／英語を選べる) */}
+        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 8 }}>
+          <div role="group" aria-label={t('help.language')} style={{ display: 'flex', gap: 4, background: '#f8fafc', borderRadius: 999, padding: 3 }}>
+            {LOCALES.map(loc => (
+              <button key={loc} onClick={() => setLocale(loc)} aria-pressed={locale === loc} style={{
+                padding: '6px 12px', minHeight: 36, borderRadius: 999, border: 'none', cursor: 'pointer',
+                fontSize: 11, fontWeight: 700, transition: 'all 0.2s',
+                background: locale === loc ? '#0f172a' : 'transparent',
+                color: locale === loc ? '#fff' : '#94a3b8'
+              }}>{t(`language.${loc}`)}</button>
+            ))}
+          </div>
+        </div>
+
         {/* Step content(切替時に静かにフェード) */}
         <div key={step} style={{ flex: 1, animation: 'fadeIn 0.45s ease', minHeight: 280, display: 'flex', flexDirection: 'column' }}>
           {step === 0 && (
