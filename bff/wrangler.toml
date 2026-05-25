@@ -1,0 +1,17 @@
+name = "oracle-mirror-bff"
+main = "src/index.ts"
+compatibility_date = "2025-01-15"
+compatibility_flags = ["nodejs_compat"]
+
+# 通常変数(Secret ではない)
+[vars]
+GEMINI_MODEL = "gemini-2.5-flash-preview-09-2025"
+# カンマ区切り。デプロイ時に人間が wrangler.toml を編集して差し替えるか、wrangler secret で上書き
+ALLOWED_ORIGINS = "capacitor://localhost,ionic://localhost,http://localhost,http://localhost:5173"
+
+# Secrets は wrangler secret put で別途登録:
+# - GEMINI_API_KEY
+
+# 観測性(Cloudflare ダッシュボードでログが見える)
+[observability]
+enabled = true
