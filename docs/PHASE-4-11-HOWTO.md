@@ -1,9 +1,14 @@
 # Phase 4.11 実機検証手順
 
+> [!NOTE]
+> この手順は Phase 4.11 時点の検証記録です。Phase 5.5 で `src/dev/promptAB.ts`
+> と関連する Gemini 直叩き開発ツールは削除されており、現在のフロントエンドは
+> `VITE_BACKEND_URL` 経由で BFF のみを呼び出します。
+
 ## 前提
 
 - Phase 4.11 までマージ済みであること
-- .env.local に VITE_GEMINI_API_KEY が設定されていること
+- 現在の動作確認では `.env.local` に `VITE_BACKEND_URL` が設定されていること
 - Node 20、npm 10 環境
 
 ## 手順
@@ -28,8 +33,8 @@ const result = await runFullMatrixVerification();
 ```
 
 コンソールに進捗ログが流れる（`[1/30] persona=lumina mode=pure case=短い悩み` のような形式）。  
-完了まで API 呼び出しが約 30 × 2(C/D) × 2(Stage1/Stage2) = 120 回発生する。  
-体感所要時間: 5〜15 分（Gemini のレートと回線依存）。
+完了まで API 呼び出しが多数発生する。  
+体感所要時間は BFF のレート制御と回線に依存する。
 
 ### 4. 結果ダウンロード
 
@@ -67,7 +72,7 @@ JSON と Markdown が自動ダウンロードされる。
 
 ### API レートリミット(429)が出る
 
-- Gemini の無料枠は分間60リクエスト程度。30セル巡回中に上限到達することがある。
+- BFF / upstream provider のレート制御により、30セル巡回中に上限到達することがある。
 - continueOnError: true がデフォルトなので、失敗セルは error フィールドに記録され、次セルへ進む。
 - 完了後、失敗セルのみ再実行する手段は本フェーズでは未実装。失敗が多い場合は時間を空けて再実行。
 
