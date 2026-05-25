@@ -622,6 +622,8 @@ export function MainApp() {
   }
 
   const p = persona;
+  const modeEntries = Object.values(MODES) as Mode[];
+  const activeModeIndex = modeEntries.findIndex(m => m.id === mode.id);
 
   return (
     <div className="app-shell" style={{
@@ -765,17 +767,27 @@ export function MainApp() {
             </div>
           </div>
 
-          <div role="radiogroup" aria-label={t('a11y.modeSelect')} style={{ display: 'flex', background: 'rgba(255,255,255,0.75)', borderRadius: 999, padding: 4, border: '1px solid rgba(0,0,0,0.05)', marginTop: 8, width: 'fit-content', marginLeft: 'auto', marginRight: 'auto' }}>
-            {Object.values(MODES).map((m: Mode) => (
+          <div role="radiogroup" aria-label={t('a11y.modeSelect')} style={{
+            position: 'relative', display: 'flex', background: 'rgba(255,255,255,0.75)', borderRadius: 999,
+            padding: 4, border: '1px solid rgba(0,0,0,0.05)', marginTop: 8,
+            width: 300, maxWidth: '100%', marginLeft: 'auto', marginRight: 'auto'
+          }}>
+            {/* スライドして移動するセグメントインジケータ */}
+            <span aria-hidden="true" style={{
+              position: 'absolute', top: 4, bottom: 4, width: 'calc(50% - 4px)',
+              left: activeModeIndex <= 0 ? 4 : '50%',
+              background: '#0f172a', borderRadius: 999, boxShadow: '0 2px 8px rgba(0,0,0,0.18)',
+              transition: 'left 0.35s cubic-bezier(0.16,1,0.3,1)'
+            }} />
+            {modeEntries.map((m: Mode) => (
               <button key={m.id} role="radio" aria-checked={mode.id === m.id} onClick={() => setMode(m)}
                 style={{
-                  display: 'flex', alignItems: 'center', gap: 6,
-                  padding: '8px 18px', borderRadius: 999, cursor: 'pointer', border: 'none',
+                  position: 'relative', zIndex: 1, flex: '1 1 0',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                  padding: '8px 12px', borderRadius: 999, cursor: 'pointer', border: 'none',
                   whiteSpace: 'nowrap', fontSize: 10, letterSpacing: '0.15em',
-                  textTransform: 'uppercase', fontWeight: 700, transition: 'all 0.2s',
-                  background: mode.id === m.id ? '#0f172a' : 'transparent',
-                  color: mode.id === m.id ? '#fff' : '#9ca3af',
-                  boxShadow: mode.id === m.id ? '0 2px 8px rgba(0,0,0,0.18)' : 'none'
+                  textTransform: 'uppercase', fontWeight: 700, transition: 'color 0.3s', background: 'transparent',
+                  color: mode.id === m.id ? '#fff' : '#9ca3af'
                 }}>
                 {m.icon} {t(`mode.${m.id}.name`)}
               </button>
