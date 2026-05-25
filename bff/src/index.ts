@@ -64,8 +64,8 @@ export default {
     // (大量ペイロードのメモリ消費を抑制する一次防衛)
     const contentLengthHeader = request.headers.get('Content-Length');
     if (contentLengthHeader !== null) {
-      const contentLengthVal = parseInt(contentLengthHeader, 10);
-      if (!isNaN(contentLengthVal) && contentLengthVal > MAX_BODY_BYTES) {
+      const contentLengthVal = Number(contentLengthHeader);
+      if (Number.isFinite(contentLengthVal) && contentLengthVal > MAX_BODY_BYTES) {
         return jsonResponse(413, { error: { code: 'BODY_TOO_LARGE', message: 'Request body exceeds 32KB.' } }, corsHeaders);
       }
     }
@@ -126,7 +126,7 @@ export default {
         result.status >= 500 ? 502 : result.status,
         {
           error: {
-            code: result.code.startsWith('GEMINI_') ? 'UPSTREAM_ERROR' : result.code,
+            code: result.code.startsWith('GEMINI_') || result.code === 'NO_CANDIDATE_TEXT' ? 'UPSTREAM_ERROR' : result.code,
             message: '天との接続が途切れました。少し時間をおいてから再び問いかけてください。',
           },
         },

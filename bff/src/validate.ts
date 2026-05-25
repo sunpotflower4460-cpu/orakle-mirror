@@ -29,9 +29,9 @@ function isChatMessage(v: unknown): v is ChatMessage {
 function isSamplingParams(v: unknown): v is SamplingParams {
   if (typeof v !== 'object' || v === null) return false;
   const s = v as Record<string, unknown>;
-  if (typeof s.temperature !== 'number' || s.temperature < 0 || s.temperature > 2) return false;
-  if (typeof s.topP !== 'number' || s.topP < 0 || s.topP > 1) return false;
-  if (s.topK !== undefined && (typeof s.topK !== 'number' || s.topK < 1 || s.topK > 100)) return false;
+  if (typeof s.temperature !== 'number' || !Number.isFinite(s.temperature) || s.temperature < 0 || s.temperature > 2) return false;
+  if (typeof s.topP !== 'number' || !Number.isFinite(s.topP) || s.topP < 0 || s.topP > 1) return false;
+  if (s.topK !== undefined && (typeof s.topK !== 'number' || !Number.isFinite(s.topK) || s.topK < 1 || s.topK > 100)) return false;
   return true;
 }
 
