@@ -32,9 +32,10 @@ export const BACKEND_URL: string =
  * Phase 7-3 の assertProductionReady() で利用する想定。
  */
 export function isBackendUrlPlaceholder(): boolean {
-  if (!BACKEND_URL) return true;
-  if (BACKEND_URL.includes('your-backend.com')) return true;
-  if (BACKEND_URL.includes('..workers.dev')) return true;
+  const normalized = BACKEND_URL.trim();
+  if (!normalized) return true;
+  if (normalized === 'https://api.your-backend.com/oracle') return true;
+  if (normalized === 'https://oracle-mirror-bff..workers.dev/oracle') return true;
   return false;
 }
 
