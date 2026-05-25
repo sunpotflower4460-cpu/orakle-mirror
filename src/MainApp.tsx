@@ -822,7 +822,7 @@ export function MainApp() {
                     {isUser ? (
                       <div style={{
                         maxWidth: '85%', textAlign: 'right', paddingRight: 18, borderRight: `2px solid ${p.accent}30`,
-                        paddingTop: 8, paddingBottom: 8, animation: 'userReveal 0.5s ease forwards'
+                        paddingTop: 8, paddingBottom: 8, animation: 'userReveal 0.5s cubic-bezier(0.16,1,0.3,1) forwards'
                       }}>
                         <p style={{ fontSize: 15, color: '#64748b', fontStyle: 'italic', fontWeight: 300, lineHeight: 1.8 }}>{msg.text}</p>
                       </div>

@@ -38,6 +38,10 @@ export const GLOBAL_STYLES: string = `
   @keyframes stepReveal { from { opacity:0; transform:translateY(10px); filter:blur(3px); } to { opacity:1; transform:translateY(0); filter:blur(0); } }
   /* 受信中の呼吸するドット */
   @keyframes breathe { 0%,100% { opacity:.3; transform:scale(.8); } 50% { opacity:1; transform:scale(1); } }
+  /* 引かれた象徴(カード)が順に浮かび上がる */
+  @keyframes cardReveal { from { opacity:0; transform:translateY(8px) scale(0.94); filter:blur(2px); } to { opacity:1; transform:translateY(0) scale(1); filter:blur(0); } }
+  /* コピー成功などの小さな確認ポップ */
+  @keyframes pop { 0% { transform:scale(0.6); } 60% { transform:scale(1.15); } 100% { transform:scale(1); } }
   .oracle-bubble .bubble-actions { opacity:0; transition:opacity 0.3s; }
   .oracle-bubble:hover .bubble-actions, .oracle-bubble:focus-within .bubble-actions { opacity:1; }
   .room-row .room-del { opacity:0; transition:opacity 0.2s; }
