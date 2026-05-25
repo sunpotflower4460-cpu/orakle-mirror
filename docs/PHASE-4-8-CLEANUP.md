@@ -40,3 +40,12 @@ Phase 5.5 (プロバイダ抽象化 Gemini ↔ OpenAI 切替) 完了時に、以
 
 - `src/lib/api.ts`: `fetchPreviewAPI`, `fetchBackendAPI`, `buildHistory`, `fetchPreviewAPIv2`, `fetchBackendAPIv2`
 - `src/lib/prompt.ts`: `buildSystemPrompt`, `buildChatMessages`
+
+## Phase 5-2 後の状態（追記）
+
+- フロントエンドの LLM 呼び出しは BFF (`POST {VITE_BACKEND_URL}`) 経由に統一済。
+- `callLLMWithSampling` は BFF 経由の新実装に置き換え完了。
+- 以下の @deprecated 関数は Phase 5.5 で `src/dev/` ごと一括削除予定:
+  - `fetchBackendAPI`, `fetchPreviewAPI`, `fetchPreviewAPIv2`, `fetchBackendAPIv2`, `buildHistory`
+  - `toGeminiPayload`, `extractGeminiText`
+  - `buildSystemPrompt`, `buildChatMessages`

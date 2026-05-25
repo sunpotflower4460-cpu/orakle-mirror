@@ -207,3 +207,35 @@ export interface GeminiResponse {
 export interface FatalError extends Error {
   fatal?: boolean;
 }
+
+/**
+ * BFF (Cloudflare Workers) のエラーレスポンス型。
+ * 成功時は { text: string }、失敗時は以下の構造。
+ */
+export interface BackendErrorResponse {
+  error: {
+    code: string;
+    message: string;
+  };
+}
+
+/**
+ * BFF が返しうるエラーコードの主要パターン(参考定義、網羅ではない)。
+ * UPSTREAM_ERROR は Gemini 由来エラーを丸めたもの。
+ */
+export type BackendErrorCode =
+  | 'ORIGIN_NOT_ALLOWED'
+  | 'UNSUPPORTED_MEDIA_TYPE'
+  | 'BODY_TOO_LARGE'
+  | 'INVALID_JSON'
+  | 'INVALID_BODY'
+  | 'INVALID_MESSAGES'
+  | 'TOO_MANY_MESSAGES'
+  | 'INVALID_MESSAGE_SHAPE'
+  | 'CONTENT_TOO_LONG'
+  | 'INVALID_SAMPLING'
+  | 'RATE_LIMITED'
+  | 'SERVER_MISCONFIGURED'
+  | 'UPSTREAM_ERROR'
+  | 'NOT_FOUND'
+  | string;
