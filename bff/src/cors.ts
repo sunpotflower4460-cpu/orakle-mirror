@@ -7,7 +7,9 @@ import type { Env } from './types';
  */
 export function isOriginAllowed(origin: string | null, env: Env): boolean {
   if (!origin) return false;
-  const allowed = env.ALLOWED_ORIGINS.split(',').map((s) => s.trim()).filter(Boolean);
+  // env.ALLOWED_ORIGINS が未設定でも例外を投げないよう nullish 対策
+  const raw = env.ALLOWED_ORIGINS ?? '';
+  const allowed = raw.split(',').map((s) => s.trim()).filter(Boolean);
   return allowed.includes(origin);
 }
 

@@ -43,10 +43,10 @@ export function toGeminiPayload(messages: ChatMessage[], sampling: SamplingParam
   };
 }
 
-function extractText(data: GeminiResponse): string {
+function extractText(data: GeminiResponse): string | null {
   const cand = data.candidates?.[0];
   const text = cand?.content?.parts?.[0]?.text;
-  return typeof text === 'string' && text.length > 0 ? text : '…沈黙…';
+  return typeof text === 'string' && text.length > 0 ? text : null;
 }
 
 export interface GeminiCallResult {
@@ -67,7 +67,8 @@ export async function callGemini(
   env: Env,
 ): Promise<GeminiCallResult | GeminiCallError> {
   const payload = toGeminiPayload(messages, sampling);
-  const url = `${GEMINI_BASE_URL}/${env.GEMINI_MODEL}:generateContent?key=${env.GEMINI_API_KEY}`;
+  // API キーは URL クエリではなくヘッダで送る(URL はログに残りやすいため)
+  const url = `${GEMINI_BASE_URL}/${env.GEMINI_MODEL}:generateContent`;
 
   let lastError: GeminiCallError | null = null;
 
@@ -75,13 +76,26 @@ export async function callGemini(
     try {
       const res = await fetch(url, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'x-goog-api-key': env.GEMINI_API_KEY,
+        },
         body: JSON.stringify(payload),
       });
 
       if (res.ok) {
         const data = (await res.json()) as GeminiResponse;
-        return { ok: true, text: extractText(data) };
+        const text = extractText(data);
+        if (text === null) {
+          // Gemini が空・ブロック・異常レスポンスを返した場合はエラーとして扱う
+          return {
+            ok: false,
+            status: 502,
+            code: 'NO_CANDIDATE_TEXT',
+            message: 'Gemini returned no usable candidate text',
+          };
+        }
+        return { ok: true, text };
       }
 
       const errJson = (await res.json().catch(() => ({} as { error?: { message?: string } }))) as { error?: { message?: string } };

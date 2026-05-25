@@ -1,7 +1,7 @@
 import type { Env, OracleResponseError, OracleResponseSuccess } from './types';
 import { buildCorsHeaders, handlePreflight, isOriginAllowed } from './cors';
 import { checkRateLimit, getClientIp } from './rateLimit';
-import { validateBodySize, validateRequest } from './validate';
+import { MAX_BODY_BYTES, validateBodySize, validateRequest } from './validate';
 import { callGemini } from './gemini';
 
 function jsonResponse(status: number, body: OracleResponseSuccess | OracleResponseError, corsHeaders: Record<string, string>): Response {
@@ -36,7 +36,12 @@ export default {
       );
     }
 
-    // Origin 検証(本番)
+    // Origin 必須ポリシー:
+    // - ブラウザ呼び出し:Origin ヘッダが必ず付く
+    // - Capacitor (iOS/Android) WebView:capacitor://localhost / ionic://localhost が付く
+    // - サーバー間呼び出し・curl からの直接呼び出しは想定しない(403 で拒否)
+    // 将来サーバー間呼び出しを許可する場合は、API キーや署名ヘッダによる
+    // 別経路の認証を追加すること(CORS だけでは防衛にならない)
     if (!isOriginAllowed(origin, env)) {
       return jsonResponse(
         403,
@@ -53,6 +58,16 @@ export default {
         { error: { code: 'UNSUPPORTED_MEDIA_TYPE', message: 'Content-Type must be application/json' } },
         corsHeaders,
       );
+    }
+
+    // Content-Length が存在する場合は body を読む前に早期拒否する
+    // (大量ペイロードのメモリ消費を抑制する一次防衛)
+    const contentLengthHeader = request.headers.get('Content-Length');
+    if (contentLengthHeader !== null) {
+      const contentLengthVal = parseInt(contentLengthHeader, 10);
+      if (!isNaN(contentLengthVal) && contentLengthVal > MAX_BODY_BYTES) {
+        return jsonResponse(413, { error: { code: 'BODY_TOO_LARGE', message: 'Request body exceeds 32KB.' } }, corsHeaders);
+      }
     }
 
     // ボディサイズ検証

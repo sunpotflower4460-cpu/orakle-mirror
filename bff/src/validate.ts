@@ -5,7 +5,7 @@ export interface ValidationError {
   message: string;
 }
 
-const MAX_BODY_BYTES = 32 * 1024;
+export const MAX_BODY_BYTES = 32 * 1024;
 const MAX_TOTAL_CONTENT_CHARS = 16000;
 const ALLOWED_ROLES = new Set(['system', 'developer', 'user', 'assistant']);
 

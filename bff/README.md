@@ -54,10 +54,11 @@ curl -X POST http://localhost:8787/oracle \
 
 **リクエスト:**
 
-```json
+```js
 {
   "messages": [
-    { "role": "system" | "developer" | "user" | "assistant", "content": "..." }
+    // role は "system" | "developer" | "user" | "assistant" のいずれか
+    { "role": "user", "content": "..." }
   ],
   "sampling": { "temperature": 1.0, "topP": 0.95, "topK": 40 }
 }
@@ -81,6 +82,19 @@ curl -X POST http://localhost:8787/oracle \
 - メッセージ数: 64 件まで
 - メッセージ合計文字数: 16,000 字まで
 - レート制限: IP あたり 20 req/分、200 req/時
+
+### Origin ポリシー
+
+`POST /oracle` は `Origin` ヘッダ必須です。以下の Origin が許可されます:
+
+- `capacitor://localhost`（iOS/Android Capacitor 実機 WebView）
+- `ionic://localhost`
+- `http://localhost`
+- `http://localhost:5173`（Vite 開発サーバー）
+
+`Origin` が付かないリクエスト（サーバー間呼び出し、curl 直接など）は `403 ORIGIN_NOT_ALLOWED` で拒否されます。
+将来サーバー間呼び出しを許可する場合は、API キーや署名ヘッダによる別経路の認証を追加してください
+（CORS だけでは防衛にならない）。
 
 ## デプロイ(人間タスク M-3)
 
