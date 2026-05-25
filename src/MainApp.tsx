@@ -657,14 +657,14 @@ export function MainApp() {
         boxShadow: sidebarOpen ? '8px 0 40px rgba(0,0,0,0.07)' : 'none',
         display: 'flex', flexDirection: 'column'
       }}>
-        <div style={{ paddingTop: 'calc(18px + var(--sat))', paddingLeft: 'calc(14px + var(--sal))', paddingRight: 14, paddingBottom: 10, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
+        <div style={{ paddingTop: 'calc(18px + var(--sat))', paddingLeft: 'calc(14px + var(--sal))', paddingRight: 14, paddingBottom: 10, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0, opacity: sidebarOpen ? 1 : 0, transition: 'opacity 0.3s ease 0.12s' }}>
           <span style={{ fontSize: 10, letterSpacing: '0.4em', fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>Archive</span>
           <button aria-label={t('a11y.newRoom')} onClick={handleNewRoom} style={{ minWidth: 44, minHeight: 44, background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', display: 'flex', alignItems: 'center', justifyContent: 'center', marginRight: -8 }}>
             <Plus size={16}/>
           </button>
         </div>
         
-        <div style={{ flex: 1, overflowY: 'auto', padding: '0 8px 16px', paddingLeft: 'calc(8px + var(--sal))' }}>
+        <div style={{ flex: 1, overflowY: 'auto', padding: '0 8px 16px', paddingLeft: 'calc(8px + var(--sal))', opacity: sidebarOpen ? 1 : 0, transition: 'opacity 0.3s ease 0.12s' }}>
           {rooms.length === 0 && (
             <p style={{ fontSize: 11, color: '#cbd5e1', textAlign: 'center', padding: '20px 8px', whiteSpace: 'nowrap' }}>{t('sidebar.empty')}</p>
           )}
@@ -697,7 +697,7 @@ export function MainApp() {
         </div>
         
         {/* サイドバー下部：サブスクリプション導線 */}
-        <div style={{ padding: '16px', paddingLeft: 'calc(16px + var(--sal))', borderTop: '1px solid #f1f5f9', background: '#f8fafc', paddingBottom: 'calc(16px + var(--sab))', flexShrink: 0 }}>
+        <div style={{ padding: '16px', paddingLeft: 'calc(16px + var(--sal))', borderTop: '1px solid #f1f5f9', background: '#f8fafc', paddingBottom: 'calc(16px + var(--sab))', flexShrink: 0, opacity: sidebarOpen ? 1 : 0, transition: 'opacity 0.3s ease 0.12s' }}>
           <div style={{ fontSize: 10, letterSpacing: '0.2em', color: '#94a3b8', textTransform: 'uppercase', marginBottom: 12, fontWeight: 700 }}>Subscription</div>
           {isPremium ? (
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#10b981', fontSize: 12, fontWeight: 700 }}>
@@ -798,21 +798,22 @@ export function MainApp() {
         <div style={{ flex: 1, overflowY: 'auto', padding: '24px calc(18px + var(--sar)) 24px calc(18px + var(--sal))' }}>
           <div style={{ maxWidth: 660, margin: '0 auto' }}>
             {messages.length === 0 && !isLoading && (
-              <div style={{ minHeight: '40vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 24, animation: 'fadeIn 1.4s ease forwards' }}>
-                <div style={{ position: 'relative' }}>
+              <div style={{ minHeight: '40vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 24 }}>
+                <div style={{ position: 'relative', animation: 'oracleReveal 1s cubic-bezier(0.16,1,0.3,1) 0.05s both' }}>
                   <div style={{ position: 'absolute', inset: -20, background: `radial-gradient(circle, ${p.accent}22 0%, transparent 70%)`, animation: 'pulse 3s ease-in-out infinite', borderRadius: '50%' }}/>
                   <Compass size={56} strokeWidth={0.6} style={{ color: '#cbd5e1', animation: 'spinSlow 80s linear infinite', position: 'relative' }}/>
                 </div>
-                <div style={{ textAlign: 'center' }}>
+                <div style={{ textAlign: 'center', animation: 'fadeIn 0.9s cubic-bezier(0.16,1,0.3,1) 0.3s both' }}>
                   <h2 style={{ fontSize: 18, letterSpacing: '0.5em', fontWeight: 300, color: '#94a3b8', textTransform: 'uppercase', marginBottom: 8 }}>Oracle Mirror</h2>
                   <p style={{ fontSize: 10, letterSpacing: '0.45em', color: '#cbd5e1', textTransform: 'uppercase', fontWeight: 700 }}>Reflection of Higher Self</p>
                 </div>
                 <div style={{ display: 'flex', gap: 10, marginTop: 8, justifyContent: 'center', width: '100%', maxWidth: 360 }}>
-                  {Object.values(PERSONAS).map(px => (
+                  {Object.values(PERSONAS).map((px, pi) => (
                     <button key={px.id} onClick={() => setPersona(px)} aria-label={t('a11y.selectPersona', { name: px.name })}
                       style={{
                         flex: '1 1 0', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6,
                         padding: '16px 8px', borderRadius: 18, cursor: 'pointer', border: 'none',
+                        animation: `fadeIn 0.7s cubic-bezier(0.16,1,0.3,1) ${0.5 + pi * 0.1}s both`,
                         background: persona.id === px.id ? '#fff' : 'rgba(255,255,255,0.5)',
                         boxShadow: persona.id === px.id ? `0 4px 20px ${px.accent}20,0 0 0 1px ${px.border}` : 'inset 0 0 0 1px rgba(0,0,0,0.04)',
                         transition: 'all 0.3s'
