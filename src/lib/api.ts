@@ -129,6 +129,10 @@ export const buildHistory = (messages: Message[], newUserText: string): GeminiHi
 // ────────────────────────────────────────────────────────
 // 内部 ChatMessage[] を Gemini API の payload に変換
 // ────────────────────────────────────────────────────────
+/**
+ * @deprecated Phase 5.5 のプロバイダ抽象化完了時に削除予定。
+ * fetchPreviewAPIv2 からのみ参照。
+ */
 export const toGeminiPayload = (messages: ChatMessage[]): GeminiPayload => {
   const systemTexts: string[] = [];
   const conversation: ChatMessage[] = [];
@@ -169,6 +173,10 @@ const getGeminiApiKey = (): string => {
   }
 };
 
+/**
+ * @deprecated Phase 5.5 のプロバイダ抽象化完了時に削除予定。
+ * fetchPreviewAPIv2 からのみ参照。
+ */
 const extractGeminiText = (data: GeminiResponse): string => {
   return (data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts && data.candidates[0].content.parts[0] && data.candidates[0].content.parts[0].text) || '…沈黙…';
 };
@@ -297,9 +305,11 @@ export async function callLLMWithSampling(
     throw err;
   }
 
+  // MAX_ATTEMPTS = 試行上限回数。RETRY_DELAYS_MS の要素数は必ず MAX_ATTEMPTS - 1 にすること。
   const MAX_ATTEMPTS = 3;
-  const RETRY_DELAYS_MS = [500, 1500, 3500];
+  const RETRY_DELAYS_MS = [500, 1500]; // MAX_ATTEMPTS - 1 = 2 要素
   let lastError: Error | null = null;
+  let lastCode: string | null = null;
 
   for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
     try {
@@ -330,6 +340,8 @@ export async function callLLMWithSampling(
         throw err;
       }
 
+      // リトライ可能エラー: コードを保持して次の試行へ
+      lastCode = code;
       lastError = new Error(message);
     } catch (e: unknown) {
       const err = e as FatalError;
@@ -342,9 +354,12 @@ export async function callLLMWithSampling(
     }
   }
 
-  const err = new Error(
-    '天との接続が安定しません。少し時間をおいてから再び問いかけてください。',
-  ) as FatalError & { cause?: unknown };
+  // 全試行失敗: 最後のエラーコードに応じたユーザー向け文言を返す
+  // (例: 429 が連続した場合は RATE_LIMITED 文言になる)
+  const finalMsg = lastCode
+    ? buildUserFacingError(lastCode, lastError?.message ?? '')
+    : '天との接続が安定しません。少し時間をおいてから再び問いかけてください。';
+  const err = new Error(finalMsg) as FatalError & { cause?: unknown };
   err.fatal = true;
   err.cause = lastError ?? undefined;
   throw err;

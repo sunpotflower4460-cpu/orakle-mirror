@@ -220,10 +220,10 @@ export interface BackendErrorResponse {
 }
 
 /**
- * BFF が返しうるエラーコードの主要パターン(参考定義、網羅ではない)。
+ * BFF が返しうる既知エラーコードの union。
  * UPSTREAM_ERROR は Gemini 由来エラーを丸めたもの。
  */
-export type BackendErrorCode =
+export type KnownBackendErrorCode =
   | 'ORIGIN_NOT_ALLOWED'
   | 'UNSUPPORTED_MEDIA_TYPE'
   | 'BODY_TOO_LARGE'
@@ -237,5 +237,11 @@ export type BackendErrorCode =
   | 'RATE_LIMITED'
   | 'SERVER_MISCONFIGURED'
   | 'UPSTREAM_ERROR'
-  | 'NOT_FOUND'
-  | string;
+  | 'NOT_FOUND';
+
+/**
+ * BFF が返しうるエラーコード型。
+ * 既知コードの補完を保ちつつ、未知コードも文字列として受け付ける。
+ * buildUserFacingError の網羅性チェックは KnownBackendErrorCode で行うこと。
+ */
+export type BackendErrorCode = KnownBackendErrorCode | (string & {});

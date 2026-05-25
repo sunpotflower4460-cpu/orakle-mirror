@@ -29,14 +29,22 @@ export const BACKEND_URL: string =
 
 /**
  * BACKEND_URL がプレースホルダ／未設定であるかを判定する。
+ * 部分一致で既知のプレースホルダー断片を検出する。
+ *
  * Phase 7-3 の assertProductionReady() で利用する想定。
+ * 現時点ではビルド時の console.warn にのみ使用し、起動時 fatal は Phase 7-3 で実装予定。
  */
 export function isBackendUrlPlaceholder(): boolean {
-  const normalized = BACKEND_URL.trim();
-  if (!normalized) return true;
-  if (normalized === 'https://api.your-backend.com/oracle') return true;
-  if (normalized === 'https://oracle-mirror-bff..workers.dev/oracle') return true;
-  return false;
+  const v = BACKEND_URL.trim();
+  if (!v) return true;
+  // 既知のプレースホルダー断片 (部分一致)
+  const PLACEHOLDER_TOKENS = [
+    'your-backend.com',
+    '<subdomain>',
+    'your-subdomain',
+    'oracle-mirror-bff..workers.dev', // 二重ドットの誤コピー
+  ];
+  return PLACEHOLDER_TOKENS.some((t) => v.includes(t));
 }
 
 // ビルド時に開発者へ警告(本番ビルドのみ)
