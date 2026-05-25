@@ -17,7 +17,7 @@ import {
   buildSystemPrompt,
 } from '../lib/prompt';
 import { buildHistory, fetchOracleTwoStage, fetchPreviewAPI, fetchPreviewAPIv2, toGeminiPayload } from '../lib/api';
-import type { ChatMessage, Message, Mode, OracleCard, Persona } from '../types';
+import type { ChatMessage, Message, Mode, ModeId, OracleCard, Persona, PersonaId } from '../types';
 
 const TEST_CASES: Array<{ label: string; query: string; mode: Mode; cards: OracleCard[] }> = [
   {
@@ -56,6 +56,44 @@ const TEST_CASES: Array<{ label: string; query: string; mode: Mode; cards: Oracl
   },
 ];
 
+export interface MatrixCellResult {
+  cellNumber: number;
+  personaId: PersonaId;
+  modeId: ModeId;
+  caseLabel: string;
+  query: string;
+  cPatternRaw: string | null;
+  cPatternFinal: string | null;
+  dPatternRaw: string | null;
+  dPatternFinal: string | null;
+  latencyMs: {
+    cTotal: number | null;
+    dTotal: number | null;
+  };
+  error: string | null;
+  timestamp: string;
+}
+
+export interface MatrixVerificationResult {
+  startedAt: string;
+  finishedAt: string;
+  totalCells: number;
+  succeededCells: number;
+  failedCells: number;
+  cells: MatrixCellResult[];
+}
+
+type DevWindow = Window & typeof globalThis & {
+  __abResults?: unknown;
+  __matrixResult?: MatrixVerificationResult;
+  runFullMatrixVerification?: typeof runFullMatrixVerification;
+  downloadMatrixResultAsJson?: typeof downloadMatrixResultAsJson;
+  downloadMatrixResultAsMarkdown?: typeof downloadMatrixResultAsMarkdown;
+};
+
+/**
+ * @deprecated Phase 4.11 以降は runFullMatrixVerification を使用してください。
+ */
 export const runABComparison = async (): Promise<void> => {
   const results: Array<{
     label: string;
@@ -113,7 +151,98 @@ export const runABComparison = async (): Promise<void> => {
     );
   }
 
-  (window as any).__abResults = results;
+  (window as DevWindow).__abResults = results;
+};
+
+const finalizeMatrixResult = (
+  cells: MatrixCellResult[],
+  startedAt: string
+): MatrixVerificationResult => ({
+  startedAt,
+  finishedAt: new Date().toISOString(),
+  totalCells: cells.length,
+  succeededCells: cells.filter((c) => c.error === null).length,
+  failedCells: cells.filter((c) => c.error !== null).length,
+  cells,
+});
+
+export const runFullMatrixVerification = async (
+  options: {
+    onProgress?: (cellNumber: number, total: number, label: string) => void;
+    continueOnError?: boolean;
+  } = {}
+): Promise<MatrixVerificationResult> => {
+  const { onProgress, continueOnError = true } = options;
+  const personas = [PERSONAS.lumina, PERSONAS.zenith, PERSONAS.archivist] as Persona[];
+  const modes = [MODES.PURE, MODES.CARD] as Mode[];
+  const cards3 = TEST_CASES[3].cards;
+  const cells: MatrixCellResult[] = [];
+  const startedAt = new Date().toISOString();
+  let cellNumber = 0;
+  const total = personas.length * modes.length * TEST_CASES.length;
+
+  for (const persona of personas) {
+    for (const mode of modes) {
+      for (const tc of TEST_CASES) {
+        cellNumber += 1;
+        const cards = mode.id === 'card' ? cards3 : [];
+        const label = `persona=${persona.id} mode=${mode.id} case=${tc.label}`;
+        onProgress?.(cellNumber, total, label);
+        console.log(`[${cellNumber}/${total}] ${label}`);
+
+        const cell: MatrixCellResult = {
+          cellNumber,
+          personaId: persona.id,
+          modeId: mode.id,
+          caseLabel: tc.label,
+          query: tc.query,
+          cPatternRaw: null,
+          cPatternFinal: null,
+          dPatternRaw: null,
+          dPatternFinal: null,
+          latencyMs: { cTotal: null, dTotal: null },
+          error: null,
+          timestamp: new Date().toISOString(),
+        };
+
+        try {
+          const cStart = performance.now();
+          const cMsgs = buildReceptionMessagesWithoutTuning(persona, mode, cards, [], tc.query);
+          const cResult = await fetchOracleTwoStage(cMsgs, (raw) => buildDiscernmentMessages(persona, raw));
+          cell.cPatternRaw = cResult.raw;
+          cell.cPatternFinal = cResult.final;
+          cell.latencyMs.cTotal = performance.now() - cStart;
+
+          const dStart = performance.now();
+          const dMsgs = buildReceptionMessages(persona, mode, cards, [], tc.query);
+          const dResult = await fetchOracleTwoStage(dMsgs, (raw) => buildDiscernmentMessages(persona, raw));
+          cell.dPatternRaw = dResult.raw;
+          cell.dPatternFinal = dResult.final;
+          cell.latencyMs.dTotal = performance.now() - dStart;
+
+          console.log(
+            `[${cellNumber}/${total}] ${label} (cMs=${cell.latencyMs.cTotal.toFixed(0)}, dMs=${cell.latencyMs.dTotal.toFixed(0)})`
+          );
+        } catch (e: unknown) {
+          cell.error = e instanceof Error ? e.message : String(e);
+          console.error(`[${cellNumber}/${total}] FAILED: ${label}`, cell.error);
+          cells.push(cell);
+          if (!continueOnError) {
+            const result = finalizeMatrixResult(cells, startedAt);
+            (window as DevWindow).__matrixResult = result;
+            return result;
+          }
+          continue;
+        }
+
+        cells.push(cell);
+      }
+    }
+  }
+
+  const result = finalizeMatrixResult(cells, startedAt);
+  (window as DevWindow).__matrixResult = result;
+  return result;
 };
 
 const buildReceptionMessagesWithoutTuning = (
@@ -154,3 +283,77 @@ const buildReceptionMessagesWithoutTuning = (
     { role: 'user', content: userInput },
   ];
 };
+
+/**
+ * 検証結果を JSON ファイルとしてダウンロードする。
+ * ブラウザのコンソールから呼び出すことを想定。
+ */
+export const downloadMatrixResultAsJson = (
+  result: MatrixVerificationResult,
+  filename = `phase-4-9-4-10-verification-${Date.now()}.json`
+): void => {
+  const blob = new Blob([JSON.stringify(result, null, 2)], {
+    type: 'application/json',
+  });
+  triggerDownload(blob, filename);
+};
+
+/**
+ * 検証結果を Markdown 表として整形してダウンロードする。
+ * 30セル全てを Phase 4.9 検証テンプレートの形式に合わせる。
+ */
+export const downloadMatrixResultAsMarkdown = (
+  result: MatrixVerificationResult,
+  filename = `phase-4-9-4-10-verification-${Date.now()}.md`
+): void => {
+  const md = renderMatrixMarkdown(result);
+  const blob = new Blob([md], { type: 'text/markdown' });
+  triggerDownload(blob, filename);
+};
+
+const triggerDownload = (blob: Blob, filename: string): void => {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+};
+
+const renderMatrixMarkdown = (result: MatrixVerificationResult): string => {
+  const header = [
+    '# Phase 4.9 + 4.10 Verification Result',
+    '',
+    `- Started: ${result.startedAt}`,
+    `- Finished: ${result.finishedAt}`,
+    `- Total: ${result.totalCells} / Succeeded: ${result.succeededCells} / Failed: ${result.failedCells}`,
+    '',
+    '## Matrix',
+    '',
+    '| # | Persona | Mode | Case | C Raw | C Final | D Raw | D Final | C ms | D ms | Error |',
+    '|---|---|---|---|---|---|---|---|---|---|---|',
+  ];
+  const rows = result.cells.map((c) => {
+    const escapeCell = (s: string | null): string =>
+      s === null
+        ? ''
+        : s
+            .replace(/\\/g, '\\\\')
+            .replace(/\|/g, '\\|')
+            .replace(/\r?\n/g, '')
+            .slice(0, 200);
+
+    return `| ${c.cellNumber} | ${c.personaId} | ${c.modeId} | ${escapeCell(c.caseLabel)} | ${escapeCell(c.cPatternRaw)} | ${escapeCell(c.cPatternFinal)} | ${escapeCell(c.dPatternRaw)} | ${escapeCell(c.dPatternFinal)} | ${c.latencyMs.cTotal?.toFixed(0) ?? ''} | ${c.latencyMs.dTotal?.toFixed(0) ?? ''} | ${escapeCell(c.error)} |`;
+  });
+
+  return [...header, ...rows, ''].join('\n');
+};
+
+if (typeof window !== 'undefined' && import.meta.env.DEV) {
+  const devWindow = window as DevWindow;
+  devWindow.runFullMatrixVerification = runFullMatrixVerification;
+  devWindow.downloadMatrixResultAsJson = downloadMatrixResultAsJson;
+  devWindow.downloadMatrixResultAsMarkdown = downloadMatrixResultAsMarkdown;
+}
