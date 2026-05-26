@@ -64,28 +64,12 @@ export interface Storage {
   roomOrder: string[];
 }
 
-// ─── Gemini API ────────────────────────────────────────
-export interface GeminiHistoryPart {
-  text: string;
-}
-
-export interface GeminiHistoryEntry {
-  role: Role;
-  parts: GeminiHistoryPart[];
-}
-
 // ─── Chat Message(プロバイダ非依存の内部表現) ──────────
 export type ChatRole = 'system' | 'developer' | 'user' | 'assistant';
 
 export interface ChatMessage {
   role: ChatRole;
   content: string;
-}
-
-// Gemini 出力形式(既存の GeminiHistoryEntry と systemInstruction を合わせた形)
-export interface GeminiPayload {
-  contents: GeminiHistoryEntry[];
-  systemInstruction: { parts: GeminiHistoryPart[] };
 }
 
 // ─── Capacitor Plugin Mocks ────────────────────────────
@@ -191,17 +175,6 @@ export type SamplingParams = {
   topP: number;
   topK?: number;
 };
-
-// ─── Gemini API Response ───────────────────────────────
-export interface GeminiResponseCandidate {
-  content: {
-    parts: { text: string }[];
-  };
-}
-
-export interface GeminiResponse {
-  candidates?: GeminiResponseCandidate[];
-}
 
 // ─── API Error ─────────────────────────────────────────
 export interface FatalError extends Error {

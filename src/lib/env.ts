@@ -17,6 +17,8 @@ export const IS_PROD: boolean = (() => {
  * 本番: .env.production または Vite ビルド時の環境変数で
  *       https://oracle-mirror-bff.<subdomain>.workers.dev/oracle を指定
  *
+ * フロントエンドは Phase 5.5 以降この URL だけを見ており、
+ * LLM プロバイダ固有の情報は BFF 側に閉じ込める。
  * 未設定の場合、本番ビルドの実行時(ランタイム)に callLLMWithSampling 側でエラーを投げる。
  */
 export const BACKEND_URL: string =
@@ -30,8 +32,8 @@ export const BACKEND_URL: string =
  * BACKEND_URL がプレースホルダ／未設定であるかを判定する。
  * 部分一致で既知のプレースホルダー断片を検出する。
  *
- * Phase 7-3 の assertProductionReady() で利用する想定。
- * 現時点ではビルド時の console.warn にのみ使用し、起動時 fatal は Phase 7-3 で実装予定。
+ * 現時点ではビルド時の console.warn と callLLMWithSampling の実行時ガードに利用する。
+ * 将来 assertProductionReady() のような本番前検査を導入する場合も、この判定を再利用できる。
  */
 export function isBackendUrlPlaceholder(): boolean {
   const v = BACKEND_URL.trim();
