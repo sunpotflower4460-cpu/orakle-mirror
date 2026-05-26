@@ -76,6 +76,7 @@ export function MainApp() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const mainRef        = useRef<HTMLElement>(null);
   const asideRef       = useRef<HTMLElement>(null);
+  const prevRoomIdRef  = useRef<string | null>(null);
 
   useEffect(() => {
     const href = 'https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@300;400;700&display=swap';
@@ -316,11 +317,17 @@ export function MainApp() {
 
   useEffect(() => {
     if (!messagesEndRef.current) return;
+    // 同じルーム内の更新はなめらかに追従、ルーム切替時は即座に最下部へ。
+    const sameRoom = prevRoomIdRef.current === activeRoomId;
+    prevRoomIdRef.current = activeRoomId;
+    const prefersReduced = typeof window !== 'undefined' && typeof window.matchMedia === 'function'
+      && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const behavior: ScrollBehavior = sameRoom && !prefersReduced ? 'smooth' : 'auto';
     const timer = setTimeout(() => {
-      messagesEndRef.current?.scrollIntoView({ behavior: 'auto', block: 'end' });
+      messagesEndRef.current?.scrollIntoView({ behavior, block: 'end' });
     }, 50);
     return () => clearTimeout(timer);
-  }, [messages.length, isLoading]);
+  }, [messages.length, isLoading, activeRoomId]);
 
   useEffect(() => {
     if (keyboardPadding !== '0px' && messagesEndRef.current) {
@@ -745,14 +752,13 @@ export function MainApp() {
 
             <div style={{ display: 'flex', alignItems: 'center', gap: 0, flexShrink: 0 }}>
               {Object.values(PERSONAS).map(px => (
-                <button key={px.id} onClick={() => setPersona(px)} title={px.name} aria-label={t('a11y.switchPersona', { name: px.name })} aria-pressed={persona.id === px.id}
+                <button key={px.id} className="persona-dot" onClick={() => setPersona(px)} title={px.name} aria-label={t('a11y.switchPersona', { name: px.name })} aria-pressed={persona.id === px.id}
                   style={{
                     minWidth: 40, minHeight: 40, borderRadius: 999, cursor: 'pointer', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center',
                     background: persona.id === px.id ? '#fff' : 'transparent',
                     color: persona.id === px.id ? px.accent : '#d1d5db',
                     boxShadow: persona.id === px.id ? `0 2px 10px ${px.accent}22,0 0 0 1px ${px.border}` : 'none',
-                    transform: persona.id === px.id ? 'scale(1.1)' : 'scale(1)',
-                    transition: 'all 0.25s', flexShrink: 0
+                    flexShrink: 0
                   }}>{px.icon}</button>
               ))}
               <div style={{ width: 1, height: 16, background: '#e5e7eb', margin: '0 6px', flexShrink: 0 }}/>

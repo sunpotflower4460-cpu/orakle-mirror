@@ -29,6 +29,7 @@ export const GLOBAL_STYLES: string = `
   @keyframes userReveal { from { opacity:0; transform:translateX(10px); } to { opacity:1; transform:translateX(0); } }
   @keyframes fadeIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
   @keyframes fadeUp { from { opacity:0; transform:translateX(-50%) translateY(8px); } to { opacity:1; transform:translateX(-50%) translateY(0); } }
+  @keyframes fadeDownOut { from { opacity:1; transform:translateX(-50%) translateY(0); } to { opacity:0; transform:translateX(-50%) translateY(-8px); } }
   @keyframes spin { to { transform:rotate(360deg); } }
   @keyframes spinSlow { to { transform:rotate(360deg); } }
   @keyframes pulse { 0%,100%{opacity:.25} 50%{opacity:.65} }
@@ -49,6 +50,12 @@ export const GLOBAL_STYLES: string = `
   .send-btn { transition:transform 0.2s cubic-bezier(0.16,1,0.3,1); }
   .send-btn:hover:not(:disabled) { transform:scale(1.07); }
   .send-btn:active:not(:disabled) { transform:scale(0.92); }
+
+  /* ヘッダーのペルソナ切替ドット(色は動的なのでインライン、動きは共通化) */
+  .persona-dot { transform:scale(1); transition:background 0.25s, color 0.25s, box-shadow 0.25s, transform 0.25s cubic-bezier(0.16,1,0.3,1); }
+  .persona-dot[aria-pressed="true"] { transform:scale(1.1); }
+  .persona-dot:hover:not([aria-pressed="true"]) { transform:scale(1.1); }
+  .persona-dot:active { transform:scale(0.92); }
 
   /* キーボード操作時のみ表示されるアクセシブルなフォーカスリング(世界基準) */
   :focus-visible { outline:2px solid rgba(99,102,241,0.55); outline-offset:2px; border-radius:10px; }
