@@ -40,3 +40,25 @@ Phase 5.5 (プロバイダ抽象化 Gemini ↔ OpenAI 切替) 完了時に、以
 
 - `src/lib/api.ts`: `fetchPreviewAPI`, `fetchBackendAPI`, `buildHistory`, `fetchPreviewAPIv2`, `fetchBackendAPIv2`
 - `src/lib/prompt.ts`: `buildSystemPrompt`, `buildChatMessages`
+
+## Phase 5-2 後の状態（追記）
+
+- フロントエンドの LLM 呼び出しは BFF (`POST {VITE_BACKEND_URL}`) 経由に統一済。
+- `callLLMWithSampling` は BFF 経由の新実装に置き換え完了。`VITE_GEMINI_API_KEY` はフロント側では未使用になった。
+- `isBackendUrlPlaceholder()` はプレースホルダー断片（`<subdomain>` 等）の部分一致検出に強化済。
+- 以下の `@deprecated` 関数は Phase 5.5 で `src/dev/` ごと一括削除予定:
+  - `fetchBackendAPI`, `fetchPreviewAPI`, `fetchBackendAPIv2`, `fetchPreviewAPIv2`, `buildHistory`
+  - `toGeminiPayload`, `extractGeminiText`
+  - `getBackendUrl()`, Gemini 直叩き関連定数（`GEMINI_MODEL`, `GEMINI_URL`, `DEFAULT_SAMPLING`, `RETRY_DELAYS`, `MAX_RETRIES`, `RETRYABLE_STATUSES`, `getGeminiApiKey`）
+  - `src/lib/prompt.ts`: `buildSystemPrompt`, `buildChatMessages`
+
+### Phase 5.5 チェックリスト（予告）
+
+- [ ] `src/dev/promptAB.ts` および上記 `@deprecated` 関数群の削除
+- [ ] Cloudflare Workers / ホスティング環境変数から `VITE_GEMINI_API_KEY` を削除
+- [ ] `VITE_GEMINI_API_KEY` を `.env.example` からも削除
+
+### 疎通確認 TODO（Phase 6.5 完了後に実施）
+
+- [ ] Vite dev (`http://localhost:5173`) → BFF (`http://localhost:8787/oracle`) で 200 が返ること、Network タブで `/oracle` への POST のみ発生していること
+- [ ] Capacitor 実機（iOS シミュレータ可）から `capacitor://localhost` Origin で BFF が 200 を返すこと
