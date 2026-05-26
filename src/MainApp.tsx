@@ -21,10 +21,13 @@ import { Toast } from './components/Toast';
 import { SubscribeModal } from './components/SubscribeModal';
 import { HelpModal } from './components/HelpModal';
 import { OracleBubble } from './components/OracleBubble';
-import type { Storage, OracleCard, Message, PersonaId } from './types';
+import { Onboarding } from './components/Onboarding';
+import { useT } from './i18n';
+import type { Storage, OracleCard, Message, PersonaId, Mode } from './types';
 
 // ─── Main App ─────────────────────────────────────────────────────────────────
 export function MainApp() {
+  const t = useT();
   const [isStorageLoaded, setIsStorageLoaded] = useState<boolean>(false);
   const [storage,         setStorage]         = useState<Storage>({ rooms: {}, roomOrder: [] });
   const [keyboardPadding, setKeyboardPadding] = useState<string>('0px');
@@ -57,6 +60,8 @@ export function MainApp() {
 
   const [sidebarOpen,  setSidebarOpen]  = useState<boolean>(false);
   const [showHelp,     setShowHelp]     = useState<boolean>(false);
+  const [showOnboarding, setShowOnboarding] = useState<boolean>(false);
+  const [inputFocused, setInputFocused] = useState<boolean>(false);
   const [toast,        setToast]        = useState<string | null>(null);
   const [persona,      setPersona]      = useState(PERSONAS.lumina);
   const [mode,         setMode]         = useState(MODES.PURE);
@@ -165,32 +170,39 @@ export function MainApp() {
       let parsedStorage = { rooms: {}, roomOrder: [] };
       let premiumStatus = false;
       let todayCount = 0;
+      let hasOnboarded = true;
       const today = new Date().toDateString();
 
       try {
         const { value: historyVal } = await Preferences.get({ key: LS_KEY });
         if (historyVal) parsedStorage = JSON.parse(historyVal);
-        
+
         const { value: premiumVal } = await Preferences.get({ key: 'app_is_premium' });
         premiumStatus = premiumVal === 'true';
-        
+
         const { value: usageVal } = await Preferences.get({ key: 'app_usage_data' });
         if (usageVal) {
           const parsed = JSON.parse(usageVal);
           if (parsed.date === today) todayCount = parsed.count || 0;
         }
 
+        // 既存ユーザー(対話履歴あり)には初回オンボーディングを出さない。
+        const hasExistingData = Array.isArray(parsedStorage.roomOrder) && parsedStorage.roomOrder.length > 0;
+        const { value: onboardedVal } = await Preferences.get({ key: 'app_onboarded' });
+        hasOnboarded = onboardedVal === 'true' || hasExistingData;
+
         const LEGACY_KEYS = Array.from({ length: 15 }, (_, i) => `oracle_mirror_v${i + 1}`);
         await Promise.allSettled(LEGACY_KEYS.map(key => Preferences.remove({ key })));
-      } catch (e) { 
-        console.error('Storage Init Error', e); 
+      } catch (e) {
+        console.error('Storage Init Error', e);
       }
-      
+
       safeStartTransition(() => {
         setStorage(parsedStorage);
         setIsPremium(premiumStatus);
         setUsageCount(todayCount);
         setLastUsageDate(today);
+        setShowOnboarding(!hasOnboarded);
         setIsStorageLoaded(true);
       });
     };
@@ -237,16 +249,16 @@ export function MainApp() {
       if (isActive) {
         await Preferences.set({ key: 'app_is_premium', value: 'true' });
         setIsPremium(true);
-        showToast('無限の導きが解放されました');
+        showToast(t('subscribe.unlocked'));
         setShowSubscribeModal(false);
       }
     } catch (e: unknown) {
       const err = e as { code?: string };
-      if (err.code !== 'PURCHASE_CANCELLED') showToast('購入処理に失敗しました');
+      if (err.code !== 'PURCHASE_CANCELLED') showToast(t('subscribe.purchaseFailed'));
     } finally {
       setIsPurchasing(false);
     }
-  }, [showToast, isPurchasing]);
+  }, [showToast, isPurchasing, t]);
 
   const handleRestore = useCallback(async () => {
     if (isPurchasing) return;
@@ -258,17 +270,17 @@ export function MainApp() {
       if (isActive) {
         await Preferences.set({ key: 'app_is_premium', value: 'true' });
         setIsPremium(true);
-        showToast('購入を復元しました');
+        showToast(t('subscribe.restored'));
         setShowSubscribeModal(false);
       } else {
-        showToast('復元可能な購入履歴がありません');
+        showToast(t('subscribe.noRestore'));
       }
     } catch (e) {
-      showToast('復元処理に失敗しました');
+      showToast(t('subscribe.restoreFailed'));
     } finally {
       setIsPurchasing(false);
     }
-  }, [showToast, isPurchasing]);
+  }, [showToast, isPurchasing, t]);
 
   const canUseOracleRef = useRef(false);
   const canUseOracle = useMemo(() => {
@@ -334,10 +346,10 @@ export function MainApp() {
   const handleCopy = useCallback(async (text: string, id?: string): Promise<void> => {
     const ok = await clip(text);
     if (!ok) {
-      showToast('コピーに失敗しました');
+      showToast(t('toast.copyFailed'));
       return;
     }
-    
+
     if (id !== undefined && id !== null) {
       setCopiedId(id);
       if (copiedTimerRef.current) clearTimeout(copiedTimerRef.current);
@@ -346,18 +358,18 @@ export function MainApp() {
         copiedTimerRef.current = null;
       }, 2000);
     } else {
-      showToast('コピーしました');
+      showToast(t('toast.copied'));
     }
-  }, [showToast]);
+  }, [showToast, t]);
 
   const handleShareApp = useCallback(async () => {
     await Share.share({
       title: 'Oracle Mirror',
-      text: '純粋な鏡を通じて、内なる声を聞く。',
+      text: t('share.text'),
       url: 'https://oraclemirror.app',
-      dialogTitle: 'オラクルミラーを共有'
+      dialogTitle: t('share.dialogTitle')
     });
-  }, []);
+  }, [t]);
 
   const handleSend = useCallback(async () => {
     const text = input.trim();
@@ -443,8 +455,8 @@ export function MainApp() {
       playMagicSound();
       incrementUsage();
 
-    } catch (e: unknown) { 
-      setError(e instanceof Error ? e.message : '天との接続でエラーが発生しました'); 
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : t('error.connection'));
       setStorage(prev => {
         const room = prev.rooms[targetRoomId];
         if (!room) return prev;
@@ -470,7 +482,7 @@ export function MainApp() {
       setInput(text);
     }
     finally { setIsLoading(false); }
-  }, [input, activeRoomId, persona, mode, incrementUsage]);
+  }, [input, activeRoomId, persona, mode, incrementUsage, t]);
 
   const handleSwitch = useCallback(async (msgIdx: number, targetPersonaId: PersonaId): Promise<void> => {
     if (isLoadingRef.current || regenIdRef.current || !activeRoomId) return;
@@ -506,7 +518,7 @@ export function MainApp() {
     }
     
     if (!userTextToRegenerate) {
-      showToast('元の問いが見つかりませんでした');
+      showToast(t('toast.questionNotFound'));
       setRegenId(null);
       return;
     }
@@ -551,10 +563,10 @@ export function MainApp() {
       playMagicSound();
       incrementUsage();
 
-    } catch (e: unknown) { setError(e instanceof Error ? e.message : '天との接続でエラーが発生しました'); }
+    } catch (e: unknown) { setError(e instanceof Error ? e.message : t('error.connection')); }
     finally { setRegenId(null); }
 
-  }, [activeRoomId, incrementUsage, showToast]);
+  }, [activeRoomId, incrementUsage, showToast, t]);
 
   const handleDeleteRoom = useCallback((roomId: string, e: React.MouseEvent<HTMLButtonElement>): void => {
     e.stopPropagation();
@@ -571,6 +583,12 @@ export function MainApp() {
 
   const handleNewRoom = useCallback(() => {
     setActiveRoomId(null); setSidebarOpen(false); setError(null); setInput('');
+  }, []);
+
+  const handleOnboardingComplete = useCallback((selectedPersona?: PersonaId) => {
+    Preferences.set({ key: 'app_onboarded', value: 'true' }).catch(console.error);
+    if (selectedPersona) setPersona(PERSONAS[selectedPersona]);
+    setShowOnboarding(false);
   }, []);
 
   const isPhysicalKeyboardRef = useRef(false);
@@ -604,6 +622,8 @@ export function MainApp() {
   }
 
   const p = persona;
+  const modeEntries = Object.values(MODES) as Mode[];
+  const activeModeIndex = modeEntries.findIndex(m => m.id === mode.id);
 
   return (
     <div className="app-shell" style={{
@@ -615,6 +635,7 @@ export function MainApp() {
       <style>{GLOBAL_STYLES}</style>
 
       {toast && <Toast message={toast} onDone={clearToast}/>}
+      {showOnboarding && <Onboarding onComplete={handleOnboardingComplete}/>}
       {showHelp && <HelpModal onClose={() => setShowHelp(false)}/>}
       {showSubscribeModal && <SubscribeModal onClose={() => setShowSubscribeModal(false)} onSubscribe={handleSubscribe} onRestore={handleRestore} isPurchasing={isPurchasing} />}
 
@@ -626,7 +647,7 @@ export function MainApp() {
       )}
 
       {/* Sidebar */}
-      <aside ref={asideRef} aria-label="アーカイブ" style={{
+      <aside ref={asideRef} aria-label={t('a11y.archive')} style={{
         position: 'fixed', left: 0, top: 0, bottom: 0, zIndex: 99,
         width: sidebarOpen ? 260 : 0,
         background: 'rgba(255,255,255,0.98)', 
@@ -636,16 +657,16 @@ export function MainApp() {
         boxShadow: sidebarOpen ? '8px 0 40px rgba(0,0,0,0.07)' : 'none',
         display: 'flex', flexDirection: 'column'
       }}>
-        <div style={{ paddingTop: 'calc(18px + var(--sat))', paddingLeft: 'calc(14px + var(--sal))', paddingRight: 14, paddingBottom: 10, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
+        <div style={{ paddingTop: 'calc(18px + var(--sat))', paddingLeft: 'calc(14px + var(--sal))', paddingRight: 14, paddingBottom: 10, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0, opacity: sidebarOpen ? 1 : 0, transition: 'opacity 0.3s ease 0.12s' }}>
           <span style={{ fontSize: 10, letterSpacing: '0.4em', fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>Archive</span>
-          <button aria-label="新規ルーム" onClick={handleNewRoom} style={{ minWidth: 44, minHeight: 44, background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', display: 'flex', alignItems: 'center', justifyContent: 'center', marginRight: -8 }}>
+          <button aria-label={t('a11y.newRoom')} onClick={handleNewRoom} style={{ minWidth: 44, minHeight: 44, background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', display: 'flex', alignItems: 'center', justifyContent: 'center', marginRight: -8 }}>
             <Plus size={16}/>
           </button>
         </div>
         
-        <div style={{ flex: 1, overflowY: 'auto', padding: '0 8px 16px', paddingLeft: 'calc(8px + var(--sal))' }}>
+        <div style={{ flex: 1, overflowY: 'auto', padding: '0 8px 16px', paddingLeft: 'calc(8px + var(--sal))', opacity: sidebarOpen ? 1 : 0, transition: 'opacity 0.3s ease 0.12s' }}>
           {rooms.length === 0 && (
-            <p style={{ fontSize: 11, color: '#cbd5e1', textAlign: 'center', padding: '20px 8px', whiteSpace: 'nowrap' }}>まだ対話がありません</p>
+            <p style={{ fontSize: 11, color: '#cbd5e1', textAlign: 'center', padding: '20px 8px', whiteSpace: 'nowrap' }}>{t('sidebar.empty')}</p>
           )}
           {rooms.map(room => {
             const isActive = activeRoomId === room.id;
@@ -666,7 +687,7 @@ export function MainApp() {
                 <span style={{ fontSize: 13, color: isActive ? '#374151' : '#64748b', fontWeight: isActive ? 600 : 400, overflow: 'hidden', textOverflow: 'ellipsis', flex: 1, whiteSpace: 'nowrap' }}>
                   {room.title || 'Divine Echo'}
                 </span>
-                <button className="room-del" aria-label="ルーム削除" onClick={e => handleDeleteRoom(room.id, e)}
+                <button className="room-del" aria-label={t('a11y.deleteRoom')} onClick={e => handleDeleteRoom(room.id, e)}
                   style={{ minWidth: 36, minHeight: 36, background: 'none', border: 'none', cursor: 'pointer', color: '#cbd5e1', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginRight: -6 }}>
                   <Trash2 size={13}/>
                 </button>
@@ -676,25 +697,25 @@ export function MainApp() {
         </div>
         
         {/* サイドバー下部：サブスクリプション導線 */}
-        <div style={{ padding: '16px', paddingLeft: 'calc(16px + var(--sal))', borderTop: '1px solid #f1f5f9', background: '#f8fafc', paddingBottom: 'calc(16px + var(--sab))', flexShrink: 0 }}>
+        <div style={{ padding: '16px', paddingLeft: 'calc(16px + var(--sal))', borderTop: '1px solid #f1f5f9', background: '#f8fafc', paddingBottom: 'calc(16px + var(--sab))', flexShrink: 0, opacity: sidebarOpen ? 1 : 0, transition: 'opacity 0.3s ease 0.12s' }}>
           <div style={{ fontSize: 10, letterSpacing: '0.2em', color: '#94a3b8', textTransform: 'uppercase', marginBottom: 12, fontWeight: 700 }}>Subscription</div>
           {isPremium ? (
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#10b981', fontSize: 12, fontWeight: 700 }}>
-              <Unlock size={14} /> 無限の導き（解放済）
+              <Unlock size={14} /> {t('subscription.unlimited')}
             </div>
           ) : (
             <div>
               <div style={{ fontSize: 12, color: '#64748b', marginBottom: 10, display: 'flex', justifyContent: 'space-between' }}>
-                <span>本日の残り</span>
+                <span>{t('subscription.remainingToday')}</span>
                 {/* 修正: remainingDisplayの型を明示的にチェックし、NaNによる予期せぬ挙動を防止 */}
-                <span style={{ fontWeight: 700, color: typeof remainingDisplay === 'number' && remainingDisplay > 0 ? '#334155' : '#f43f5e' }}>{remainingDisplay} 回</span>
+                <span style={{ fontWeight: 700, color: typeof remainingDisplay === 'number' && remainingDisplay > 0 ? '#334155' : '#f43f5e' }}>{t('subscription.remainingCount', { count: remainingDisplay })}</span>
               </div>
               <button onClick={() => setShowSubscribeModal(true)} style={{
                 width: '100%', padding: '10px 0', background: '#0f172a', color: '#fff',
                 borderRadius: 8, fontSize: 11, fontWeight: 700, cursor: 'pointer', border: 'none',
                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6
               }}>
-                <Lock size={12} /> プレミアムを解放
+                <Lock size={12} /> {t('subscription.unlockPremium')}
               </button>
             </div>
           )}
@@ -709,7 +730,7 @@ export function MainApp() {
         }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
-              <button aria-label="メニュー" aria-expanded={sidebarOpen} onClick={() => setSidebarOpen(v => !v)}
+              <button aria-label={t('a11y.menu')} aria-expanded={sidebarOpen} onClick={() => setSidebarOpen(v => !v)}
                 style={{ minWidth: 44, minHeight: 44, background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 10, flexShrink: 0 }}>
                 <Menu size={18}/>
               </button>
@@ -724,7 +745,7 @@ export function MainApp() {
 
             <div style={{ display: 'flex', alignItems: 'center', gap: 0, flexShrink: 0 }}>
               {Object.values(PERSONAS).map(px => (
-                <button key={px.id} onClick={() => setPersona(px)} title={px.name} aria-label={`${px.name}に変更`} aria-pressed={persona.id === px.id}
+                <button key={px.id} onClick={() => setPersona(px)} title={px.name} aria-label={t('a11y.switchPersona', { name: px.name })} aria-pressed={persona.id === px.id}
                   style={{
                     minWidth: 40, minHeight: 40, borderRadius: 999, cursor: 'pointer', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center',
                     background: persona.id === px.id ? '#fff' : 'transparent',
@@ -735,30 +756,40 @@ export function MainApp() {
                   }}>{px.icon}</button>
               ))}
               <div style={{ width: 1, height: 16, background: '#e5e7eb', margin: '0 6px', flexShrink: 0 }}/>
-              <button aria-label="ヘルプ" onClick={() => setShowHelp(true)}
+              <button aria-label={t('a11y.help')} onClick={() => setShowHelp(true)}
                 style={{ minWidth: 40, minHeight: 40, background: 'none', border: 'none', cursor: 'pointer', color: '#d1d5db', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 8, flexShrink: 0 }}>
                 <HelpCircle size={16} strokeWidth={1.5}/>
               </button>
-              <button aria-label="共有する" onClick={handleShareApp}
+              <button aria-label={t('a11y.share')} onClick={handleShareApp}
                 style={{ minWidth: 40, minHeight: 40, background: 'none', border: 'none', cursor: 'pointer', color: '#d1d5db', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 8, flexShrink: 0 }}>
                 <Share2 size={16} strokeWidth={1.5}/>
               </button>
             </div>
           </div>
 
-          <div role="radiogroup" aria-label="モード選択" style={{ display: 'flex', background: 'rgba(255,255,255,0.75)', borderRadius: 999, padding: 4, border: '1px solid rgba(0,0,0,0.05)', marginTop: 8, width: 'fit-content', marginLeft: 'auto', marginRight: 'auto' }}>
-            {Object.values(MODES).map(m => (
+          <div role="radiogroup" aria-label={t('a11y.modeSelect')} style={{
+            position: 'relative', display: 'flex', background: 'rgba(255,255,255,0.75)', borderRadius: 999,
+            padding: 4, border: '1px solid rgba(0,0,0,0.05)', marginTop: 8,
+            width: 300, maxWidth: '100%', marginLeft: 'auto', marginRight: 'auto'
+          }}>
+            {/* スライドして移動するセグメントインジケータ */}
+            <span aria-hidden="true" style={{
+              position: 'absolute', top: 4, bottom: 4, width: 'calc(50% - 4px)',
+              left: activeModeIndex <= 0 ? 4 : '50%',
+              background: '#0f172a', borderRadius: 999, boxShadow: '0 2px 8px rgba(0,0,0,0.18)',
+              transition: 'left 0.35s cubic-bezier(0.16,1,0.3,1)'
+            }} />
+            {modeEntries.map((m: Mode) => (
               <button key={m.id} role="radio" aria-checked={mode.id === m.id} onClick={() => setMode(m)}
                 style={{
-                  display: 'flex', alignItems: 'center', gap: 6,
-                  padding: '8px 18px', borderRadius: 999, cursor: 'pointer', border: 'none',
+                  position: 'relative', zIndex: 1, flex: '1 1 0',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                  padding: '8px 12px', borderRadius: 999, cursor: 'pointer', border: 'none',
                   whiteSpace: 'nowrap', fontSize: 10, letterSpacing: '0.15em',
-                  textTransform: 'uppercase', fontWeight: 700, transition: 'all 0.2s',
-                  background: mode.id === m.id ? '#0f172a' : 'transparent',
-                  color: mode.id === m.id ? '#fff' : '#9ca3af',
-                  boxShadow: mode.id === m.id ? '0 2px 8px rgba(0,0,0,0.18)' : 'none'
+                  textTransform: 'uppercase', fontWeight: 700, transition: 'color 0.3s', background: 'transparent',
+                  color: mode.id === m.id ? '#fff' : '#9ca3af'
                 }}>
-                {m.icon} {m.name}
+                {m.icon} {t(`mode.${m.id}.name`)}
               </button>
             ))}
           </div>
@@ -767,28 +798,29 @@ export function MainApp() {
         <div style={{ flex: 1, overflowY: 'auto', padding: '24px calc(18px + var(--sar)) 24px calc(18px + var(--sal))' }}>
           <div style={{ maxWidth: 660, margin: '0 auto' }}>
             {messages.length === 0 && !isLoading && (
-              <div style={{ minHeight: '40vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 24, animation: 'fadeIn 1.4s ease forwards' }}>
-                <div style={{ position: 'relative' }}>
+              <div style={{ minHeight: '40vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 24 }}>
+                <div style={{ position: 'relative', animation: 'oracleReveal 1s cubic-bezier(0.16,1,0.3,1) 0.05s both' }}>
                   <div style={{ position: 'absolute', inset: -20, background: `radial-gradient(circle, ${p.accent}22 0%, transparent 70%)`, animation: 'pulse 3s ease-in-out infinite', borderRadius: '50%' }}/>
                   <Compass size={56} strokeWidth={0.6} style={{ color: '#cbd5e1', animation: 'spinSlow 80s linear infinite', position: 'relative' }}/>
                 </div>
-                <div style={{ textAlign: 'center' }}>
+                <div style={{ textAlign: 'center', animation: 'fadeIn 0.9s cubic-bezier(0.16,1,0.3,1) 0.3s both' }}>
                   <h2 style={{ fontSize: 18, letterSpacing: '0.5em', fontWeight: 300, color: '#94a3b8', textTransform: 'uppercase', marginBottom: 8 }}>Oracle Mirror</h2>
                   <p style={{ fontSize: 10, letterSpacing: '0.45em', color: '#cbd5e1', textTransform: 'uppercase', fontWeight: 700 }}>Reflection of Higher Self</p>
                 </div>
                 <div style={{ display: 'flex', gap: 10, marginTop: 8, justifyContent: 'center', width: '100%', maxWidth: 360 }}>
-                  {Object.values(PERSONAS).map(px => (
-                    <button key={px.id} onClick={() => setPersona(px)} aria-label={`${px.name}を選択`}
+                  {Object.values(PERSONAS).map((px, pi) => (
+                    <button key={px.id} onClick={() => setPersona(px)} aria-label={t('a11y.selectPersona', { name: px.name })}
                       style={{
                         flex: '1 1 0', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6,
                         padding: '16px 8px', borderRadius: 18, cursor: 'pointer', border: 'none',
+                        animation: `fadeIn 0.7s cubic-bezier(0.16,1,0.3,1) ${0.5 + pi * 0.1}s both`,
                         background: persona.id === px.id ? '#fff' : 'rgba(255,255,255,0.5)',
                         boxShadow: persona.id === px.id ? `0 4px 20px ${px.accent}20,0 0 0 1px ${px.border}` : 'inset 0 0 0 1px rgba(0,0,0,0.04)',
                         transition: 'all 0.3s'
                       }}>
                       <span style={{ color: px.accent }}>{px.icon}</span>
                       <span style={{ fontSize: 10, letterSpacing: '0.15em', textTransform: 'uppercase', fontWeight: 700, color: px.accent, whiteSpace: 'nowrap' }}>{px.name}</span>
-                      <span style={{ fontSize: 9, color: '#94a3b8', whiteSpace: 'nowrap' }}>{px.title}</span>
+                      <span style={{ fontSize: 9, color: '#94a3b8', whiteSpace: 'nowrap' }}>{t(`persona.${px.id}.title`)}</span>
                     </button>
                   ))}
                 </div>
@@ -803,7 +835,7 @@ export function MainApp() {
                     {isUser ? (
                       <div style={{
                         maxWidth: '85%', textAlign: 'right', paddingRight: 18, borderRight: `2px solid ${p.accent}30`,
-                        paddingTop: 8, paddingBottom: 8, animation: 'userReveal 0.5s ease forwards'
+                        paddingTop: 8, paddingBottom: 8, animation: 'userReveal 0.5s cubic-bezier(0.16,1,0.3,1) forwards'
                       }}>
                         <p style={{ fontSize: 15, color: '#64748b', fontStyle: 'italic', fontWeight: 300, lineHeight: 1.8 }}>{msg.text}</p>
                       </div>
@@ -817,10 +849,14 @@ export function MainApp() {
               })}
 
               {isLoading && (
-                <div aria-busy="true" style={{ display: 'flex', justifyContent: 'flex-start', animation: 'fadeIn 0.3s ease' }}>
-                  <div style={{ padding: '20px 26px', background: 'rgba(255,255,255,0.95)', borderRadius: 24, border: `1px solid ${p.border}`, display: 'flex', alignItems: 'center', gap: 12 }}>
-                    <Loader2 size={16} style={{ color: p.accent, animation: 'spin 1s linear infinite' }}/>
-                    <span style={{ fontSize: 11, color: '#94a3b8', letterSpacing: '0.15em' }}>天の流れを受信中…</span>
+                <div aria-busy="true" style={{ display: 'flex', justifyContent: 'flex-start', animation: 'oracleReveal 0.6s cubic-bezier(0.16,1,0.3,1)' }}>
+                  <div style={{ padding: '20px 26px', background: 'rgba(255,255,255,0.95)', borderRadius: 24, border: `1px solid ${p.border}`, display: 'flex', alignItems: 'center', gap: 14, boxShadow: `0 8px 32px ${p.accent}12` }}>
+                    <div style={{ display: 'flex', gap: 5 }} aria-hidden="true">
+                      {[0, 1, 2].map(i => (
+                        <span key={i} style={{ width: 6, height: 6, borderRadius: 999, background: p.accent, animation: `breathe 1.4s ease-in-out ${i * 0.18}s infinite` }} />
+                      ))}
+                    </div>
+                    <span style={{ fontSize: 11, color: '#94a3b8', letterSpacing: '0.15em' }}>{t('status.receiving')}</span>
                   </div>
                 </div>
               )}
@@ -829,13 +865,13 @@ export function MainApp() {
                 <div role="alert" style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 16px', background: '#fff1f2', borderRadius: 16, border: '1px solid #fecdd3', animation: 'fadeIn 0.3s ease' }}>
                   <AlertCircle size={16} style={{ color: '#f43f5e', flexShrink: 0 }}/>
                   <span style={{ fontSize: 13, color: '#be123c', flex: 1 }}>{error}</span>
-                  <button aria-label="エラーを閉じる" onClick={() => setError(null)} style={{ minWidth: 32, minHeight: 32, background: 'none', border: 'none', cursor: 'pointer', color: '#fca5a5', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={14}/></button>
+                  <button aria-label={t('a11y.closeError')} onClick={() => setError(null)} style={{ minWidth: 32, minHeight: 32, background: 'none', border: 'none', cursor: 'pointer', color: '#fca5a5', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={14}/></button>
                 </div>
               )}
               <div ref={messagesEndRef}/>
               
               <div className="sr-only" aria-live="polite" aria-atomic="true">
-                {isLoading ? '天の流れを受信中…' : (messages.length > 0 && messages[messages.length - 1].role === 'model' ? '神託が届きました' : '')}
+                {isLoading ? t('status.receiving') : (messages.length > 0 && messages[messages.length - 1].role === 'model' ? t('status.received') : '')}
               </div>
             </div>
           </div>
@@ -848,18 +884,24 @@ export function MainApp() {
             : `8px calc(14px + var(--sar)) calc(12px + var(--sab)) calc(14px + var(--sal))`, 
           flexShrink: 0 
         }}>
-          <div style={{
+          <div className="input-shell" style={{
             display: 'flex', alignItems: 'flex-end', gap: 8, background: 'rgba(255,255,255,0.95)', backdropFilter: 'blur(8px)',
-            borderRadius: 28, padding: '8px 8px 8px 20px', border: `1px solid ${p.border}`,
-            boxShadow: `0 4px 24px ${p.accent}12, 0 1px 6px rgba(0,0,0,0.04)`, transition: 'box-shadow 0.4s, border-color 0.4s'
+            borderRadius: 28, padding: '8px 8px 8px 20px',
+            border: `1px solid ${inputFocused ? `${p.accent}66` : p.border}`,
+            transform: inputFocused ? 'translateY(-1px)' : 'translateY(0)',
+            boxShadow: inputFocused
+              ? `0 8px 34px ${p.accent}2e, 0 1px 6px rgba(0,0,0,0.05)`
+              : `0 4px 24px ${p.accent}12, 0 1px 6px rgba(0,0,0,0.04)`
           }}>
             <textarea
               ref={textareaRef}
               value={input}
               onChange={e => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder={isLocked ? "今日の神託は終わりました" : "あなたの問いを鏡へ…"}
-              aria-label="メッセージ入力"
+              onFocus={() => setInputFocused(true)}
+              onBlur={() => setInputFocused(false)}
+              placeholder={isLocked ? t('input.locked') : t('input.placeholder')}
+              aria-label={t('a11y.messageInput')}
               rows={1}
               disabled={isLocked}
               style={{
@@ -873,7 +915,7 @@ export function MainApp() {
             {/* ボタンの disabled 条件は isLoading 時に限定。
               isLocked 状態でもタップ可能にし、onClick イベント側でガード（モーダルを開く処理）を発火させる。
             */}
-            <button aria-label="送信" 
+            <button aria-label={t('a11y.send')}
               onClick={() => {
                 if (isLocked) {
                   setShowSubscribeModal(true);

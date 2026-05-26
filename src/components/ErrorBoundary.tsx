@@ -1,5 +1,6 @@
 import React, { Component, ReactNode, ErrorInfo } from 'react';
 import { AlertCircle } from 'lucide-react';
+import { detectLocale, translate } from '../i18n';
 
 // ─── Error Boundary ───────────────────────────────────────────────────────────
 
@@ -24,13 +25,15 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
 
   render(): ReactNode {
     if (this.state.hasError) {
+      // LocaleProvider の外側で描画されるため、端末言語から直接翻訳を引く。
+      const locale = detectLocale();
       return (
         <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: '#0f172a', color: '#f1f5f9', fontFamily: 'sans-serif', padding: 20, paddingTop: 'env(safe-area-inset-top, 20px)', textAlign: 'center' }}>
           <AlertCircle size={48} color="#f43f5e" style={{ marginBottom: 20 }} />
-          <h2 style={{ fontSize: 18, marginBottom: 10, letterSpacing: '0.1em' }}>予期せぬエラーが発生しました</h2>
-          <p style={{ fontSize: 14, color: '#94a3b8', marginBottom: 30 }}>お手数ですが、アプリを再読み込みしてください。</p>
+          <h2 style={{ fontSize: 18, marginBottom: 10, letterSpacing: '0.1em' }}>{translate(locale, 'errorBoundary.title')}</h2>
+          <p style={{ fontSize: 14, color: '#94a3b8', marginBottom: 30 }}>{translate(locale, 'errorBoundary.body')}</p>
           <button onClick={() => window.location.reload()} style={{ padding: '12px 24px', background: '#334155', color: '#fff', border: 'none', borderRadius: 999, fontSize: 14, fontWeight: 'bold', cursor: 'pointer' }}>
-            再読み込み
+            {translate(locale, 'errorBoundary.reload')}
           </button>
         </div>
       );

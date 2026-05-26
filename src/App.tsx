@@ -25,11 +25,14 @@ import React from 'react';
 
 import { MainApp } from './MainApp';
 import { ErrorBoundary } from './components/ErrorBoundary';
+import { LocaleProvider } from './i18n';
 
 export default function App(): JSX.Element {
   return (
     <ErrorBoundary>
-      <MainApp />
+      <LocaleProvider>
+        <MainApp />
+      </LocaleProvider>
     </ErrorBoundary>
   );
 }

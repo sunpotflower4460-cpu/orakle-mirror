@@ -112,6 +112,11 @@ npm run typecheck
     │   └── personas.tsx
     ├── dev/
     │   └── promptAB.ts
+    ├── i18n/
+    │   ├── index.tsx
+    │   └── locales/
+    │       ├── ja.ts
+    │       └── en.ts
     ├── lib/
     │   ├── api.ts
     │   ├── audio.ts
@@ -127,6 +132,18 @@ npm run typecheck
         ├── global.d.ts
         └── index.ts
 ```
+
+## 多言語対応 (i18n)
+
+グローバル展開に向けて、UI 文言を型安全な自前 i18n 基盤で管理する(外部ライブラリ非依存)。
+
+- 辞書: `src/i18n/locales/ja.ts`(正準)と `en.ts`。`ja.ts` のキー集合が `MessageKey` 型となり、他ロケールの欠落キーは型エラーになる。
+- 使い方: コンポーネントで `const t = useT();` → `t('key')` / `t('key', { name })`。コンテキスト外(`ErrorBoundary`)は `translate(detectLocale(), key)` を使う。
+- 既定言語: 端末言語が日本語なら `ja`、それ以外は `en`。ユーザーが選択した言語は Capacitor Preferences の `app_locale` に保存され、端末言語より優先される。手動切替はヘルプ(Mirror Guide)から。
+- 新規言語の追加: `src/i18n/locales/<locale>.ts` を `en.ts` と同じ要領で追加し、`Locale` 型と `LOCALES` / `DICTIONARIES` に登録する。
+- 補足: 神託応答そのものの言語(`constants/personas.tsx` の system / `lib/prompt.ts`)は本基盤の対象外。プロンプト多言語化は別フェーズで扱う。
+
+対応言語は現状 **日本語 / 英語**。
 
 ## iOS ビルド手順
 
