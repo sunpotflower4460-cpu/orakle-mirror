@@ -13,6 +13,7 @@ import { LS_KEY, genId, FREE_LIMIT, MAX_ROOMS } from './lib/constants';
 import { buildDiscernmentMessages, buildReceptionMessages } from './lib/prompt';
 import { clip } from './lib/clipboard';
 import { getAudioContext, playMagicSound } from './lib/audio';
+import { haptic } from './lib/haptics';
 import { IS_PROD, USE_JS_KEYBOARD_PADDING } from './lib/env';
 import { safeStartTransition } from './lib/react-compat';
 import { Preferences, Share, Purchases, SplashScreen, Keyboard, StatusBar } from './lib/capacitorMocks';
@@ -250,6 +251,7 @@ export function MainApp() {
       if (isActive) {
         await Preferences.set({ key: 'app_is_premium', value: 'true' });
         setIsPremium(true);
+        haptic('success');
         showToast(t('subscribe.unlocked'));
         setShowSubscribeModal(false);
       }
@@ -387,8 +389,9 @@ export function MainApp() {
     }
 
     const currentStorage = storageRef.current;
-    
-    getAudioContext(); 
+
+    haptic('light');
+    getAudioContext();
     setInput(''); setError(null); setIsLoading(true);
 
     const targetRoomId = activeRoomId || genId();
@@ -460,6 +463,7 @@ export function MainApp() {
       });
       
       playMagicSound();
+      haptic('success');
       incrementUsage();
 
     } catch (e: unknown) {
@@ -568,6 +572,7 @@ export function MainApp() {
       });
 
       playMagicSound();
+      haptic('success');
       incrementUsage();
 
     } catch (e: unknown) { setError(e instanceof Error ? e.message : t('error.connection')); }
@@ -625,7 +630,15 @@ export function MainApp() {
   }, [handleSend, isLocked]);
 
   if (!isStorageLoaded) {
-    return <div className="app-shell" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', background: PERSONAS.lumina.soft }}><Loader2 size={24} style={{ color: PERSONAS.lumina.accent, animation: 'spin 1s linear infinite' }}/></div>;
+    return (
+      <div className="app-shell" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', background: PERSONAS.lumina.soft }}>
+        <div style={{ display: 'flex', gap: 6 }} aria-hidden="true">
+          {[0, 1, 2].map(i => (
+            <span key={i} style={{ width: 7, height: 7, borderRadius: 999, background: PERSONAS.lumina.accent, animation: `breathe 1.4s ease-in-out ${i * 0.18}s infinite` }} />
+          ))}
+        </div>
+      </div>
+    );
   }
 
   const p = persona;
@@ -752,7 +765,7 @@ export function MainApp() {
 
             <div style={{ display: 'flex', alignItems: 'center', gap: 0, flexShrink: 0 }}>
               {Object.values(PERSONAS).map(px => (
-                <button key={px.id} className="persona-dot" onClick={() => setPersona(px)} title={px.name} aria-label={t('a11y.switchPersona', { name: px.name })} aria-pressed={persona.id === px.id}
+                <button key={px.id} className="persona-dot" onClick={() => { haptic('light'); setPersona(px); }} title={px.name} aria-label={t('a11y.switchPersona', { name: px.name })} aria-pressed={persona.id === px.id}
                   style={{
                     minWidth: 40, minHeight: 40, borderRadius: 999, cursor: 'pointer', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center',
                     background: persona.id === px.id ? '#fff' : 'transparent',
@@ -786,7 +799,7 @@ export function MainApp() {
               transition: 'left 0.35s cubic-bezier(0.16,1,0.3,1)'
             }} />
             {modeEntries.map((m: Mode) => (
-              <button key={m.id} role="radio" aria-checked={mode.id === m.id} onClick={() => setMode(m)}
+              <button key={m.id} role="radio" aria-checked={mode.id === m.id} onClick={() => { haptic('light'); setMode(m); }}
                 style={{
                   position: 'relative', zIndex: 1, flex: '1 1 0',
                   display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
@@ -815,7 +828,7 @@ export function MainApp() {
                 </div>
                 <div style={{ display: 'flex', gap: 10, marginTop: 8, justifyContent: 'center', width: '100%', maxWidth: 360 }}>
                   {Object.values(PERSONAS).map((px, pi) => (
-                    <button key={px.id} onClick={() => setPersona(px)} aria-label={t('a11y.selectPersona', { name: px.name })}
+                    <button key={px.id} onClick={() => { haptic('light'); setPersona(px); }} aria-label={t('a11y.selectPersona', { name: px.name })}
                       style={{
                         flex: '1 1 0', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6,
                         padding: '16px 8px', borderRadius: 18, cursor: 'pointer', border: 'none',
@@ -915,7 +928,7 @@ export function MainApp() {
                 resize: 'none', fontWeight: 300, color: '#374151', fontSize: 16,
                 lineHeight: 1.6, overflowY: 'hidden', maxHeight: 120,
                 fontFamily: 'inherit', caretColor: p.accent, paddingTop: 6, paddingBottom: 6,
-                opacity: isLocked ? 0.5 : 1
+                opacity: isLocked ? 0.5 : 1, transition: 'height 0.15s ease, opacity 0.3s ease'
               }}
             />
             {/* ボタンの disabled 条件は isLoading 時に限定。
