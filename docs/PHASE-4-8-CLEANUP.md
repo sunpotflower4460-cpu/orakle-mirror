@@ -17,11 +17,11 @@
 - `buildSystemPrompt` (Phase 4.5 以前の単一プロンプト)
 - `buildChatMessages` (Phase 4.5 の 4 層プロンプト構造、二段階処理に置換)
 
-## 本番コードからの参照状況
+## 本番コードからの参照状況 (Phase 4.8 時点)
 
 - 本番コード (src/MainApp.tsx、src/App.tsx) からの参照: 0 件
 - src/dev/promptAB.ts からの参照のみ (A/B/C 比較用途)
-- src/dev/ は vite.config.ts で本番ビルドから除外されている
+- src/dev/ は vite.config.ts で本番ビルドから除外されていた
 
 ## 本番安全ガード (Phase 4.8 で追加)
 
@@ -62,3 +62,47 @@ Phase 5.5 (プロバイダ抽象化 Gemini ↔ OpenAI 切替) 完了時に、以
 
 - [ ] Vite dev (`http://localhost:5173`) → BFF (`http://localhost:8787/oracle`) で 200 が返ること、Network タブで `/oracle` への POST のみ発生していること
 - [ ] Capacitor 実機（iOS シミュレータ可）から `capacitor://localhost` Origin で BFF が 200 を返すこと
+
+## Phase 5.5 完了後の状態
+
+Phase 5.5 で、フロントエンドは BFF クライアントに完全に純化された。削除済み項目は以下のとおり。
+
+### 削除済み関数・定数
+
+- `src/lib/api.ts`
+  - `fetchBackendAPI`
+  - `fetchPreviewAPI`
+  - `fetchBackendAPIv2`
+  - `fetchPreviewAPIv2`
+  - `buildHistory`
+  - `toGeminiPayload`
+  - `extractGeminiText`
+  - `getGeminiApiKey`
+  - `getBackendUrl`
+  - `BACKEND_URL_PLACEHOLDER`
+  - `GEMINI_MODEL`
+  - `GEMINI_URL`
+  - `DEFAULT_SAMPLING`
+  - `RETRY_DELAYS`
+  - `MAX_RETRIES`
+  - `RETRYABLE_STATUSES`
+
+### 削除済み型
+
+- `src/types/index.ts`
+  - `GeminiHistoryPart`
+  - `GeminiHistoryEntry`
+  - `GeminiPayload`
+  - `GeminiResponseCandidate`
+  - `GeminiResponse`
+
+### 削除済みファイル
+
+- `src/dev/promptAB.ts`
+
+### Phase 5.5 以降にフロント側へ残すもの
+
+- LLM 呼び出し入口: `callLLMWithSampling()`
+- 二段階処理: `fetchOracleTwoStage()`
+- タグ抽出: `extractTag()`
+- プロバイダ非依存型: `ChatMessage`, `SamplingParams`, `BackendErrorResponse`, `KnownBackendErrorCode`, `BackendErrorCode`

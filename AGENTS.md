@@ -19,16 +19,16 @@ Orakle Mirror — Agent Working Rules
 
 - Vite + React 18 + TypeScript (strict: true)
 - Capacitor 6 統合済み (ios/ ディレクトリ生成済み、プラグインはモック)
-- ファイル分割完了 (src/components, src/constants, src/lib, src/styles, src/types, src/dev)
+- ファイル分割完了 (src/components, src/constants, src/lib, src/styles, src/types)
 - プロンプト構造: 二段階受信処理 (Stage 1 純粋受信 → Stage 2 識別と調律)
   - src/lib/prompt.ts: buildReceptionMessages / buildDiscernmentMessages
   - src/lib/api.ts: fetchOracleTwoStage / callLLMWithSampling
-- LLM プロバイダ: Gemini (gemini-2.5-flash-preview-09-2025)
-  - 開発時: VITE_GEMINI_API_KEY で直接呼び出し
-  - 本番時: VITE_BACKEND_URL 経由で BFF 呼び出し (Phase 5 で実装)
+- LLM プロバイダ境界: フロントは VITE_BACKEND_URL 経由で BFF を呼び出す
+  - フロントエンドは provider 固有 API / キー / URL を保持しない
+  - BFF 側で Gemini 実装を吸収し、将来の provider 切替境界とする
 - Capacitor プラグインはすべて src/lib/capacitorMocks.ts のモック (Phase 6 で差し替え)
 - ストレージキー: LS_KEY = 'oracle_mirror_v16'
-- 旧 API / 旧プロンプトは @deprecated 状態で残存 (Phase 5.5 で削除予定)
+- 旧 API / 旧開発用ツールは Phase 5.5 で削除済み
 
 3. フェーズ構成 (全体像)
 
