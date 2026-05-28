@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Loader2, Lock, Unlock, RefreshCw } from 'lucide-react';
-import { Purchases } from '../lib/capacitorMocks';
+import { Browser, Purchases } from '../lib/capacitorMocks';
 import { FREE_LIMIT } from '../lib/constants';
+import { TERMS_URL, PRIVACY_URL, isLegalUrlPlaceholder } from '../lib/env';
 import { useT } from '../i18n';
 
 interface SubscribeModalProps {
@@ -14,6 +15,12 @@ interface SubscribeModalProps {
 export function SubscribeModal({ onClose, onSubscribe, onRestore, isPurchasing }: SubscribeModalProps) {
   const t = useT();
   const [price, setPrice] = useState(() => t('subscribe.priceLoading'));
+  const showTermsLink = !isLegalUrlPlaceholder(TERMS_URL);
+  const showPrivacyLink = !isLegalUrlPlaceholder(PRIVACY_URL);
+
+  const openLink = (url: string) => {
+    Browser.open({ url }).catch(() => window.open(url, '_blank', 'noopener,noreferrer'));
+  };
 
   useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
@@ -89,6 +96,17 @@ export function SubscribeModal({ onClose, onSubscribe, onRestore, isPurchasing }
             {isPurchasing ? <Loader2 size={12} style={{ animation: 'spin 1s linear infinite' }} /> : <RefreshCw size={12} />}
             {t('subscribe.restore')}
           </button>
+
+          {(showTermsLink || showPrivacyLink) && (
+            <div style={{ display: 'flex', justifyContent: 'center', gap: 20, marginTop: 12 }}>
+              {showTermsLink && (
+                <button onClick={() => openLink(TERMS_URL)} style={{ background: 'none', border: 'none', padding: 0, fontSize: 11, color: '#94a3b8', textDecoration: 'underline', cursor: 'pointer' }}>{t('help.terms')}</button>
+              )}
+              {showPrivacyLink && (
+                <button onClick={() => openLink(PRIVACY_URL)} style={{ background: 'none', border: 'none', padding: 0, fontSize: 11, color: '#94a3b8', textDecoration: 'underline', cursor: 'pointer' }}>{t('help.privacy')}</button>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </div>

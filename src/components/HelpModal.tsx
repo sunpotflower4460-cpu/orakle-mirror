@@ -3,6 +3,7 @@ import { X } from 'lucide-react';
 import { MODES } from '../constants/modes';
 import { PERSONAS } from '../constants/personas';
 import { Browser } from '../lib/capacitorMocks';
+import { TERMS_URL, PRIVACY_URL, isLegalUrlPlaceholder } from '../lib/env';
 import { LOCALES, useLocale } from '../i18n';
 import type { Mode } from '../types';
 
@@ -22,6 +23,9 @@ export function HelpModal({ onClose }: HelpModalProps) {
   const openLink = (url: string) => {
     Browser.open({ url }).catch(() => window.open(url, '_blank', 'noopener,noreferrer'));
   };
+
+  const showTermsLink = !isLegalUrlPlaceholder(TERMS_URL);
+  const showPrivacyLink = !isLegalUrlPlaceholder(PRIVACY_URL);
 
   return (
     <div role="dialog" aria-modal="true" aria-labelledby="helpTitle" style={{
@@ -79,11 +83,16 @@ export function HelpModal({ onClose }: HelpModalProps) {
         </div>
 
         {/* App Store審査必須要件：プライバシーポリシーと利用規約への安全なリンク */}
-        <div style={{ display: 'flex', justifyContent: 'center', gap: 20, marginTop: 24 }}>
-          {/* 【本番環境】実際のURLに差し替えてください */}
-          <button onClick={() => openLink('https://your-website.com/terms')} style={{ background: 'none', border: 'none', padding: 0, fontSize: 11, color: '#94a3b8', textDecoration: 'underline', cursor: 'pointer' }}>{t('help.terms')}</button>
-          <button onClick={() => openLink('https://your-website.com/privacy')} style={{ background: 'none', border: 'none', padding: 0, fontSize: 11, color: '#94a3b8', textDecoration: 'underline', cursor: 'pointer' }}>{t('help.privacy')}</button>
-        </div>
+        {(showTermsLink || showPrivacyLink) && (
+          <div style={{ display: 'flex', justifyContent: 'center', gap: 20, marginTop: 24 }}>
+            {showTermsLink && (
+              <button onClick={() => openLink(TERMS_URL)} style={{ background: 'none', border: 'none', padding: 0, fontSize: 11, color: '#94a3b8', textDecoration: 'underline', cursor: 'pointer' }}>{t('help.terms')}</button>
+            )}
+            {showPrivacyLink && (
+              <button onClick={() => openLink(PRIVACY_URL)} style={{ background: 'none', border: 'none', padding: 0, fontSize: 11, color: '#94a3b8', textDecoration: 'underline', cursor: 'pointer' }}>{t('help.privacy')}</button>
+            )}
+          </div>
+        )}
 
         <button onClick={onClose} style={{
           width: '100%', padding: '14px 0', background: '#0f172a', color: '#fff', minHeight: 48,

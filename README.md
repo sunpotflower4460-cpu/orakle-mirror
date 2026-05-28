@@ -16,7 +16,9 @@ Oracle Mirror
 - Phase 4.6.1 (ドキュメント同期と検証記録) 完了
 - Phase 4.7 (TypeScript strict モード化) 完了
 - Phase 4.8 (本番安全ガードと旧コード整理) 完了
-- 次は Phase 5 (Cloudflare Workers BFF 構築)
+- Phase 5 (Cloudflare Workers BFF 構築) 完了
+- Phase 5.5 (プロバイダ抽象化・旧コード削除) 完了
+- 次は Phase 6 (IAP 実装)
 
 プロジェクト構成(計画)
 
