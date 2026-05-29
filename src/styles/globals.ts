@@ -57,7 +57,127 @@ export const GLOBAL_STYLES: string = `
   /* 入力欄シェル:フォーカス時にやわらかく息づく */
   .input-shell { transition:box-shadow 0.45s ease, border-color 0.45s ease, transform 0.45s cubic-bezier(0.16,1,0.3,1); }
 
-  @media (max-width:600px) { .oracle-bubble .bubble-actions { opacity:1; } .room-row .room-del { opacity:1; } }
+  @media (max-width:600px) {
+    .oracle-bubble .bubble-actions { opacity:1; }
+    .room-row .room-del { opacity:1; }
+    .app-header { padding-bottom: 12px !important; }
+    .app-header-top {
+      flex-direction: column !important;
+      align-items: stretch !important;
+      gap: 10px !important;
+    }
+    .app-header-brand,
+    .app-header-actions {
+      width: 100% !important;
+    }
+    .app-header-actions {
+      justify-content: space-between !important;
+      gap: 4px !important;
+      flex-wrap: wrap !important;
+    }
+    .mode-switch {
+      width: 100% !important;
+      margin-top: 10px !important;
+    }
+    .mode-switch-btn {
+      padding: 10px 8px !important;
+      font-size: 9px !important;
+      letter-spacing: 0.08em !important;
+      gap: 4px !important;
+    }
+    .chat-scroll-area {
+      padding-top: 18px !important;
+      padding-bottom: 18px !important;
+    }
+    .empty-state {
+      min-height: auto !important;
+      gap: 18px !important;
+      padding-top: 6px !important;
+    }
+    .empty-state-copy h2 {
+      font-size: 16px !important;
+      letter-spacing: 0.35em !important;
+    }
+    .empty-state-copy p {
+      font-size: 11px !important;
+      letter-spacing: 0.24em !important;
+      line-height: 1.7 !important;
+    }
+    .empty-persona-grid,
+    .onboarding-persona-grid {
+      display: grid !important;
+      grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+      max-width: none !important;
+      width: 100% !important;
+    }
+    .empty-persona-card,
+    .onboarding-persona-card {
+      min-height: 110px !important;
+      padding: 14px 10px !important;
+    }
+    .empty-persona-card:last-child,
+    .onboarding-persona-card:last-child {
+      grid-column: 1 / -1;
+    }
+    .user-message {
+      max-width: 100% !important;
+      padding-right: 12px !important;
+    }
+    .oracle-bubble-meta {
+      margin-left: 6px !important;
+      margin-bottom: 10px !important;
+      flex-wrap: wrap !important;
+      row-gap: 4px !important;
+    }
+    .oracle-bubble-card {
+      padding: 20px 18px !important;
+      border-radius: 20px !important;
+    }
+    .oracle-bubble-text {
+      font-size: 14px !important;
+      line-height: 1.95 !important;
+    }
+    .oracle-bubble-footer {
+      margin-top: 18px !important;
+      gap: 8px !important;
+      align-items: flex-start !important;
+      flex-wrap: wrap !important;
+    }
+    .onboarding-overlay {
+      align-items: flex-end !important;
+      padding: 12px !important;
+      padding-top: calc(12px + var(--sat)) !important;
+      padding-bottom: calc(12px + var(--sab)) !important;
+    }
+    .onboarding-card {
+      border-radius: 24px !important;
+      padding: 22px 18px !important;
+      max-height: min(100%, 820px) !important;
+    }
+    .onboarding-step {
+      min-height: auto !important;
+    }
+    .onboarding-heading {
+      font-size: 20px !important;
+      line-height: 1.45 !important;
+    }
+    .onboarding-body {
+      font-size: 14px !important;
+      line-height: 1.85 !important;
+    }
+    .onboarding-nav {
+      flex-wrap: wrap !important;
+      gap: 8px !important;
+    }
+    .onboarding-nav-spacer {
+      display: none !important;
+    }
+    .onboarding-secondary,
+    .onboarding-primary {
+      width: 100% !important;
+      justify-content: center !important;
+    }
+  }
 
   /* OS の「視差効果を減らす／動きを減らす」設定を尊重する */
   @media (prefers-reduced-motion: reduce) {
