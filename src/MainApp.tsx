@@ -3,7 +3,7 @@ import React, { useState, useRef, useEffect, useCallback, useMemo, useLayoutEffe
 import { Capacitor } from '@capacitor/core';
 import {
   Wind, Loader2, Menu,
-  Plus, Compass, HelpCircle, X, Share2, Diamond,
+  Plus, HelpCircle, X, Share2,
   Trash2, AlertCircle, Lock, Unlock, KeyRound
 } from 'lucide-react';
 import { GLOBAL_STYLES } from './styles/globals';
@@ -22,6 +22,7 @@ import { Toast } from './components/Toast';
 import { SubscribeModal } from './components/SubscribeModal';
 import { HelpModal } from './components/HelpModal';
 import { OracleBubble } from './components/OracleBubble';
+import { OracleOrb } from './components/OracleOrb';
 import { Onboarding } from './components/Onboarding';
 import { useT } from './i18n';
 import type { Storage, OracleCard, Message, PersonaId, Mode } from './types';
@@ -712,12 +713,12 @@ export function MainApp() {
         borderRadius: '0 28px 28px 0',
         transition: 'width 0.3s cubic-bezier(0.16,1,0.3,1)',
         overflow: 'hidden',
-        boxShadow: sidebarOpen ? '24px 0 70px rgba(80,60,70,0.10)' : 'none',
+        boxShadow: sidebarOpen ? 'var(--om-shadow-soft)' : 'none',
         display: 'flex', flexDirection: 'column'
       }}>
         <div style={{ paddingTop: 'calc(22px + var(--sat))', paddingLeft: 'calc(18px + var(--sal))', paddingRight: 18, paddingBottom: 14, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0, opacity: sidebarOpen ? 1 : 0, transition: 'opacity 0.3s ease 0.12s' }}>
           <span style={{ fontSize: 18, letterSpacing: '0.16em', fontWeight: 500, color: '#263044', whiteSpace: 'nowrap' }}>{t('sidebar.title')}</span>
-          <button aria-label={t('a11y.newRoom')} onClick={handleNewRoom} style={{ minWidth: 52, minHeight: 52, background: 'rgba(255,255,255,0.78)', border: '1px solid rgba(220,210,216,0.35)', cursor: 'pointer', color: '#8a94a6', display: 'flex', alignItems: 'center', justifyContent: 'center', marginRight: -4, borderRadius: 16, boxShadow: '0 12px 32px rgba(90,60,70,0.05)' }}>
+          <button aria-label={t('a11y.newRoom')} onClick={handleNewRoom} style={{ minWidth: 52, minHeight: 52, background: 'rgba(255,255,255,0.78)', border: '1px solid rgba(220,210,216,0.35)', cursor: 'pointer', color: '#8a94a6', display: 'flex', alignItems: 'center', justifyContent: 'center', marginRight: -4, borderRadius: 16, boxShadow: 'var(--om-shadow-soft)' }}>
             <Plus size={18} strokeWidth={1.5}/>
           </button>
         </div>
@@ -732,16 +733,13 @@ export function MainApp() {
                 linear-gradient(150deg, rgba(255,250,252,0.92), rgba(248,251,255,0.76))
               `,
               border: '1px solid rgba(210,219,236,0.38)',
-              boxShadow: '0 24px 70px rgba(160,110,130,0.06)',
+              boxShadow: 'var(--om-shadow-card)',
               padding: '36px 20px 40px',
               textAlign: 'center',
               display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12
             }}>
-              <div style={{ position: 'relative', marginBottom: 4 }}>
-                <div style={{ position: 'absolute', inset: -18, background: 'radial-gradient(circle, rgba(36,56,104,0.16) 0%, transparent 70%)', animation: 'pulse 3s ease-in-out infinite', borderRadius: '50%' }}/>
-                <div style={{ width: 46, height: 46, borderRadius: 12, transform: 'rotate(45deg)', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(140deg, rgba(255,255,255,0.95), rgba(224,234,255,0.74), rgba(246,205,224,0.78))', border: '1px solid rgba(170,186,218,0.5)', boxShadow: '0 12px 24px rgba(16,24,46,0.18)' }}>
-                  <Diamond size={20} strokeWidth={1.2} style={{ color: 'rgba(37,58,106,0.76)', transform: 'rotate(-45deg)' }} />
-                </div>
+              <div style={{ marginBottom: 2 }}>
+                <OracleOrb size={54} variant="diamond" />
               </div>
               <p style={{ fontSize: 14, color: '#263044', fontWeight: 500, letterSpacing: '0.04em' }}>{t('sidebar.empty')}</p>
               <p style={{ fontSize: 12, color: '#8b95a5', lineHeight: 1.9, letterSpacing: '0.02em' }}>{t('sidebar.emptyHint')}</p>
@@ -759,7 +757,7 @@ export function MainApp() {
                   width: '100%', textAlign: 'left', padding: '12px', borderRadius: 14, minHeight: 48,
                   cursor: 'pointer', border: 'none', marginBottom: 4, transition: 'all 0.2s',
                   background: isActive ? 'rgba(255,255,255,0.92)' : 'transparent',
-                  boxShadow: isActive ? '0 2px 10px rgba(16,23,47,0.06),inset 0 0 0 1px #eadde2' : 'none',
+                  boxShadow: isActive ? 'var(--om-shadow-soft), inset 0 0 0 1px #eadde2' : 'none',
                   display: 'flex', alignItems: 'center', gap: 10
                 }}>
                 <span style={{ color: rp.accent, flexShrink: 0, display: 'flex' }}>{rp.icon}</span>
@@ -789,7 +787,7 @@ export function MainApp() {
               <Unlock size={14} /> {t('subscription.unlimited')}
             </div>
           ) : (
-            <div style={{ background: 'linear-gradient(140deg, rgba(255,255,255,0.88), rgba(246,250,255,0.72), rgba(255,240,247,0.75))', border: '1px solid rgba(210,219,236,0.44)', borderRadius: 18, padding: 12, boxShadow: '0 16px 38px rgba(23,33,62,0.08)' }}>
+            <div style={{ background: 'linear-gradient(140deg, rgba(255,255,255,0.88), rgba(246,250,255,0.72), rgba(255,240,247,0.75))', border: '1px solid rgba(210,219,236,0.44)', borderRadius: 18, padding: 12, boxShadow: 'var(--om-shadow-soft)' }}>
               <div style={{ fontSize: 12, color: '#7f8998', marginBottom: 12, display: 'flex', justifyContent: 'space-between', background: 'rgba(255,255,255,0.72)', borderRadius: 14, padding: '10px 14px', border: '1px solid rgba(220,210,216,0.32)' }}>
                 <span>{t('subscription.remainingToday')}</span>
                 <span style={{ fontWeight: 700, color: typeof remainingDisplay === 'number' && remainingDisplay > 0 ? '#263044' : '#f43f5e' }}>{t('subscription.remainingCount', { count: remainingDisplay })}</span>
@@ -814,12 +812,12 @@ export function MainApp() {
       <main ref={mainRef} style={{ flex: 1, display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
         <header className="app-header" style={{
           padding: 'calc(10px + var(--sat)) calc(16px + var(--sar)) 10px calc(16px + var(--sal))', flexShrink: 0,
-          borderBottom: `1px solid rgba(217,164,181,0.22)`, background: 'rgba(255,253,253,0.72)', backdropFilter: 'blur(14px)', WebkitBackdropFilter: 'blur(14px)'
+          borderBottom: `1px solid rgba(217,164,181,0.22)`, background: 'rgba(255,253,253,0.72)', backdropFilter: 'blur(14px)', WebkitBackdropFilter: 'blur(14px)', boxShadow: 'var(--om-shadow-soft)'
         }}>
           <div className="app-header-top" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div className="app-header-brand" style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
               <button aria-label={t('a11y.menu')} aria-expanded={sidebarOpen} onClick={() => setSidebarOpen(v => !v)}
-                style={{ minWidth: 52, minHeight: 52, background: 'rgba(255,255,255,0.72)', border: '1px solid rgba(210,218,226,0.42)', cursor: 'pointer', color: '#8792a2', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 16, flexShrink: 0, boxShadow: '0 12px 32px rgba(90,60,70,0.04)' }}>
+                style={{ minWidth: 52, minHeight: 52, background: 'rgba(255,255,255,0.72)', border: '1px solid rgba(210,218,226,0.42)', cursor: 'pointer', color: '#8792a2', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 16, flexShrink: 0, boxShadow: 'var(--om-shadow-soft)' }}>
                 <Menu size={18} strokeWidth={1.5}/>
               </button>
               <div style={{ whiteSpace: 'nowrap' }}>
@@ -837,7 +835,7 @@ export function MainApp() {
                     minWidth: 48, minHeight: 48, borderRadius: 999, cursor: 'pointer', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center',
                     background: persona.id === px.id ? 'rgba(255,255,255,0.88)' : 'transparent',
                     color: persona.id === px.id ? px.accent : '#9ca6b4',
-                    boxShadow: persona.id === px.id ? `0 4px 18px ${px.accent}28, 0 0 0 1px ${px.border}` : 'none',
+                    boxShadow: persona.id === px.id ? `var(--om-shadow-soft), 0 0 0 1px ${px.border}, 0 0 26px ${px.accent}1f` : 'none',
                     transform: persona.id === px.id ? 'scale(1.1)' : 'scale(1)',
                     transition: 'all 0.25s', flexShrink: 0
                   }}>{px.icon}</button>
@@ -859,7 +857,7 @@ export function MainApp() {
             background: 'linear-gradient(130deg, rgba(255,255,255,0.84), rgba(255,246,251,0.74), rgba(242,248,255,0.66))',
             borderRadius: 22,
             padding: 6, border: '1px solid rgba(206,220,240,0.42)',
-            boxShadow: '0 18px 42px rgba(80,50,60,0.06)',
+            boxShadow: 'var(--om-shadow-soft)',
             marginTop: 10,
             height: 62,
             width: 300, maxWidth: '100%', marginLeft: 'auto', marginRight: 'auto'
@@ -897,26 +895,10 @@ export function MainApp() {
 
                 {/* ── Hero logo area ──────────────────────────────── */}
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', animation: 'oracleReveal 1s cubic-bezier(0.16,1,0.3,1) 0.05s both' }}>
-                  {/* Logo circle */}
-                  <div style={{ position: 'relative', width: 108, height: 108, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    {/* Wide rose glow */}
-                    <div style={{ position: 'absolute', inset: -32, background: 'radial-gradient(circle, rgba(217,111,140,0.14) 0%, transparent 70%)', borderRadius: '50%', animation: 'pulse 3s ease-in-out infinite' }}/>
-                    {/* Soft glow ring */}
-                    <div style={{ position: 'absolute', inset: -12, background: 'radial-gradient(circle, rgba(217,111,140,0.09) 0%, transparent 70%)', borderRadius: '50%' }}/>
-                    {/* Logo circle itself */}
-                    <div style={{
-                      width: 108, height: 108, borderRadius: '50%',
-                      background: 'radial-gradient(circle, rgba(255,255,255,0.78), rgba(255,238,244,0.38))',
-                      border: '1px solid rgba(200,212,224,0.42)',
-                      boxShadow: '0 0 52px rgba(217,111,140,0.18), 0 0 96px rgba(217,111,140,0.10), inset 0 1px 0 rgba(255,255,255,0.82)',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative'
-                    }}>
-                      <Compass size={52} strokeWidth={0.55} style={{ color: `rgba(210,110,140,0.70)`, animation: 'spinSlow 80s linear infinite' }}/>
-                    </div>
-                  </div>
+                  <OracleOrb size={108} variant="compass" />
 
                   {/* ORACLE MIRROR below logo */}
-                  <div style={{ marginTop: 46, textAlign: 'center' }}>
+                  <div style={{ marginTop: 24, textAlign: 'center' }}>
                     <h2 style={{ fontSize: 22, letterSpacing: '0.42em', fontWeight: 500, color: '#8994a6', textTransform: 'uppercase', margin: 0, lineHeight: 1 }}>Oracle Mirror</h2>
                   </div>
 
@@ -947,8 +929,8 @@ export function MainApp() {
                           animation: `fadeIn 0.7s cubic-bezier(0.16,1,0.3,1) ${0.5 + pi * 0.1}s both`,
                           background: 'rgba(255,255,255,0.84)',
                           boxShadow: isSelected
-                            ? `0 18px 44px rgba(215,120,148,0.12), 0 0 42px rgba(215,120,148,0.08)`
-                            : '0 18px 44px rgba(180,110,130,0.06)',
+                            ? `var(--om-shadow-card), 0 0 42px rgba(215,120,148,0.08)`
+                            : 'var(--om-shadow-card)',
                           border: isSelected
                             ? `1px solid rgba(215,120,148,0.50)`
                             : '1px solid rgba(220,210,220,0.32)',
