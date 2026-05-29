@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { Diamond, ArrowRight, ArrowLeft } from 'lucide-react';
+import { ArrowRight, ArrowLeft } from 'lucide-react';
 import { PERSONAS } from '../constants/personas';
 import { MODES } from '../constants/modes';
+import { OracleOrb } from './OracleOrb';
 import { LOCALES, useLocale } from '../i18n';
 import type { Mode, PersonaId } from '../types';
 
@@ -65,7 +66,7 @@ export function Onboarding({ onComplete }: OnboardingProps) {
       <div className="onboarding-card" style={{
         background: 'linear-gradient(140deg, rgba(255,255,255,0.76), rgba(255,246,251,0.68), rgba(240,246,255,0.56))',
         maxWidth: 440, width: '100%', maxHeight: '100%',
-        borderRadius: 38, boxShadow: '0 28px 90px rgba(18,24,46,0.10)', border: '1px solid rgba(214,224,245,0.38)',
+        borderRadius: 38, boxShadow: 'var(--om-shadow-soft)', border: '1px solid rgba(214,224,245,0.38)',
         overflowY: 'auto', padding: 32, display: 'flex', flexDirection: 'column',
         animation: 'modalReveal 0.45s cubic-bezier(0.16,1,0.3,1)'
       }}>
@@ -96,32 +97,8 @@ export function Onboarding({ onComplete }: OnboardingProps) {
         <div className="onboarding-step" key={step} style={{ flex: 1, animation: 'stepReveal 0.5s cubic-bezier(0.16,1,0.3,1)', minHeight: 280, display: 'flex', flexDirection: 'column' }}>
           {step === 0 && (
             <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flex: 1, gap: 0 }}>
-              {/* Large logo with rose glow */}
-              <div style={{ position: 'relative', width: 116, height: 116, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 28 }}>
-               <div style={{ position: 'absolute', inset: -28, background: 'radial-gradient(circle, rgba(36,60,108,0.20) 0%, transparent 70%)', animation: 'pulse 3s ease-in-out infinite', borderRadius: '50%' }} />
-               <div style={{ position: 'absolute', inset: -10, background: 'radial-gradient(circle, rgba(217,111,140,0.09) 0%, transparent 70%)', borderRadius: '50%' }}/>
-                <div style={{
-                  width: 116, height: 116, borderRadius: '50%',
-                 background: 'radial-gradient(circle at 40% 34%, rgba(255,255,255,0.92), rgba(255,235,246,0.52), rgba(218,232,255,0.42))',
-                 border: '1px solid rgba(194,212,238,0.52)',
-                 boxShadow: '0 0 62px rgba(41,63,110,0.22), 0 0 84px rgba(217,111,140,0.16), inset 0 1px 0 rgba(255,255,255,0.92)',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative'
-                }}>
-                 <div style={{
-                   width: 58,
-                   height: 58,
-                   transform: 'rotate(45deg)',
-                   borderRadius: 10,
-                   background: 'linear-gradient(140deg, rgba(255,255,255,0.95), rgba(223,233,255,0.72), rgba(250,210,225,0.78))',
-                   border: '1px solid rgba(163,179,210,0.54)',
-                   display: 'flex',
-                   alignItems: 'center',
-                   justifyContent: 'center',
-                   boxShadow: '0 10px 30px rgba(16,24,46,0.18), inset 0 0 16px rgba(255,255,255,0.68)'
-                 }}>
-                   <Diamond size={24} strokeWidth={1.2} style={{ color: 'rgba(39,59,106,0.8)', transform: 'rotate(-45deg)' }} />
-                 </div>
-               </div>
+              <div style={{ marginBottom: 16 }}>
+                <OracleOrb size={116} variant="diamond" />
               </div>
               <div style={{ fontSize: 20, letterSpacing: '0.32em', color: '#2a3c63', textTransform: 'uppercase', fontWeight: 500, marginBottom: 14, fontFamily: "'Garamond', 'Times New Roman', serif" }}>ORACLE MIRROR</div>
               <h2 className="onboarding-heading" id={titleId} style={headingStyle}>{t('onboarding.concept.title')}</h2>
@@ -143,8 +120,8 @@ export function Onboarding({ onComplete }: OnboardingProps) {
                         padding: '20px 8px 18px', borderRadius: 22, cursor: 'pointer',
                         background: 'rgba(255,255,255,0.84)',
                         boxShadow: active
-                          ? `0 18px 44px rgba(215,120,148,0.12)`
-                          : '0 14px 36px rgba(180,110,130,0.05)',
+                          ? `var(--om-shadow-card), 0 0 34px ${px.accent}18`
+                          : 'var(--om-shadow-card)',
                         border: active ? `1px solid ${px.border}` : '1px solid rgba(220,210,220,0.28)',
                         transition: 'all 0.3s'
                       }}>
