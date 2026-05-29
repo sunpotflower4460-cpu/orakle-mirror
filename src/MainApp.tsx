@@ -176,7 +176,20 @@ export function MainApp() {
 
       try {
         const { value: historyVal } = await Preferences.get({ key: LS_KEY });
-        if (historyVal) parsedStorage = JSON.parse(historyVal);
+        if (historyVal) {
+          const candidate: unknown = JSON.parse(historyVal);
+          if (
+            candidate !== null &&
+            typeof candidate === 'object' &&
+            !Array.isArray(candidate) &&
+            typeof (candidate as Record<string, unknown>).rooms === 'object' &&
+            (candidate as Record<string, unknown>).rooms !== null &&
+            !Array.isArray((candidate as Record<string, unknown>).rooms) &&
+            Array.isArray((candidate as Record<string, unknown>).roomOrder)
+          ) {
+            parsedStorage = candidate as typeof parsedStorage;
+          }
+        }
 
         const { value: premiumVal } = await Preferences.get({ key: 'app_is_premium' });
         premiumStatus = premiumVal === 'true';
