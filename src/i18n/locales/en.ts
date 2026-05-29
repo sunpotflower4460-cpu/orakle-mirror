@@ -24,6 +24,7 @@ export const en: Record<keyof typeof ja, string> = {
   // Sidebar / subscription
   'sidebar.title': 'Archive',
   'sidebar.empty': 'No reflections yet',
+  'sidebar.emptyHint': 'Your conversations with the mirror\nwill be quietly recorded here.',
   'subscription.title': 'Subscription',
   'subscription.unlimited': 'Infinite guidance (unlocked)',
   'subscription.remainingToday': 'Remaining today',

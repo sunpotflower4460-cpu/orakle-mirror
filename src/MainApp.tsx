@@ -648,9 +648,14 @@ export function MainApp() {
   return (
     <div className="app-shell" style={{
       display: 'flex',
-      fontFamily: "'Hiragino Mincho ProN', 'Yu Mincho', 'Noto Serif JP', serif", 
-      background: `radial-gradient(circle at 50% -16%, rgba(217,120,149,0.18) 0%, ${p.soft} 34%, #fffafb 100%)`, transition: 'background 0.7s ease',
-      overflow: 'hidden', color: '#1e293b', position: 'relative'
+      fontFamily: "'Hiragino Mincho ProN', 'Yu Mincho', 'Noto Serif JP', serif",
+      background: `
+        radial-gradient(circle at 50% 31%, rgba(244,190,205,0.25), transparent 30%),
+        radial-gradient(circle at 50% 72%, rgba(255,235,240,0.42), transparent 38%),
+        radial-gradient(circle at 15% 18%, rgba(255,255,255,0.76), transparent 34%),
+        linear-gradient(180deg, #fffdfd 0%, #fff8fa 48%, #fdf2f5 100%)
+      `,
+      overflow: 'hidden', color: '#263044', position: 'relative'
     }}>
       <style>{GLOBAL_STYLES}</style>
 
@@ -661,36 +666,49 @@ export function MainApp() {
 
       {sidebarOpen && (
         <div onClick={() => setSidebarOpen(false)} style={{
-          position: 'fixed', inset: 0, background: 'rgba(18,24,43,0.14)',
-          zIndex: 98, backdropFilter: 'blur(2px)'
+          position: 'fixed', inset: 0, background: 'rgba(80,70,78,0.26)',
+          zIndex: 98, backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)'
         }} />
       )}
 
       {/* Sidebar */}
       <aside ref={asideRef} aria-label={t('a11y.archive')} style={{
         position: 'fixed', left: 0, top: 0, bottom: 0, zIndex: 99,
-        width: sidebarOpen ? 260 : 0,
-        background: 'rgba(255,255,255,0.94)', 
-        borderRight: '1px solid #eadde2',
+        width: sidebarOpen ? '82%' : 0,
+        maxWidth: 300,
+        background: 'rgba(255,255,255,0.90)',
+        backdropFilter: 'blur(22px)', WebkitBackdropFilter: 'blur(22px)',
+        borderRight: '1px solid rgba(220,210,216,0.35)',
+        borderRadius: '0 28px 28px 0',
         transition: 'width 0.3s cubic-bezier(0.16,1,0.3,1)',
         overflow: 'hidden',
-        boxShadow: sidebarOpen ? '10px 0 30px rgba(16,23,47,0.1)' : 'none',
+        boxShadow: sidebarOpen ? '24px 0 70px rgba(80,60,70,0.10)' : 'none',
         display: 'flex', flexDirection: 'column'
       }}>
-        <div style={{ paddingTop: 'calc(18px + var(--sat))', paddingLeft: 'calc(14px + var(--sal))', paddingRight: 14, paddingBottom: 10, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0, opacity: sidebarOpen ? 1 : 0, transition: 'opacity 0.3s ease 0.12s' }}>
-          <span style={{ fontSize: 10, letterSpacing: '0.4em', fontWeight: 800, color: '#7b8494', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>{t('sidebar.title')}</span>
-          <button aria-label={t('a11y.newRoom')} onClick={handleNewRoom} style={{ minWidth: 44, minHeight: 44, background: 'none', border: 'none', cursor: 'pointer', color: '#7b8494', display: 'flex', alignItems: 'center', justifyContent: 'center', marginRight: -8 }}>
-            <Plus size={16}/>
+        <div style={{ paddingTop: 'calc(22px + var(--sat))', paddingLeft: 'calc(18px + var(--sal))', paddingRight: 18, paddingBottom: 14, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0, opacity: sidebarOpen ? 1 : 0, transition: 'opacity 0.3s ease 0.12s' }}>
+          <span style={{ fontSize: 18, letterSpacing: '0.16em', fontWeight: 500, color: '#263044', whiteSpace: 'nowrap' }}>{t('sidebar.title')}</span>
+          <button aria-label={t('a11y.newRoom')} onClick={handleNewRoom} style={{ minWidth: 52, minHeight: 52, background: 'rgba(255,255,255,0.78)', border: '1px solid rgba(220,210,216,0.35)', cursor: 'pointer', color: '#8a94a6', display: 'flex', alignItems: 'center', justifyContent: 'center', marginRight: -4, borderRadius: 16, boxShadow: '0 12px 32px rgba(90,60,70,0.05)' }}>
+            <Plus size={18} strokeWidth={1.5}/>
           </button>
         </div>
         
-        <div style={{ flex: 1, overflowY: 'auto', padding: '0 8px 16px', paddingLeft: 'calc(8px + var(--sal))', opacity: sidebarOpen ? 1 : 0, transition: 'opacity 0.3s ease 0.12s' }}>
+        <div style={{ flex: 1, overflowY: 'auto', padding: '0 12px 16px', paddingLeft: 'calc(12px + var(--sal))', opacity: sidebarOpen ? 1 : 0, transition: 'opacity 0.3s ease 0.12s' }}>
           {rooms.length === 0 && (
-            <div style={{ border: '1px solid #eadde2', borderRadius: 20, background: 'rgba(255,255,255,0.92)', padding: '28px 12px', textAlign: 'center', color: '#7b8494', boxShadow: '0 6px 20px rgba(16,23,47,0.04)' }}>
-              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 10, color: p.accent }}>
-                <Compass size={18} strokeWidth={1.25} />
+            <div style={{
+              borderRadius: 28, margin: '4px 0 16px',
+              background: 'radial-gradient(circle at 50% 30%, rgba(244,190,205,0.22), transparent 60%), rgba(255,250,252,0.86)',
+              border: '1px solid rgba(220,210,216,0.28)',
+              boxShadow: '0 24px 70px rgba(160,110,130,0.06)',
+              padding: '36px 20px 40px',
+              textAlign: 'center',
+              display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12
+            }}>
+              <div style={{ position: 'relative', marginBottom: 4 }}>
+                <div style={{ position: 'absolute', inset: -18, background: 'radial-gradient(circle, rgba(215,120,148,0.14) 0%, transparent 70%)', animation: 'pulse 3s ease-in-out infinite', borderRadius: '50%' }}/>
+                <Compass size={42} strokeWidth={0.7} style={{ color: 'rgba(215,120,148,0.55)', position: 'relative', animation: 'spinSlow 80s linear infinite' }} />
               </div>
-              <p style={{ fontSize: 12 }}>{t('sidebar.empty')}</p>
+              <p style={{ fontSize: 14, color: '#263044', fontWeight: 500, letterSpacing: '0.04em' }}>{t('sidebar.empty')}</p>
+              <p style={{ fontSize: 12, color: '#8b95a5', lineHeight: 1.9, letterSpacing: '0.02em' }}>{t('sidebar.emptyHint')}</p>
             </div>
           )}
           {rooms.map(room => {
@@ -722,23 +740,32 @@ export function MainApp() {
         </div>
         
         {/* サイドバー下部：サブスクリプション導線 */}
-        <div style={{ padding: '16px', paddingLeft: 'calc(16px + var(--sal))', borderTop: '1px solid #eadde2', background: 'rgba(255,250,251,0.8)', paddingBottom: 'calc(16px + var(--sab))', flexShrink: 0, opacity: sidebarOpen ? 1 : 0, transition: 'opacity 0.3s ease 0.12s' }}>
-          <div style={{ fontSize: 10, letterSpacing: '0.2em', color: '#7b8494', textTransform: 'uppercase', marginBottom: 12, fontWeight: 700 }}>{t('subscription.title')}</div>
+        <div style={{ padding: '16px', paddingLeft: 'calc(16px + var(--sal))', borderTop: '1px solid rgba(220,210,216,0.30)', background: 'rgba(255,250,252,0.86)', paddingBottom: 'calc(16px + var(--sab))', flexShrink: 0, opacity: sidebarOpen ? 1 : 0, transition: 'opacity 0.3s ease 0.12s' }}>
+          {/* 小星ライン区切り */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, marginBottom: 16 }}>
+            <div style={{ height: 1, width: 48, background: 'rgba(215,120,148,0.22)' }}/>
+            <span style={{ color: '#d77894', fontSize: 10 }}>✦</span>
+            <div style={{ height: 1, width: 48, background: 'rgba(215,120,148,0.22)' }}/>
+          </div>
+          <div style={{ fontSize: 10, letterSpacing: '0.22em', color: '#8994a6', textTransform: 'uppercase', marginBottom: 12, fontWeight: 600 }}>{t('subscription.title')}</div>
           {isPremium ? (
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#10b981', fontSize: 12, fontWeight: 700 }}>
               <Unlock size={14} /> {t('subscription.unlimited')}
             </div>
           ) : (
             <div>
-              <div style={{ fontSize: 12, color: '#64748b', marginBottom: 10, display: 'flex', justifyContent: 'space-between' }}>
+              <div style={{ fontSize: 12, color: '#7f8998', marginBottom: 12, display: 'flex', justifyContent: 'space-between', background: 'rgba(255,255,255,0.82)', borderRadius: 14, padding: '10px 14px', border: '1px solid rgba(220,210,216,0.32)' }}>
                 <span>{t('subscription.remainingToday')}</span>
-                {/* 修正: remainingDisplayの型を明示的にチェックし、NaNによる予期せぬ挙動を防止 */}
-                <span style={{ fontWeight: 700, color: typeof remainingDisplay === 'number' && remainingDisplay > 0 ? '#334155' : '#f43f5e' }}>{t('subscription.remainingCount', { count: remainingDisplay })}</span>
+                <span style={{ fontWeight: 700, color: typeof remainingDisplay === 'number' && remainingDisplay > 0 ? '#263044' : '#f43f5e' }}>{t('subscription.remainingCount', { count: remainingDisplay })}</span>
               </div>
               <button onClick={() => setShowSubscribeModal(true)} style={{
-                width: '100%', padding: '10px 0', background: '#10172f', color: '#fff',
-                borderRadius: 8, fontSize: 11, fontWeight: 700, cursor: 'pointer', border: 'none',
-                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6
+                width: '100%', padding: '14px 0',
+                background: 'linear-gradient(135deg, #0b1024, #141c38)',
+                color: '#fff',
+                borderRadius: 16, fontSize: 11, fontWeight: 700, cursor: 'pointer', border: 'none',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                boxShadow: '0 16px 38px rgba(10,16,36,0.22)',
+                letterSpacing: '0.12em'
               }}>
                 <Lock size={12} /> {t('subscription.unlockPremium')}
               </button>
@@ -750,19 +777,18 @@ export function MainApp() {
       {/* Main */}
       <main ref={mainRef} style={{ flex: 1, display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
         <header className="app-header" style={{
-          padding: 'calc(8px + var(--sat)) calc(12px + var(--sar)) 8px calc(12px + var(--sal))', flexShrink: 0,
-          borderBottom: `1px solid ${p.border}`, transition: 'border-color 0.7s ease', background: 'rgba(255,255,255,0.62)', backdropFilter: 'blur(6px)'
+          padding: 'calc(10px + var(--sat)) calc(16px + var(--sar)) 10px calc(16px + var(--sal))', flexShrink: 0,
+          borderBottom: `1px solid rgba(217,164,181,0.22)`, background: 'rgba(255,253,253,0.72)', backdropFilter: 'blur(14px)', WebkitBackdropFilter: 'blur(14px)'
         }}>
           <div className="app-header-top" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <div className="app-header-brand" style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
+            <div className="app-header-brand" style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
               <button aria-label={t('a11y.menu')} aria-expanded={sidebarOpen} onClick={() => setSidebarOpen(v => !v)}
-                style={{ minWidth: 44, minHeight: 44, background: 'none', border: '1px solid #e9d6de', cursor: 'pointer', color: '#7b8494', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 14, flexShrink: 0 }}>
-                <Menu size={18}/>
+                style={{ minWidth: 52, minHeight: 52, background: 'rgba(255,255,255,0.72)', border: '1px solid rgba(210,218,226,0.42)', cursor: 'pointer', color: '#8792a2', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 16, flexShrink: 0, boxShadow: '0 12px 32px rgba(90,60,70,0.04)' }}>
+                <Menu size={18} strokeWidth={1.5}/>
               </button>
               <div style={{ whiteSpace: 'nowrap' }}>
-                <div style={{ fontSize: 10, letterSpacing: '0.35em', fontWeight: 800, color: '#7b8494', textTransform: 'uppercase', lineHeight: 1 }}>Oracle Mirror</div>
-                {/* 混乱を招く「(3回)」の表記を削除し、ペルソナ名のみにスッキリさせました */}
-                <div style={{ fontSize: 10, color: p.accent, fontWeight: 700, marginTop: 4 }}>
+                <div style={{ fontSize: 11, letterSpacing: '0.42em', fontWeight: 500, color: '#8994a6', textTransform: 'uppercase', lineHeight: 1 }}>Oracle Mirror</div>
+                <div style={{ fontSize: 11, color: p.accent, fontWeight: 600, marginTop: 5, letterSpacing: '0.06em' }}>
                   {p.name}
                 </div>
               </div>
@@ -772,36 +798,43 @@ export function MainApp() {
               {Object.values(PERSONAS).map(px => (
                 <button key={px.id} className="persona-chip" onClick={() => setPersona(px)} title={px.name} aria-label={t('a11y.switchPersona', { name: px.name })} aria-pressed={persona.id === px.id}
                   style={{
-                    minWidth: 40, minHeight: 40, borderRadius: 999, cursor: 'pointer', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    background: persona.id === px.id ? '#fff' : 'transparent',
-                    color: persona.id === px.id ? px.accent : '#a8b1be',
-                    boxShadow: persona.id === px.id ? `0 2px 10px ${px.accent}22,0 0 0 1px ${px.border}` : 'inset 0 0 0 1px #ece4e8',
+                    minWidth: 48, minHeight: 48, borderRadius: 999, cursor: 'pointer', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    background: persona.id === px.id ? 'rgba(255,255,255,0.88)' : 'transparent',
+                    color: persona.id === px.id ? px.accent : '#9ca6b4',
+                    boxShadow: persona.id === px.id ? `0 4px 18px ${px.accent}28, 0 0 0 1px ${px.border}` : 'none',
                     transform: persona.id === px.id ? 'scale(1.1)' : 'scale(1)',
                     transition: 'all 0.25s', flexShrink: 0
                   }}>{px.icon}</button>
               ))}
-              <div style={{ width: 1, height: 16, background: '#e5dce2', margin: '0 6px', flexShrink: 0 }}/>
+              <div style={{ width: 1, height: 16, background: 'rgba(160,170,185,0.22)', margin: '0 8px', flexShrink: 0 }}/>
               <button className="header-icon-btn" aria-label={t('a11y.help')} onClick={() => setShowHelp(true)}
-                style={{ minWidth: 40, minHeight: 40, background: 'none', border: '1px solid #ece4e8', cursor: 'pointer', color: '#9aa5b3', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 12, flexShrink: 0 }}>
+                style={{ minWidth: 42, minHeight: 42, background: 'none', border: '1px solid rgba(220,210,216,0.38)', cursor: 'pointer', color: '#9ca6b4', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 12, flexShrink: 0 }}>
                 <HelpCircle size={16} strokeWidth={1.5}/>
               </button>
               <button className="header-icon-btn" aria-label={t('a11y.share')} onClick={handleShareApp}
-                style={{ minWidth: 40, minHeight: 40, background: 'none', border: '1px solid #ece4e8', cursor: 'pointer', color: '#9aa5b3', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 12, flexShrink: 0 }}>
+                style={{ minWidth: 42, minHeight: 42, background: 'none', border: '1px solid rgba(220,210,216,0.38)', cursor: 'pointer', color: '#9ca6b4', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 12, flexShrink: 0 }}>
                 <Share2 size={16} strokeWidth={1.5}/>
               </button>
             </div>
           </div>
 
           <div className="mode-switch" role="radiogroup" aria-label={t('a11y.modeSelect')} style={{
-            position: 'relative', display: 'flex', background: 'rgba(255,255,255,0.84)', borderRadius: 999,
-            padding: 4, border: '1px solid #e9d6de', marginTop: 8,
+            position: 'relative', display: 'flex',
+            background: 'rgba(255,255,255,0.76)',
+            borderRadius: 999,
+            padding: 5, border: '1px solid rgba(210,190,200,0.35)',
+            boxShadow: '0 14px 36px rgba(80,50,60,0.04)',
+            marginTop: 10,
+            height: 56,
             width: 300, maxWidth: '100%', marginLeft: 'auto', marginRight: 'auto'
           }}>
             {/* スライドして移動するセグメントインジケータ */}
             <span aria-hidden="true" style={{
-              position: 'absolute', top: 4, bottom: 4, width: 'calc(50% - 4px)',
-              left: activeModeIndex <= 0 ? 4 : '50%',
-              background: '#10172f', borderRadius: 999, boxShadow: '0 2px 8px rgba(16,23,47,0.28)',
+              position: 'absolute', top: 5, bottom: 5, width: 'calc(50% - 5px)',
+              left: activeModeIndex <= 0 ? 5 : '50%',
+              background: 'linear-gradient(135deg, #0b1024, #141c38)',
+              borderRadius: 999,
+              boxShadow: '0 14px 36px rgba(10,16,36,0.22)',
               transition: 'left 0.35s cubic-bezier(0.16,1,0.3,1)'
             }} />
             {modeEntries.map((m: Mode) => (
@@ -812,7 +845,7 @@ export function MainApp() {
                   padding: '8px 12px', borderRadius: 999, cursor: 'pointer', border: 'none',
                   whiteSpace: 'nowrap', fontSize: 10, letterSpacing: '0.15em',
                   textTransform: 'uppercase', fontWeight: 700, transition: 'color 0.3s', background: 'transparent',
-                  color: mode.id === m.id ? '#fff' : '#8d96a7'
+                  color: mode.id === m.id ? '#ffffff' : '#8f98a8'
                 }}>
                 {m.icon} {t(`mode.${m.id}.name`)}
               </button>
@@ -823,31 +856,73 @@ export function MainApp() {
         <div className="chat-scroll-area" style={{ flex: 1, overflowY: 'auto', padding: '24px calc(18px + var(--sar)) 24px calc(18px + var(--sal))' }}>
           <div style={{ maxWidth: 660, margin: '0 auto' }}>
             {messages.length === 0 && !isLoading && (
-              <div className="empty-state" style={{ minHeight: '40vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 24 }}>
-                <div style={{ position: 'relative', animation: 'oracleReveal 1s cubic-bezier(0.16,1,0.3,1) 0.05s both' }}>
-                  <div style={{ position: 'absolute', inset: -20, background: `radial-gradient(circle, ${p.accent}22 0%, transparent 70%)`, animation: 'pulse 3s ease-in-out infinite', borderRadius: '50%' }}/>
-                  <Compass size={56} strokeWidth={0.6} style={{ color: '#cbd5e1', animation: 'spinSlow 80s linear infinite', position: 'relative' }}/>
+              <div className="empty-state" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', paddingTop: 48, paddingBottom: 32, gap: 0 }}>
+
+                {/* ── Hero logo area ──────────────────────────────── */}
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', animation: 'oracleReveal 1s cubic-bezier(0.16,1,0.3,1) 0.05s both' }}>
+                  {/* Logo circle */}
+                  <div style={{ position: 'relative', width: 108, height: 108, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    {/* Wide rose glow */}
+                    <div style={{ position: 'absolute', inset: -32, background: 'radial-gradient(circle, rgba(217,111,140,0.14) 0%, transparent 70%)', borderRadius: '50%', animation: 'pulse 3s ease-in-out infinite' }}/>
+                    {/* Soft glow ring */}
+                    <div style={{ position: 'absolute', inset: -12, background: 'radial-gradient(circle, rgba(217,111,140,0.09) 0%, transparent 70%)', borderRadius: '50%' }}/>
+                    {/* Logo circle itself */}
+                    <div style={{
+                      width: 108, height: 108, borderRadius: '50%',
+                      background: 'radial-gradient(circle, rgba(255,255,255,0.78), rgba(255,238,244,0.38))',
+                      border: '1px solid rgba(200,212,224,0.42)',
+                      boxShadow: '0 0 52px rgba(217,111,140,0.18), 0 0 96px rgba(217,111,140,0.10), inset 0 1px 0 rgba(255,255,255,0.82)',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative'
+                    }}>
+                      <Compass size={52} strokeWidth={0.55} style={{ color: `rgba(210,110,140,0.70)`, animation: 'spinSlow 80s linear infinite' }}/>
+                    </div>
+                  </div>
+
+                  {/* ORACLE MIRROR below logo */}
+                  <div style={{ marginTop: 46, textAlign: 'center' }}>
+                    <h2 style={{ fontSize: 22, letterSpacing: '0.42em', fontWeight: 500, color: '#8994a6', textTransform: 'uppercase', margin: 0, lineHeight: 1 }}>Oracle Mirror</h2>
+                  </div>
+
+                  {/* Subtitle */}
+                  <div style={{ marginTop: 16, textAlign: 'center' }}>
+                    <p style={{ fontSize: 11, letterSpacing: '0.38em', color: '#a9b0bd', textTransform: 'uppercase', fontWeight: 400 }}>Reflection of Higher Self</p>
+                  </div>
+
+                  {/* Ornament line + star */}
+                  <div style={{ marginTop: 30, display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <div style={{ height: 1, width: 64, background: 'rgba(215,120,148,0.28)' }}/>
+                    <span style={{ color: '#d77894', fontSize: 11, lineHeight: 1 }}>✦</span>
+                    <div style={{ height: 1, width: 64, background: 'rgba(215,120,148,0.28)' }}/>
+                  </div>
                 </div>
-                <div className="empty-state-copy" style={{ textAlign: 'center', animation: 'fadeIn 0.9s cubic-bezier(0.16,1,0.3,1) 0.3s both' }}>
-                  <h2 style={{ fontSize: 18, letterSpacing: '0.5em', fontWeight: 300, color: '#94a3b8', textTransform: 'uppercase', marginBottom: 8 }}>Oracle Mirror</h2>
-                  <p style={{ fontSize: 10, letterSpacing: '0.45em', color: '#cbd5e1', textTransform: 'uppercase', fontWeight: 700 }}>Reflection of Higher Self</p>
-                </div>
-                <div className="empty-persona-grid" style={{ display: 'flex', gap: 10, marginTop: 8, justifyContent: 'center', width: '100%', maxWidth: 360 }}>
-                  {Object.values(PERSONAS).map((px, pi) => (
-                    <button key={px.id} className="empty-persona-card" onClick={() => setPersona(px)} aria-label={t('a11y.selectPersona', { name: px.name })}
-                      style={{
-                        flex: '1 1 0', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6,
-                        padding: '16px 8px', borderRadius: 18, cursor: 'pointer', border: 'none',
-                        animation: `fadeIn 0.7s cubic-bezier(0.16,1,0.3,1) ${0.5 + pi * 0.1}s both`,
-                        background: persona.id === px.id ? '#fff' : 'rgba(255,255,255,0.5)',
-                        boxShadow: persona.id === px.id ? `0 4px 20px ${px.accent}20,0 0 0 1px ${px.border}` : 'inset 0 0 0 1px rgba(0,0,0,0.04)',
-                        transition: 'all 0.3s'
-                      }}>
-                      <span style={{ color: px.accent }}>{px.icon}</span>
-                      <span style={{ fontSize: 10, letterSpacing: '0.15em', textTransform: 'uppercase', fontWeight: 700, color: px.accent, whiteSpace: 'nowrap' }}>{px.name}</span>
-                      <span style={{ fontSize: 9, color: '#94a3b8', whiteSpace: 'nowrap' }}>{t(`persona.${px.id}.title`)}</span>
-                    </button>
-                  ))}
+
+                {/* ── Persona cards ────────────────────────────────── */}
+                <div className="empty-persona-grid" style={{ display: 'flex', gap: 12, marginTop: 48, justifyContent: 'center', width: '100%', maxWidth: 400 }}>
+                  {Object.values(PERSONAS).map((px, pi) => {
+                    const isSelected = persona.id === px.id;
+                    return (
+                      <button key={px.id} className="empty-persona-card" onClick={() => setPersona(px)} aria-label={t('a11y.selectPersona', { name: px.name })}
+                        style={{
+                          flex: '1 1 0', display: 'flex', flexDirection: 'column', alignItems: 'center',
+                          gap: 8,
+                          padding: '22px 10px 20px',
+                          borderRadius: 26, cursor: 'pointer',
+                          animation: `fadeIn 0.7s cubic-bezier(0.16,1,0.3,1) ${0.5 + pi * 0.1}s both`,
+                          background: 'rgba(255,255,255,0.84)',
+                          boxShadow: isSelected
+                            ? `0 18px 44px rgba(215,120,148,0.12), 0 0 42px rgba(215,120,148,0.08)`
+                            : '0 18px 44px rgba(180,110,130,0.06)',
+                          border: isSelected
+                            ? `1px solid rgba(215,120,148,0.50)`
+                            : '1px solid rgba(220,210,220,0.32)',
+                          transition: 'all 0.35s'
+                        }}>
+                        <span style={{ color: px.accent }}>{px.icon}</span>
+                        <span style={{ fontSize: 11, letterSpacing: '0.28em', textTransform: 'uppercase', fontWeight: 600, color: px.accent, whiteSpace: 'nowrap' }}>{px.name}</span>
+                        <span style={{ fontSize: 11, color: '#7f8998', letterSpacing: '0.06em' }}>{t(`persona.${px.id}.title`)}</span>
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
             )}
@@ -905,18 +980,20 @@ export function MainApp() {
         {/* Input Area */}
         <div style={{ 
           padding: USE_JS_KEYBOARD_PADDING
-            ? `8px calc(14px + var(--sar)) calc(12px + var(--sab) + ${keyboardPadding}) calc(14px + var(--sal))`
-            : `8px calc(14px + var(--sar)) calc(12px + var(--sab)) calc(14px + var(--sal))`, 
+            ? `10px calc(18px + var(--sar)) calc(max(18px, env(safe-area-inset-bottom)) + ${keyboardPadding}) calc(18px + var(--sal))`
+            : `10px calc(18px + var(--sar)) max(18px, calc(env(safe-area-inset-bottom) + 8px)) calc(18px + var(--sal))`,
           flexShrink: 0 
         }}>
           <div className="input-shell" style={{
-            display: 'flex', alignItems: 'flex-end', gap: 8, background: 'rgba(255,255,255,0.95)', backdropFilter: 'blur(8px)',
-            borderRadius: 28, padding: '8px 8px 8px 20px',
-            border: `1px solid ${inputFocused ? `${p.accent}66` : '#e9d6de'}`,
-            transform: inputFocused ? 'translateY(-1px)' : 'translateY(0)',
+            display: 'flex', alignItems: 'flex-end', gap: 10,
+            background: inputFocused ? 'rgba(255,255,255,0.90)' : 'rgba(255,255,255,0.86)',
+            backdropFilter: 'blur(14px)', WebkitBackdropFilter: 'blur(14px)',
+            borderRadius: 999, padding: '10px 10px 10px 26px',
+            border: `1px solid ${inputFocused ? `rgba(230,210,218,0.68)` : 'rgba(230,210,218,0.44)'}`,
+            transform: inputFocused ? 'translateY(-2px)' : 'translateY(0)',
             boxShadow: inputFocused
-              ? `0 8px 34px ${p.accent}2e, 0 1px 6px rgba(0,0,0,0.05)`
-              : `0 4px 24px ${p.accent}12, 0 1px 6px rgba(0,0,0,0.04)`
+              ? `0 18px 48px rgba(120,80,90,0.07), 0 0 0 1px rgba(215,120,148,0.12)`
+              : '0 18px 48px rgba(120,80,90,0.05)'
           }}>
             <textarea
               ref={textareaRef}
@@ -931,9 +1008,9 @@ export function MainApp() {
               disabled={isLocked}
               style={{
                 flex: 1, background: 'transparent', border: 'none', outline: 'none',
-                resize: 'none', fontWeight: 300, color: '#374151', fontSize: 16,
-                lineHeight: 1.6, overflowY: 'hidden', maxHeight: 120,
-                fontFamily: 'inherit', caretColor: p.accent, paddingTop: 6, paddingBottom: 6,
+                resize: 'none', fontWeight: 300, color: '#263044', fontSize: 17,
+                lineHeight: 1.65, overflowY: 'hidden', maxHeight: 120,
+                fontFamily: 'inherit', caretColor: p.accent, paddingTop: 8, paddingBottom: 8,
                 opacity: isLocked ? 0.5 : 1
               }}
             />
@@ -951,13 +1028,13 @@ export function MainApp() {
               disabled={isLoading || (!isLocked && !input.trim())} 
               className="send-btn"
               style={{
-                width: 44, height: 44, borderRadius: 999, border: 'none', display: 'flex',
+                width: 52, height: 52, borderRadius: 999, border: 'none', display: 'flex',
                 alignItems: 'center', justifyContent: 'center', flexShrink: 0,
                 cursor: isLoading || (!isLocked && !input.trim()) ? 'not-allowed' : 'pointer',
-                background: isLoading || (!isLocked && !input.trim()) ? '#f2f3f7' : '#10172f',
-                color: isLoading || (!isLocked && !input.trim()) ? '#bec7d3' : '#fff',
+                background: isLoading || (!isLocked && !input.trim()) ? 'rgba(248,233,238,0.86)' : '#10172f',
+                color: isLoading || (!isLocked && !input.trim()) ? '#c97890' : '#fff',
                 transition: 'background 0.3s, color 0.3s',
-                boxShadow: isLoading || (!isLocked && !input.trim()) ? 'none' : `0 3px 12px ${p.accent}40`
+                boxShadow: isLoading || (!isLocked && !input.trim()) ? 'none' : '0 16px 38px rgba(10,16,36,0.22)'
               }}>
               {isLoading
                 ? <Loader2 size={18} style={{ animation: 'spin 1s linear infinite' }}/>

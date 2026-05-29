@@ -7,12 +7,43 @@ export const GLOBAL_STYLES: string = `
     --sar: env(safe-area-inset-right, 0px);
     --sab: env(safe-area-inset-bottom, 0px);
     --sal: env(safe-area-inset-left, 0px);
+
+    /* ── Oracle Mirror design tokens ─────────────────────────── */
+    --om-bg-top: #fffdfd;
+    --om-bg-mid: #fff8fa;
+    --om-bg-bottom: #fdf2f5;
+
+    --om-surface: rgba(255,255,255,0.78);
+    --om-surface-strong: rgba(255,255,255,0.92);
+    --om-surface-milk: rgba(255,250,252,0.86);
+
+    --om-border-rose: rgba(217,164,181,0.34);
+    --om-border-cool: rgba(155,164,184,0.24);
+
+    --om-text-main: #263044;
+    --om-text-soft: #7f8998;
+    --om-text-muted: #aab2bf;
+    --om-brand-bluegray: #8994a6;
+
+    --om-rose: #d77894;
+    --om-rose-soft: #f5dce5;
+    --om-rose-milk: #f8e9ee;
+
+    --om-zenith: #757bc3;
+    --om-navy: #0d1328;
+    --om-navy-2: #141c38;
+
+    --om-shadow-soft: 0 18px 48px rgba(90,60,70,0.06);
+    --om-shadow-card: 0 18px 44px rgba(180,110,130,0.08);
+    --om-shadow-navy: 0 16px 38px rgba(10,16,36,0.22);
+    --om-glow-rose: 0 0 52px rgba(217,111,140,0.18);
+    --om-glow-rose-wide: 0 0 86px rgba(217,111,140,0.12);
   }
   * { box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color: transparent; }
   body { 
     overscroll-behavior: contain; 
     -webkit-overflow-scrolling: touch; 
-    background: #fffafb; 
+    background: #fffdfd; 
   }
   ::-webkit-scrollbar { width:4px; }
   ::-webkit-scrollbar-track { background:transparent; }
@@ -21,7 +52,18 @@ export const GLOBAL_STYLES: string = `
     font-family:inherit; 
     font-size: 16px; 
   }
-  .app-shell { height: 100vh; height: 100dvh; }
+  .app-shell { height: 100vh; height: 100dvh; position: relative; }
+  /* Pearl-white rose-mist background with subtle paper texture */
+  .app-shell::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='1'/%3E%3C/svg%3E");
+    opacity: 0.032;
+    mix-blend-mode: multiply;
+    z-index: 0;
+  }
   
   .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border-width: 0; }
   
