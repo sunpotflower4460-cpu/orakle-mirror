@@ -92,7 +92,7 @@ export const en: Record<keyof typeof ja, string> = {
 
   // Onboarding (first-run)
   'onboarding.concept.title': 'A mirror for your inner voice',
-  'onboarding.concept.body': 'Oracle Mirror is not a fortune-teller that hands you answers.\nIt is a quiet mirror that reflects the voice already within you.',
+  'onboarding.concept.body': "Oracle Mirror isn't a fortune-teller that hands you answers — it quietly reflects the voice already within you.",
   'onboarding.persona.title': 'Choose your mirror',
   'onboarding.persona.body': 'Three mirrors reflect you in different light.\nYou can switch between them anytime.',
   'onboarding.mode.title': 'How the dialogue flows',

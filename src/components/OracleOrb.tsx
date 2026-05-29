@@ -29,7 +29,7 @@ export function OracleOrb({ size, variant, iconColor, strokeWidth }: OracleOrbPr
     return () => media.removeListener(update);
   }, []);
 
-  const containerHeight = useMemo(() => Math.round(size * 1.34), [size]);
+  const containerHeight = useMemo(() => Math.round(size * 1.20), [size]);
   const symbolSize = useMemo(
     () => Math.round(size * (variant === 'compass' ? 0.48 : 0.34)),
     [size, variant],
@@ -37,10 +37,9 @@ export function OracleOrb({ size, variant, iconColor, strokeWidth }: OracleOrbPr
   const symbolColor = iconColor ?? (variant === 'compass' ? 'rgba(210,110,140,0.72)' : 'rgba(39,59,106,0.82)');
   const symbolStrokeWidth = strokeWidth ?? (variant === 'compass' ? 0.68 : 1.12);
 
-  const renderSymbol = (mirrored = false) => {
+  const renderSymbol = () => {
     const style: React.CSSProperties = {
       color: symbolColor,
-      opacity: mirrored ? 0.36 : 1,
       animation: prefersReducedMotion
         ? 'none'
         : (variant === 'compass' ? 'spinSlow 80s linear infinite' : 'iridescentShift 7.2s ease-in-out infinite'),
@@ -98,7 +97,7 @@ export function OracleOrb({ size, variant, iconColor, strokeWidth }: OracleOrbPr
           radial-gradient(circle at 32% 26%, rgba(255,255,255,0.98) 0%, rgba(255,255,255,0.90) 14%, rgba(255,243,248,0.74) 34%, rgba(233,242,255,0.46) 60%, rgba(250,236,244,0.42) 100%),
           linear-gradient(145deg, rgba(255,255,255,0.82), rgba(248,226,236,0.52), rgba(227,238,255,0.54))
         `,
-        boxShadow: 'var(--om-glow-rose), var(--om-glow-rose-wide), inset 0 1px 0 rgba(255,255,255,0.94), inset 0 -16px 28px rgba(217,111,140,0.08), inset 0 -28px 34px rgba(190,216,255,0.14)',
+        boxShadow: 'var(--om-glow-rose), var(--om-glow-rose-wide), inset 0 1px 0 rgba(255,255,255,0.94), inset 0 -16px 28px rgba(217,111,140,0.13), inset 0 -28px 34px rgba(190,216,255,0.14)',
         animation: prefersReducedMotion ? 'none' : 'iridescentShift 8.8s ease-in-out infinite',
       }}>
         <div style={{
@@ -153,43 +152,26 @@ export function OracleOrb({ size, variant, iconColor, strokeWidth }: OracleOrbPr
         <div style={{
           position: 'absolute',
           inset: 0,
+          borderRadius: '50%',
+          background: `repeating-linear-gradient(
+            37deg,
+            transparent 0px,
+            rgba(160,120,140,0.022) 1px,
+            transparent 2px,
+            transparent 7px
+          )`,
+          pointerEvents: 'none',
+        }} />
+
+        <div style={{
+          position: 'absolute',
+          inset: 0,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
           zIndex: 1,
         }}>
           {renderSymbol()}
-        </div>
-      </div>
-
-      <div style={{
-        position: 'absolute',
-        top: `${Math.round(size * 0.86)}px`,
-        left: `${Math.round(size * 0.16)}px`,
-        right: `${Math.round(size * 0.16)}px`,
-        height: `${Math.round(size * 0.34)}px`,
-        transform: 'scaleY(-1)',
-        opacity: 0.24,
-        filter: 'blur(1.2px)',
-        WebkitMaskImage: 'linear-gradient(to bottom, rgba(0,0,0,0.68), transparent 88%)',
-        maskImage: 'linear-gradient(to bottom, rgba(0,0,0,0.68), transparent 88%)',
-        animation: prefersReducedMotion ? 'none' : 'pulse 6s ease-in-out infinite',
-      }}>
-        <div style={{
-          position: 'absolute',
-          inset: 0,
-          borderRadius: '50%',
-          background: 'radial-gradient(circle at 50% 6%, rgba(255,255,255,0.28), rgba(255,222,234,0.12) 35%, transparent 76%)',
-        }} />
-        <div style={{
-          position: 'absolute',
-          inset: 0,
-          display: 'flex',
-          alignItems: 'flex-start',
-          justifyContent: 'center',
-          paddingTop: `${Math.max(2, Math.round(size * 0.02))}px`,
-        }}>
-          {renderSymbol(true)}
         </div>
       </div>
     </div>
