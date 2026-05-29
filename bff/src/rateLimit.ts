@@ -27,13 +27,17 @@ const HOUR_MS = 60 * 60 * 1000;
 
 function checkBucket(map: Map<string, Bucket>, key: string, limit: number, windowMs: number, now: number): boolean {
   const bucket = map.get(key);
+  if (!bucket || bucket.resetAt < now) return true;
+  return bucket.count < limit;
+}
+
+function incrementBucket(map: Map<string, Bucket>, key: string, windowMs: number, now: number): void {
+  const bucket = map.get(key);
   if (!bucket || bucket.resetAt < now) {
     map.set(key, { count: 1, resetAt: now + windowMs });
-    return true;
+  } else {
+    bucket.count += 1;
   }
-  if (bucket.count >= limit) return false;
-  bucket.count += 1;
-  return true;
 }
 
 /**
@@ -67,6 +71,10 @@ export function checkRateLimit(clientIp: string): RateLimitResult {
   if (!checkBucket(hourBuckets, hourKey, HOUR_LIMIT, HOUR_MS, now)) {
     return { allowed: false, reason: '1 時間あたりの制限を超過' };
   }
+
+  // 両方のチェックが通過した場合のみカウントを増加させる
+  incrementBucket(minuteBuckets, minuteKey, MINUTE_MS, now);
+  incrementBucket(hourBuckets, hourKey, HOUR_MS, now);
 
   return { allowed: true };
 }
