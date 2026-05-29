@@ -39,6 +39,10 @@ export interface ModesMap {
 export interface OracleCard {
   name: string;
   meaning: string;
+  /** 後からカード画像を差し込むための任意フィールド。例: /cards/star-pilgrimage.webp */
+  image?: string;
+  /** 画像の代替テキスト。未指定の場合はカード名を利用する */
+  imageAlt?: string;
 }
 
 // ─── Message / Room / Storage ──────────────────────────
@@ -117,109 +121,3 @@ export interface CustomerInfo {
     active: Record<string, unknown>;
   };
 }
-
-export interface PurchasesPlugin {
-  isMock?: boolean;
-  configure?(options: { apiKey: string }): Promise<void>;
-  getOfferings(): Promise<Offerings>;
-  purchasePackage(options: { aPackage: PurchasePackage }): Promise<{ customerInfo: CustomerInfo }>;
-  restorePurchases(): Promise<{ customerInfo: CustomerInfo }>;
-}
-
-export interface SplashScreenPlugin {
-  isMock?: boolean;
-  hide(): Promise<void>;
-}
-
-export interface KeyboardInfo {
-  keyboardHeight: number;
-}
-
-export interface KeyboardListenerHandle {
-  remove(): Promise<void>;
-}
-
-export type KeyboardEventName = 'keyboardWillShow' | 'keyboardWillHide';
-
-export interface KeyboardPlugin {
-  isMock?: boolean;
-  addListener(
-    eventName: KeyboardEventName,
-    callback: (info: KeyboardInfo) => void
-  ): Promise<KeyboardListenerHandle>;
-}
-
-export interface StatusBarPlugin {
-  isMock?: boolean;
-  setBackgroundColor(options: { color: string }): Promise<void>;
-}
-
-export interface BrowserPlugin {
-  isMock?: boolean;
-  open(options: { url: string }): Promise<void>;
-}
-
-export interface RawTransmission {
-  raw: string;
-  receivedAt: number;
-}
-
-export interface TwoStageResult {
-  raw: string;
-  final: string;
-  receptionMs: number;
-  discernmentMs: number;
-}
-
-export type SamplingParams = {
-  temperature: number;
-  topP: number;
-  topK?: number;
-};
-
-// ─── API Error ─────────────────────────────────────────
-export interface FatalError extends Error {
-  fatal?: boolean;
-}
-
-/**
- * BFF (Cloudflare Workers) のエラーレスポンス型。
- * 成功時は { text: string }、失敗時は以下の構造。
- */
-export interface BackendErrorResponse {
-  error: {
-    code: string;
-    message: string;
-  };
-}
-
-/**
- * BFF が返しうる既知エラーコードの union。
- * UPSTREAM_ERROR は Gemini 由来エラーを丸めたもの。
- */
-export type KnownBackendErrorCode =
-  | 'ORIGIN_NOT_ALLOWED'
-  | 'UNSUPPORTED_MEDIA_TYPE'
-  | 'BODY_TOO_LARGE'
-  | 'INVALID_JSON'
-  | 'INVALID_BODY'
-  | 'INVALID_MESSAGES'
-  | 'TOO_MANY_MESSAGES'
-  | 'INVALID_MESSAGE_SHAPE'
-  | 'CONTENT_TOO_LONG'
-  | 'INVALID_SAMPLING'
-  | 'RATE_LIMITED'
-  | 'SERVER_MISCONFIGURED'
-  | 'UPSTREAM_ERROR'
-  | 'NOT_FOUND';
-
-/**
- * BFF が返しうるエラーコード型。
- * 既知コードの補完を保ちつつ、未知コードも文字列として受け付ける。
- *
- * 現状 buildUserFacingError は string を受け、ランタイムの switch + default
- * フォールバック方式で文言を決定しており、型レベル網羅性チェックは行っていない。
- * 将来 assertNever ベースの厳密網羅性検査に移行する場合は、
- * buildUserFacingError の引数型を KnownBackendErrorCode へ変更する。
- */
-export type BackendErrorCode = KnownBackendErrorCode | (string & {});
