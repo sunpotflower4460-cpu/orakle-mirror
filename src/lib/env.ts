@@ -1,4 +1,5 @@
 import { Purchases } from './capacitorMocks';
+// NOTE: capacitorMocks.ts は env.ts を import しないこと（循環依存になる）
 
 // 実行環境の判定フラグ群
 // 元 App.tsx の IS_PROD / USE_JS_KEYBOARD_PADDING をそのまま移動
@@ -51,30 +52,38 @@ export const PRIVACY_URL: string =
  * 現時点ではビルド時の console.warn と callLLMWithSampling の実行時ガード、
  * および assertProductionReady() の本番前検査に利用する。
  */
+
+/** プレースホルダ文字列に含まれる既知の断片リスト */
+const BACKEND_PLACEHOLDER_TOKENS = [
+  'your-backend.com',
+  '<subdomain>',
+  'your-subdomain',
+  'oracle-mirror-bff..workers.dev', // 二重ドットの誤コピー
+];
+
+const LEGAL_PLACEHOLDER_TOKENS = [
+  'your-website.com',
+  'example.com',
+  'example.org',
+  'example.net',
+  'your-domain.com',
+];
+
+/** 文字列がいずれかのプレースホルダ断片を含むかを判定する共通ヘルパー */
+function containsPlaceholderToken(value: string, tokens: string[]): boolean {
+  return tokens.some((t) => value.includes(t));
+}
+
 export function isBackendUrlPlaceholder(): boolean {
   const v = BACKEND_URL.trim();
   if (!v) return true;
-  // 既知のプレースホルダー断片 (部分一致)
-  const PLACEHOLDER_TOKENS = [
-    'your-backend.com',
-    '<subdomain>',
-    'your-subdomain',
-    'oracle-mirror-bff..workers.dev', // 二重ドットの誤コピー
-  ];
-  return PLACEHOLDER_TOKENS.some((t) => v.includes(t));
+  return containsPlaceholderToken(v, BACKEND_PLACEHOLDER_TOKENS);
 }
 
 export function isLegalUrlPlaceholder(url: string): boolean {
   const v = url.trim();
   if (!v) return true;
-  const PLACEHOLDER_TOKENS = [
-    'your-website.com',
-    'example.com',
-    'example.org',
-    'example.net',
-    'your-domain.com',
-  ];
-  return PLACEHOLDER_TOKENS.some((t) => v.includes(t));
+  return containsPlaceholderToken(v, LEGAL_PLACEHOLDER_TOKENS);
 }
 
 export function assertProductionReady(): void {
@@ -91,6 +100,10 @@ export function assertProductionReady(): void {
   if (isLegalUrlPlaceholder(PRIVACY_URL)) {
     errors.push('VITE_PRIVACY_URL is missing or placeholder');
   }
+  // Phase 6 完了まで Purchases.isMock === true のままになる（capacitorMocks.ts を参照）。
+  // この check は意図的な fail-fast: Phase 6 で RevenueCat 実プラグインに差し替えた時点で
+  // isMock が undefined になり、ガードを通過するようになる。
+  // それまでの本番ビルド起動停止は「誤って Phase 6 前にリリースする事故を防ぐ」フェイルセーフ。
   if (Purchases.isMock) {
     errors.push('RevenueCat Purchases plugin is still running in mock mode');
   }

@@ -7,6 +7,9 @@
 // import { Keyboard } from '@capacitor/keyboard';
 // import { StatusBar } from '@capacitor/status-bar';
 // import { Browser } from '@capacitor/browser';
+//
+// ⚠️ 循環依存防止: このファイルは src/lib/env.ts を import しないこと。
+//    env.ts が capacitorMocks.ts を import しているため、逆方向の import は循環参照になる。
 
 import type {
   PreferencesPlugin,
