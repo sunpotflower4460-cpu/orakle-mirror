@@ -3,7 +3,7 @@ import { Sparkles, Copy, Check } from 'lucide-react';
 import { PERSONAS } from '../constants/personas';
 import { MODES } from '../constants/modes';
 import { useT } from '../i18n';
-import type { Message, PersonaId } from '../types';
+import type { Message, OracleCard, PersonaId } from '../types';
 
 interface OracleBubbleProps {
   msg: Message;
@@ -12,6 +12,93 @@ interface OracleBubbleProps {
   regeneratingId: string | null;
   onCopy: (text: string, id?: string) => Promise<void>;
   onSwitch: (idx: number, targetPersonaId: PersonaId) => Promise<void>;
+}
+
+interface DrawnCardViewProps {
+  card: OracleCard;
+  index: number;
+  accent: string;
+  border: string;
+  soft: string;
+}
+
+function DrawnCardView({ card, index, accent, border, soft }: DrawnCardViewProps) {
+  const hasImage = Boolean(card.image);
+
+  return (
+    <article
+      style={{
+        minWidth: 138,
+        maxWidth: 172,
+        flex: '1 1 138px',
+        borderRadius: 18,
+        border: `1px solid ${border}`,
+        background: 'rgba(255,255,255,0.88)',
+        boxShadow: `0 10px 28px ${accent}12`,
+        overflow: 'hidden',
+        animation: `cardReveal 0.6s cubic-bezier(0.16,1,0.3,1) ${0.15 + index * 0.12}s both`,
+      }}
+    >
+      <div
+        style={{
+          position: 'relative',
+          aspectRatio: '3 / 4',
+          background: hasImage
+            ? '#f8fafc'
+            : `radial-gradient(circle at 50% 18%, #ffffff 0%, ${soft} 48%, #f8fafc 100%)`,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          overflow: 'hidden',
+        }}
+      >
+        {hasImage ? (
+          <img
+            src={card.image}
+            alt={card.imageAlt || card.name}
+            loading="lazy"
+            style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+          />
+        ) : (
+          <div
+            aria-label={`${card.name} のカード画像枠`}
+            style={{
+              width: '72%',
+              height: '78%',
+              borderRadius: 16,
+              border: `1px solid ${accent}22`,
+              background: 'linear-gradient(145deg, rgba(255,255,255,0.72), rgba(255,255,255,0.24))',
+              boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.8)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: accent,
+              opacity: 0.72,
+            }}
+          >
+            <Sparkles size={22} style={{ animation: 'pulse 3s ease-in-out infinite' }} />
+          </div>
+        )}
+        <div
+          aria-hidden="true"
+          style={{
+            position: 'absolute',
+            inset: 0,
+            background: 'linear-gradient(to bottom, rgba(255,255,255,0.12), rgba(255,255,255,0) 42%, rgba(15,23,42,0.03))',
+            pointerEvents: 'none',
+          }}
+        />
+      </div>
+      <div style={{ padding: '10px 11px 12px' }}>
+        <div style={{ fontSize: 13, fontWeight: 800, color: accent, letterSpacing: '0.04em', marginBottom: 4 }}>
+          {card.name}
+        </div>
+        <div style={{ fontSize: 11, lineHeight: 1.7, color: '#64748b', fontWeight: 400 }}>
+          {card.meaning}
+        </div>
+      </div>
+    </article>
+  );
 }
 
 export const OracleBubble = React.memo(function OracleBubble({ msg, idx, copiedId, regeneratingId, onCopy, onSwitch }: OracleBubbleProps) {
@@ -44,13 +131,13 @@ export const OracleBubble = React.memo(function OracleBubble({ msg, idx, copiedI
           </div>
         )}
         {msg.drawnCards && msg.drawnCards.length > 0 && (
-          <div style={{ marginBottom: 20, padding: '14px 16px', background: `linear-gradient(to bottom right, #ffffff, ${msgPersona.soft})`, borderRadius: 16, border: `1px solid ${msgPersona.border}` }}>
-            <div style={{ display:'flex', alignItems:'center', gap:6, fontSize: 10, letterSpacing: '0.2em', color: '#94a3b8', textTransform: 'uppercase', marginBottom: 10 }}>
-              <Sparkles size={12} style={{ color: msgPersona.accent, animation: 'pulse 3s ease-in-out infinite' }} /> Drawn Symbols
+          <div style={{ marginBottom: 22, padding: '15px 15px 16px', background: `linear-gradient(to bottom right, #ffffff, ${msgPersona.soft})`, borderRadius: 20, border: `1px solid ${msgPersona.border}` }}>
+            <div style={{ display:'flex', alignItems:'center', gap:6, fontSize: 10, letterSpacing: '0.2em', color: '#94a3b8', textTransform: 'uppercase', marginBottom: 12 }}>
+              <Sparkles size={12} style={{ color: msgPersona.accent, animation: 'pulse 3s ease-in-out infinite' }} /> Drawn Cards
             </div>
-            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
               {msg.drawnCards.map((c, ci) => (
-                <span key={c.name} style={{ fontSize: 12, fontWeight: 700, color: msgPersona.accent, background: '#fff', border: `1px solid ${msgPersona.border}`, padding: '6px 12px', borderRadius: 999, boxShadow: `0 2px 10px ${msgPersona.accent}14`, animation: `cardReveal 0.6s cubic-bezier(0.16,1,0.3,1) ${0.15 + ci * 0.12}s both` }}>{c.name}</span>
+                <DrawnCardView key={`${c.name}-${ci}`} card={c} index={ci} accent={msgPersona.accent} border={msgPersona.border} soft={msgPersona.soft} />
               ))}
             </div>
           </div>
