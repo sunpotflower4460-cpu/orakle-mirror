@@ -43,8 +43,10 @@ export function SubscribeModal({ onClose, onSubscribe, onRestore, isPurchasing }
       display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px',
       paddingTop: 'calc(16px + var(--sat))', paddingBottom: 'calc(16px + var(--sab))',
       animation: 'fadeIn 0.3s ease'
+    }} onClick={e => {
+      if (e.target === e.currentTarget && !isPurchasing) onClose();
     }}>
-      <div style={{ background: '#fff', padding: 32, borderRadius: 28, maxWidth: 420, width: '100%', boxShadow: '0 32px 80px rgba(0,0,0,0.4)', textAlign: 'center', animation: 'modalReveal 0.4s cubic-bezier(0.16,1,0.3,1)' }}>
+      <div style={{ background: '#fff', padding: 32, borderRadius: 28, maxWidth: 420, width: '100%', maxHeight: '100%', overflowY: 'auto', boxShadow: '0 32px 80px rgba(0,0,0,0.4)', textAlign: 'center', animation: 'modalReveal 0.4s cubic-bezier(0.16,1,0.3,1)' }}>
         <div style={{ display: 'inline-flex', padding: 16, background: '#f8fafc', borderRadius: '50%', marginBottom: 20 }}>
           <Lock size={32} color="#64748b" />
         </div>

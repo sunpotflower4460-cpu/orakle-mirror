@@ -35,7 +35,7 @@ export function HelpModal({ onClose, onDeleteAllHistory }: HelpModalProps) {
         animation: 'modalReveal 0.4s cubic-bezier(0.16,1,0.3,1)'
       }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20, paddingBottom: 14, borderBottom: '1px solid #f8fafc' }}>
-          <h2 id="helpTitle" style={{ fontSize: 11, letterSpacing: '0.4em', fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', margin: 0 }}>Mirror Guide</h2>
+          <h2 id="helpTitle" style={{ fontSize: 11, letterSpacing: '0.4em', fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', margin: 0 }}>{t('help.title')}</h2>
           <button aria-label={t('a11y.close')} onClick={onClose} style={{ minWidth: 44, minHeight: 44, background: 'none', border: 'none', cursor: 'pointer', color: '#cbd5e1', display: 'flex', alignItems: 'center', justifyContent: 'flex-end' }}><X size={18}/></button>
         </div>
         <section style={{ marginBottom: 24 }}>

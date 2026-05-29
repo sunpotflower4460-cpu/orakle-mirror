@@ -165,14 +165,14 @@ export function Onboarding({ onComplete }: OnboardingProps) {
         <div className="onboarding-nav" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           {step > 0 ? (
             <button className="onboarding-secondary" onClick={back} aria-label={t('onboarding.back')} style={{
-              minWidth: 44, minHeight: 48, padding: '0 16px', background: 'transparent', color: '#94a3b8',
-              border: 'none', borderRadius: 999, cursor: 'pointer', fontSize: 12, fontWeight: 700,
+              minWidth: 44, minHeight: 48, padding: '0 16px', background: '#f8fafc', color: '#64748b',
+              border: '1px solid #e2e8f0', borderRadius: 999, cursor: 'pointer', fontSize: 12, fontWeight: 700,
               display: 'flex', alignItems: 'center', gap: 6
             }}><ArrowLeft size={14} /> {t('onboarding.back')}</button>
           ) : (
             <button className="onboarding-secondary" onClick={() => onComplete()} style={{
-              minHeight: 48, padding: '0 16px', background: 'transparent', color: '#cbd5e1',
-              border: 'none', borderRadius: 999, cursor: 'pointer', fontSize: 11, fontWeight: 700, letterSpacing: '0.1em'
+              minHeight: 48, padding: '0 16px', background: '#f8fafc', color: '#64748b',
+              border: '1px solid #e2e8f0', borderRadius: 999, cursor: 'pointer', fontSize: 11, fontWeight: 700, letterSpacing: '0.1em'
             }}>{t('onboarding.skip')}</button>
           )}
 

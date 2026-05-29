@@ -77,15 +77,6 @@ export function MainApp() {
   const mainRef        = useRef<HTMLElement>(null);
   const asideRef       = useRef<HTMLElement>(null);
 
-  useEffect(() => {
-    const href = 'https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@300;400;700&display=swap';
-    if (document.querySelector(`link[href="${href}"]`)) return;
-    const link = document.createElement('link');
-    link.href = href;
-    link.rel = 'stylesheet';
-    document.head.appendChild(link);
-  }, []);
-
   useLayoutEffect(() => {
     if (mainRef.current) {
       if (sidebarOpen) mainRef.current.setAttribute('inert', '');
@@ -674,7 +665,7 @@ export function MainApp() {
         display: 'flex', flexDirection: 'column'
       }}>
         <div style={{ paddingTop: 'calc(18px + var(--sat))', paddingLeft: 'calc(14px + var(--sal))', paddingRight: 14, paddingBottom: 10, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0, opacity: sidebarOpen ? 1 : 0, transition: 'opacity 0.3s ease 0.12s' }}>
-          <span style={{ fontSize: 10, letterSpacing: '0.4em', fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>Archive</span>
+          <span style={{ fontSize: 10, letterSpacing: '0.4em', fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>{t('sidebar.title')}</span>
           <button aria-label={t('a11y.newRoom')} onClick={handleNewRoom} style={{ minWidth: 44, minHeight: 44, background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', display: 'flex', alignItems: 'center', justifyContent: 'center', marginRight: -8 }}>
             <Plus size={16}/>
           </button>
@@ -714,7 +705,7 @@ export function MainApp() {
         
         {/* サイドバー下部：サブスクリプション導線 */}
         <div style={{ padding: '16px', paddingLeft: 'calc(16px + var(--sal))', borderTop: '1px solid #f1f5f9', background: '#f8fafc', paddingBottom: 'calc(16px + var(--sab))', flexShrink: 0, opacity: sidebarOpen ? 1 : 0, transition: 'opacity 0.3s ease 0.12s' }}>
-          <div style={{ fontSize: 10, letterSpacing: '0.2em', color: '#94a3b8', textTransform: 'uppercase', marginBottom: 12, fontWeight: 700 }}>Subscription</div>
+          <div style={{ fontSize: 10, letterSpacing: '0.2em', color: '#94a3b8', textTransform: 'uppercase', marginBottom: 12, fontWeight: 700 }}>{t('subscription.title')}</div>
           {isPremium ? (
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#10b981', fontSize: 12, fontWeight: 700 }}>
               <Unlock size={14} /> {t('subscription.unlimited')}
