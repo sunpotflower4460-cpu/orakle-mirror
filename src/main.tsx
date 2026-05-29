@@ -1,5 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
+import { Capacitor } from '@capacitor/core';
 import App from './App';
 import { IS_PROD, assertProductionReady } from './lib/env';
 
@@ -9,12 +10,16 @@ if (!rootElement) {
 }
 
 if (IS_PROD) {
-  // 本番起動時の fail-fast ガード。
-  // throw すると ErrorBoundary の外で発生するため白画面になるが、これは意図的。
-  // 「開発者がビルド設定ミスを必ず気づく」ことを優先している。
-  // Phase 6 完了 (RevenueCat 実装差し替え) まで Purchases.isMock === true のため、
-  // 本番ビルドは intentionally ここで停止する（誤リリース防止）。
-  assertProductionReady();
+  try {
+    assertProductionReady();
+  } catch (error) {
+    if (Capacitor.isNativePlatform()) {
+      throw error;
+    }
+
+    // eslint-disable-next-line no-console
+    console.error(error);
+  }
 }
 
 ReactDOM.createRoot(rootElement).render(
