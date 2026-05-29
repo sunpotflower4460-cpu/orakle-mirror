@@ -43,7 +43,7 @@ function DrawnCardView({ card, index, accent, border, soft }: DrawnCardViewProps
           border: `1px solid ${border}`,
           background: hasImage
             ? '#f8fafc'
-            : `linear-gradient(160deg, rgba(255,255,255,0.98), ${soft} 52%, rgba(248,250,252,0.98) 100%)`,
+            : `linear-gradient(160deg, rgba(255,255,255,0.98), ${soft} 52%, rgba(255,247,248,0.95) 100%)`,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -133,11 +133,11 @@ export const OracleBubble = React.memo(function OracleBubble({ msg, idx, copiedI
           </div>
         )}
         {msg.drawnCards && msg.drawnCards.length > 0 && (
-          <div style={{ marginBottom: 22, padding: '15px 15px 0', background: `linear-gradient(to bottom right, #ffffff, ${msgPersona.soft})`, borderRadius: 20, border: `1px solid ${msgPersona.border}` }}>
-            <div style={{ display:'flex', alignItems:'center', gap:6, fontSize: 11, letterSpacing: '0.08em', color: '#94a3b8', marginBottom: 12 }}>
+          <div style={{ marginBottom: 22, padding: '15px 15px 0', background: `linear-gradient(to bottom right, #ffffff, ${msgPersona.soft})`, borderRadius: 22, border: `1px solid ${msgPersona.border}` }}>
+            <div style={{ display:'flex', alignItems:'center', gap:6, fontSize: 11, letterSpacing: '0.08em', color: '#7b8494', marginBottom: 12 }}>
               <Sparkles size={12} style={{ color: msgPersona.accent, animation: 'pulse 3s ease-in-out infinite' }} /> {t('cards.drawnTitle')}
             </div>
-            <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 22 }}>
+            <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 22, overflow: 'hidden' }}>
               {msg.drawnCards.map((c, ci) => (
                 <DrawnCardView key={`${c.name}-${ci}`} card={c} index={ci} accent={msgPersona.accent} border={msgPersona.border} soft={msgPersona.soft} />
               ))}
