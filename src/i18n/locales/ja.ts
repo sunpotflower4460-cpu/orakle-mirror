@@ -92,7 +92,7 @@ export const ja = {
 
   // オンボーディング(初回体験)
   'onboarding.concept.title': '内なる声を映す鏡',
-  'onboarding.concept.body': 'Oracle Mirror は、答えを与える占いではありません。\nあなたの内側にすでに在る声を、静かに映す鏡です。',
+  'onboarding.concept.body': 'Oracle Mirror は、答えを与える占いではありません。\nあなたの内側にすでにある声を、静かに映す鏡です。',
   'onboarding.persona.title': '鏡を選ぶ',
   'onboarding.persona.body': '3つの鏡が、それぞれ違う光であなたを映します。\nいつでも切り替えられます。',
   'onboarding.mode.title': '対話の仕方',

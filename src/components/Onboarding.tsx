@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Compass, ArrowRight, ArrowLeft } from 'lucide-react';
+import { Diamond, ArrowRight, ArrowLeft } from 'lucide-react';
 import { PERSONAS } from '../constants/personas';
 import { MODES } from '../constants/modes';
 import { LOCALES, useLocale } from '../i18n';
@@ -45,17 +45,17 @@ export function Onboarding({ onComplete }: OnboardingProps) {
   const back = () => setStep(s => Math.max(s - 1, 0));
 
   const titleId = 'onboardingTitle';
-  const bodyStyle: React.CSSProperties = { fontSize: 15, color: '#596579', lineHeight: 2.0, marginTop: 14 };
-  const headingStyle: React.CSSProperties = { fontSize: 30, fontWeight: 400, color: '#263044', letterSpacing: '0.10em', margin: 0, lineHeight: 1.5 };
+  const bodyStyle: React.CSSProperties = { fontSize: 15, color: '#55627a', lineHeight: 2.12, marginTop: 14, letterSpacing: '0.035em' };
+  const headingStyle: React.CSSProperties = { fontSize: 30, fontWeight: 400, color: '#202d48', letterSpacing: '0.13em', margin: 0, lineHeight: 1.5 };
 
   return (
     <div className="onboarding-overlay" role="dialog" aria-modal="true" aria-labelledby={titleId} style={{
       position: 'fixed', inset: 0, zIndex: 1100,
       background: `
-        radial-gradient(circle at 50% 31%, rgba(244,190,205,0.22), transparent 30%),
-        radial-gradient(circle at 50% 72%, rgba(255,235,240,0.38), transparent 38%),
-        radial-gradient(circle at 15% 18%, rgba(255,255,255,0.74), transparent 34%),
-        linear-gradient(180deg, #fffdfd 0%, #fff8fa 48%, #fdf2f5 100%)
+        radial-gradient(circle at 15% 22%, rgba(255,255,255,0.70), transparent 30%),
+        radial-gradient(circle at 78% 18%, rgba(209,226,255,0.18), transparent 36%),
+        radial-gradient(circle at 50% 68%, rgba(245,201,214,0.28), transparent 42%),
+        linear-gradient(180deg, #fffefd 0%, #fff9fb 45%, #f8f2f8 100%)
       `,
       backdropFilter: 'blur(4px)', WebkitBackdropFilter: 'blur(4px)',
       display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -63,8 +63,9 @@ export function Onboarding({ onComplete }: OnboardingProps) {
       animation: 'fadeIn 0.3s ease'
     }}>
       <div className="onboarding-card" style={{
-        background: 'rgba(255,255,255,0.84)', maxWidth: 440, width: '100%', maxHeight: '100%',
-        borderRadius: 38, boxShadow: '0 24px 80px rgba(90,60,70,0.07)', border: '1px solid rgba(220,210,216,0.30)',
+        background: 'linear-gradient(140deg, rgba(255,255,255,0.76), rgba(255,246,251,0.68), rgba(240,246,255,0.56))',
+        maxWidth: 440, width: '100%', maxHeight: '100%',
+        borderRadius: 38, boxShadow: '0 28px 90px rgba(18,24,46,0.10)', border: '1px solid rgba(214,224,245,0.38)',
         overflowY: 'auto', padding: 32, display: 'flex', flexDirection: 'column',
         animation: 'modalReveal 0.45s cubic-bezier(0.16,1,0.3,1)'
       }}>
@@ -72,18 +73,22 @@ export function Onboarding({ onComplete }: OnboardingProps) {
         <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 12 }}>
           <div role="group" aria-label={t('help.language')} style={{
             display: 'flex', gap: 3,
-            background: 'rgba(255,255,255,0.68)', borderRadius: 999, padding: 4,
-            border: '1px solid rgba(210,200,210,0.35)',
-            height: 46
+            flexDirection: 'column',
+            alignItems: 'flex-end',
+            background: 'rgba(255,255,255,0.52)', borderRadius: 16, padding: 8,
+            border: '1px solid rgba(210,220,238,0.42)'
           }}>
+            <span style={{ fontSize: 11, letterSpacing: '0.08em', color: '#6e7d98', marginBottom: 3 }}>日本語 / English</span>
+            <div style={{ display: 'flex', gap: 3, height: 42 }}>
             {LOCALES.map(loc => (
               <button key={loc} onClick={() => setLocale(loc)} aria-pressed={locale === loc} style={{
                 padding: '6px 16px', borderRadius: 999, border: 'none', cursor: 'pointer',
                 fontSize: 12, fontWeight: 600, transition: 'all 0.25s',
-                background: locale === loc ? 'rgba(244,190,205,0.62)' : 'transparent',
-                color: locale === loc ? '#263044' : '#8f98a8'
+                background: locale === loc ? 'linear-gradient(130deg, rgba(250,214,228,0.92), rgba(232,240,255,0.86))' : 'transparent',
+                color: locale === loc ? '#20304b' : '#7e8da7'
               }}>{t(`language.${loc}`)}</button>
             ))}
+            </div>
           </div>
         </div>
 
@@ -93,19 +98,32 @@ export function Onboarding({ onComplete }: OnboardingProps) {
             <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flex: 1, gap: 0 }}>
               {/* Large logo with rose glow */}
               <div style={{ position: 'relative', width: 116, height: 116, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 28 }}>
-                <div style={{ position: 'absolute', inset: -28, background: 'radial-gradient(circle, rgba(217,111,140,0.15) 0%, transparent 70%)', animation: 'pulse 3s ease-in-out infinite', borderRadius: '50%' }} />
-                <div style={{ position: 'absolute', inset: -10, background: 'radial-gradient(circle, rgba(217,111,140,0.08) 0%, transparent 70%)', borderRadius: '50%' }}/>
+               <div style={{ position: 'absolute', inset: -28, background: 'radial-gradient(circle, rgba(36,60,108,0.20) 0%, transparent 70%)', animation: 'pulse 3s ease-in-out infinite', borderRadius: '50%' }} />
+               <div style={{ position: 'absolute', inset: -10, background: 'radial-gradient(circle, rgba(217,111,140,0.09) 0%, transparent 70%)', borderRadius: '50%' }}/>
                 <div style={{
                   width: 116, height: 116, borderRadius: '50%',
-                  background: 'radial-gradient(circle, rgba(255,255,255,0.80), rgba(255,238,244,0.40))',
-                  border: '1px solid rgba(200,212,224,0.42)',
-                  boxShadow: '0 0 52px rgba(217,111,140,0.20), 0 0 86px rgba(217,111,140,0.11), inset 0 1px 0 rgba(255,255,255,0.84)',
+                 background: 'radial-gradient(circle at 40% 34%, rgba(255,255,255,0.92), rgba(255,235,246,0.52), rgba(218,232,255,0.42))',
+                 border: '1px solid rgba(194,212,238,0.52)',
+                 boxShadow: '0 0 62px rgba(41,63,110,0.22), 0 0 84px rgba(217,111,140,0.16), inset 0 1px 0 rgba(255,255,255,0.92)',
                   display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative'
                 }}>
-                  <Compass size={54} strokeWidth={0.55} style={{ color: 'rgba(215,120,148,0.72)', animation: 'spinSlow 80s linear infinite', position: 'relative' }} />
-                </div>
+                 <div style={{
+                   width: 58,
+                   height: 58,
+                   transform: 'rotate(45deg)',
+                   borderRadius: 10,
+                   background: 'linear-gradient(140deg, rgba(255,255,255,0.95), rgba(223,233,255,0.72), rgba(250,210,225,0.78))',
+                   border: '1px solid rgba(163,179,210,0.54)',
+                   display: 'flex',
+                   alignItems: 'center',
+                   justifyContent: 'center',
+                   boxShadow: '0 10px 30px rgba(16,24,46,0.18), inset 0 0 16px rgba(255,255,255,0.68)'
+                 }}>
+                   <Diamond size={24} strokeWidth={1.2} style={{ color: 'rgba(39,59,106,0.8)', transform: 'rotate(-45deg)' }} />
+                 </div>
+               </div>
               </div>
-              <div style={{ fontSize: 10, letterSpacing: '0.46em', color: '#c9bbc3', textTransform: 'uppercase', fontWeight: 600, marginBottom: 16 }}>Oracle Mirror</div>
+              <div style={{ fontSize: 20, letterSpacing: '0.32em', color: '#2a3c63', textTransform: 'uppercase', fontWeight: 500, marginBottom: 14, fontFamily: "'Garamond', 'Times New Roman', serif" }}>ORACLE MIRROR</div>
               <h2 className="onboarding-heading" id={titleId} style={headingStyle}>{t('onboarding.concept.title')}</h2>
               <p className="onboarding-body" style={bodyStyle}><MultiLine text={t('onboarding.concept.body')} /></p>
             </div>
@@ -183,12 +201,21 @@ export function Onboarding({ onComplete }: OnboardingProps) {
 
         {/* Progress dots */}
         <div role="presentation" aria-label={t('onboarding.progress', { current: step + 1, total: TOTAL_STEPS })}
-          style={{ display: 'flex', gap: 6, justifyContent: 'center', margin: '22px 0' }}>
+          style={{ display: 'flex', gap: 8, justifyContent: 'center', margin: '22px 0' }}>
           {Array.from({ length: TOTAL_STEPS }, (_, i) => (
             <span key={i} style={{
-              width: i === step ? 20 : 6, height: 6, borderRadius: 999,
-              background: i === step ? '#d77894' : 'rgba(220,210,216,0.60)', transition: 'all 0.35s'
-            }} />
+              width: i === step ? 14 : 10,
+              height: i === step ? 14 : 10,
+              color: i === step ? '#203463' : 'rgba(176,155,170,0.70)',
+              fontSize: i === step ? 11 : 9,
+              lineHeight: 1,
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              textShadow: i === step ? '0 0 12px rgba(230,244,255,0.9)' : 'none',
+              animation: i === step ? 'twinkle 1.8s ease-in-out infinite' : 'none',
+              transition: 'all 0.35s'
+            }}>✦</span>
           ))}
         </div>
 
@@ -213,11 +240,12 @@ export function Onboarding({ onComplete }: OnboardingProps) {
 
           <button className="onboarding-primary" onClick={isLast ? () => onComplete(selectedPersona) : next} style={{
             minHeight: 66, padding: '0 30px',
-            background: 'linear-gradient(135deg, #0b1024, #141c38)', color: '#fff',
+            background: 'linear-gradient(135deg, #0b1430, #101e46 56%, #162953)', color: '#fff',
             border: 'none', borderRadius: 999, cursor: 'pointer', fontSize: 11, fontWeight: 700,
             letterSpacing: '0.2em', textTransform: 'uppercase',
             display: 'flex', alignItems: 'center', gap: 8,
-            boxShadow: '0 20px 50px rgba(10,16,36,0.24)'
+            boxShadow: '0 20px 50px rgba(10,16,36,0.28), inset 0 1px 0 rgba(219,233,255,0.42)',
+            animation: 'pulse 2.8s ease-in-out infinite'
           }}>
             {isLast ? t('onboarding.begin') : t('onboarding.next')}
             {!isLast && <ArrowRight size={14} />}

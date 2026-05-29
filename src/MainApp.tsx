@@ -2,8 +2,8 @@
 import React, { useState, useRef, useEffect, useCallback, useMemo, useLayoutEffect } from 'react';
 import {
   Wind, Loader2, Menu,
-  Plus, Compass, HelpCircle, X, Share2,
-  Trash2, AlertCircle, Lock, Unlock
+  Plus, Compass, HelpCircle, X, Share2, Diamond,
+  Trash2, AlertCircle, Lock, Unlock, KeyRound
 } from 'lucide-react';
 import { GLOBAL_STYLES } from './styles/globals';
 import { getRandomCards } from './constants/cards';
@@ -650,11 +650,12 @@ export function MainApp() {
       display: 'flex',
       fontFamily: "'Hiragino Mincho ProN', 'Yu Mincho', 'Noto Serif JP', serif",
       background: `
-        radial-gradient(circle at 50% 31%, rgba(244,190,205,0.25), transparent 30%),
-        radial-gradient(circle at 50% 72%, rgba(255,235,240,0.42), transparent 38%),
-        radial-gradient(circle at 15% 18%, rgba(255,255,255,0.76), transparent 34%),
-        linear-gradient(180deg, #fffdfd 0%, #fff8fa 48%, #fdf2f5 100%)
+        radial-gradient(circle at 18% 22%, rgba(255,255,255,0.78), transparent 32%),
+        radial-gradient(circle at 74% 14%, rgba(205,224,255,0.18), transparent 36%),
+        radial-gradient(circle at 50% 72%, rgba(255,220,236,0.35), transparent 38%),
+        linear-gradient(180deg, #fffefc 0%, #fff9fc 45%, #f8f3f9 100%)
       `,
+      backgroundSize: '100% 100%, 100% 100%, 100% 100%, 100% 100%',
       overflow: 'hidden', color: '#263044', position: 'relative'
     }}>
       <style>{GLOBAL_STYLES}</style>
@@ -678,7 +679,7 @@ export function MainApp() {
         maxWidth: 300,
         background: 'rgba(255,255,255,0.90)',
         backdropFilter: 'blur(22px)', WebkitBackdropFilter: 'blur(22px)',
-        borderRight: '1px solid rgba(220,210,216,0.35)',
+        borderRight: '1px solid rgba(215,224,240,0.45)',
         borderRadius: '0 28px 28px 0',
         transition: 'width 0.3s cubic-bezier(0.16,1,0.3,1)',
         overflow: 'hidden',
@@ -696,16 +697,22 @@ export function MainApp() {
           {rooms.length === 0 && (
             <div style={{
               borderRadius: 28, margin: '4px 0 16px',
-              background: 'radial-gradient(circle at 50% 30%, rgba(244,190,205,0.22), transparent 60%), rgba(255,250,252,0.86)',
-              border: '1px solid rgba(220,210,216,0.28)',
+              background: `
+                radial-gradient(circle at 14px 14px, rgba(34,52,91,0.12) 0 1px, transparent 1.3px) 0 0 / 24px 24px,
+                radial-gradient(circle at 50% 30%, rgba(244,190,205,0.20), transparent 60%),
+                linear-gradient(150deg, rgba(255,250,252,0.92), rgba(248,251,255,0.76))
+              `,
+              border: '1px solid rgba(210,219,236,0.38)',
               boxShadow: '0 24px 70px rgba(160,110,130,0.06)',
               padding: '36px 20px 40px',
               textAlign: 'center',
               display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12
             }}>
               <div style={{ position: 'relative', marginBottom: 4 }}>
-                <div style={{ position: 'absolute', inset: -18, background: 'radial-gradient(circle, rgba(215,120,148,0.14) 0%, transparent 70%)', animation: 'pulse 3s ease-in-out infinite', borderRadius: '50%' }}/>
-                <Compass size={42} strokeWidth={0.7} style={{ color: 'rgba(215,120,148,0.55)', position: 'relative', animation: 'spinSlow 80s linear infinite' }} />
+                <div style={{ position: 'absolute', inset: -18, background: 'radial-gradient(circle, rgba(36,56,104,0.16) 0%, transparent 70%)', animation: 'pulse 3s ease-in-out infinite', borderRadius: '50%' }}/>
+                <div style={{ width: 46, height: 46, borderRadius: 12, transform: 'rotate(45deg)', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(140deg, rgba(255,255,255,0.95), rgba(224,234,255,0.74), rgba(246,205,224,0.78))', border: '1px solid rgba(170,186,218,0.5)', boxShadow: '0 12px 24px rgba(16,24,46,0.18)' }}>
+                  <Diamond size={20} strokeWidth={1.2} style={{ color: 'rgba(37,58,106,0.76)', transform: 'rotate(-45deg)' }} />
+                </div>
               </div>
               <p style={{ fontSize: 14, color: '#263044', fontWeight: 500, letterSpacing: '0.04em' }}>{t('sidebar.empty')}</p>
               <p style={{ fontSize: 12, color: '#8b95a5', lineHeight: 1.9, letterSpacing: '0.02em' }}>{t('sidebar.emptyHint')}</p>
@@ -753,21 +760,21 @@ export function MainApp() {
               <Unlock size={14} /> {t('subscription.unlimited')}
             </div>
           ) : (
-            <div>
-              <div style={{ fontSize: 12, color: '#7f8998', marginBottom: 12, display: 'flex', justifyContent: 'space-between', background: 'rgba(255,255,255,0.82)', borderRadius: 14, padding: '10px 14px', border: '1px solid rgba(220,210,216,0.32)' }}>
+            <div style={{ background: 'linear-gradient(140deg, rgba(255,255,255,0.88), rgba(246,250,255,0.72), rgba(255,240,247,0.75))', border: '1px solid rgba(210,219,236,0.44)', borderRadius: 18, padding: 12, boxShadow: '0 16px 38px rgba(23,33,62,0.08)' }}>
+              <div style={{ fontSize: 12, color: '#7f8998', marginBottom: 12, display: 'flex', justifyContent: 'space-between', background: 'rgba(255,255,255,0.72)', borderRadius: 14, padding: '10px 14px', border: '1px solid rgba(220,210,216,0.32)' }}>
                 <span>{t('subscription.remainingToday')}</span>
                 <span style={{ fontWeight: 700, color: typeof remainingDisplay === 'number' && remainingDisplay > 0 ? '#263044' : '#f43f5e' }}>{t('subscription.remainingCount', { count: remainingDisplay })}</span>
               </div>
               <button onClick={() => setShowSubscribeModal(true)} style={{
                 width: '100%', padding: '14px 0',
-                background: 'linear-gradient(135deg, #0b1024, #141c38)',
+                background: 'linear-gradient(135deg, #0b1532, #111f46 56%, #162a54)',
                 color: '#fff',
                 borderRadius: 16, fontSize: 11, fontWeight: 700, cursor: 'pointer', border: 'none',
                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-                boxShadow: '0 16px 38px rgba(10,16,36,0.22)',
+                boxShadow: '0 16px 38px rgba(10,16,36,0.24), inset 0 1px 0 rgba(219,233,255,0.42)',
                 letterSpacing: '0.12em'
               }}>
-                <Lock size={12} /> {t('subscription.unlockPremium')}
+                <KeyRound size={12} /> {t('subscription.unlockPremium')}
               </button>
             </div>
           )}
@@ -820,21 +827,22 @@ export function MainApp() {
 
           <div className="mode-switch" role="radiogroup" aria-label={t('a11y.modeSelect')} style={{
             position: 'relative', display: 'flex',
-            background: 'rgba(255,255,255,0.76)',
-            borderRadius: 999,
-            padding: 5, border: '1px solid rgba(210,190,200,0.35)',
-            boxShadow: '0 14px 36px rgba(80,50,60,0.04)',
+            background: 'linear-gradient(130deg, rgba(255,255,255,0.84), rgba(255,246,251,0.74), rgba(242,248,255,0.66))',
+            borderRadius: 22,
+            padding: 6, border: '1px solid rgba(206,220,240,0.42)',
+            boxShadow: '0 18px 42px rgba(80,50,60,0.06)',
             marginTop: 10,
-            height: 56,
+            height: 62,
             width: 300, maxWidth: '100%', marginLeft: 'auto', marginRight: 'auto'
           }}>
             {/* スライドして移動するセグメントインジケータ */}
             <span aria-hidden="true" style={{
               position: 'absolute', top: 5, bottom: 5, width: 'calc(50% - 5px)',
               left: activeModeIndex <= 0 ? 5 : '50%',
-              background: 'linear-gradient(135deg, #0b1024, #141c38)',
-              borderRadius: 999,
-              boxShadow: '0 14px 36px rgba(10,16,36,0.22)',
+              background: 'linear-gradient(130deg, #0c1633, #102044 58%, #172c58)',
+              borderRadius: 16,
+              boxShadow: '0 14px 36px rgba(10,16,36,0.24), inset 0 1px 0 rgba(214,230,255,0.38)',
+              animation: 'iridescentShift 4.4s ease-in-out infinite',
               transition: 'left 0.35s cubic-bezier(0.16,1,0.3,1)'
             }} />
             {modeEntries.map((m: Mode) => (
@@ -842,7 +850,7 @@ export function MainApp() {
                 style={{
                   position: 'relative', zIndex: 1, flex: '1 1 0',
                   display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-                  padding: '8px 12px', borderRadius: 999, cursor: 'pointer', border: 'none',
+                  padding: '8px 12px', borderRadius: 14, cursor: 'pointer', border: 'none',
                   whiteSpace: 'nowrap', fontSize: 10, letterSpacing: '0.15em',
                   textTransform: 'uppercase', fontWeight: 700, transition: 'color 0.3s', background: 'transparent',
                   color: mode.id === m.id ? '#ffffff' : '#8f98a8'
@@ -986,13 +994,13 @@ export function MainApp() {
         }}>
           <div className="input-shell" style={{
             display: 'flex', alignItems: 'flex-end', gap: 10,
-            background: inputFocused ? 'rgba(255,255,255,0.90)' : 'rgba(255,255,255,0.86)',
+            background: inputFocused ? 'linear-gradient(130deg, rgba(255,255,255,0.92), rgba(255,246,251,0.82), rgba(240,248,255,0.76))' : 'linear-gradient(130deg, rgba(255,255,255,0.88), rgba(255,246,251,0.78), rgba(240,248,255,0.68))',
             backdropFilter: 'blur(14px)', WebkitBackdropFilter: 'blur(14px)',
             borderRadius: 999, padding: '10px 10px 10px 26px',
-            border: `1px solid ${inputFocused ? `rgba(230,210,218,0.68)` : 'rgba(230,210,218,0.44)'}`,
+            border: `1px solid ${inputFocused ? `rgba(173,205,238,0.78)` : 'rgba(214,204,225,0.56)'}`,
             transform: inputFocused ? 'translateY(-2px)' : 'translateY(0)',
             boxShadow: inputFocused
-              ? `0 18px 48px rgba(120,80,90,0.07), 0 0 0 1px rgba(215,120,148,0.12)`
+              ? `0 18px 48px rgba(120,80,90,0.09), 0 0 0 1px rgba(145,181,228,0.36), inset 0 0 24px rgba(247,214,233,0.45)`
               : '0 18px 48px rgba(120,80,90,0.05)'
           }}>
             <textarea
@@ -1011,6 +1019,7 @@ export function MainApp() {
                 resize: 'none', fontWeight: 300, color: '#263044', fontSize: 17,
                 lineHeight: 1.65, overflowY: 'hidden', maxHeight: 120,
                 fontFamily: 'inherit', caretColor: p.accent, paddingTop: 8, paddingBottom: 8,
+                textAlign: input.trim().length > 0 ? 'left' : 'center',
                 opacity: isLocked ? 0.5 : 1
               }}
             />
@@ -1031,10 +1040,10 @@ export function MainApp() {
                 width: 52, height: 52, borderRadius: 999, border: 'none', display: 'flex',
                 alignItems: 'center', justifyContent: 'center', flexShrink: 0,
                 cursor: isLoading || (!isLocked && !input.trim()) ? 'not-allowed' : 'pointer',
-                background: isLoading || (!isLocked && !input.trim()) ? 'rgba(248,233,238,0.86)' : '#10172f',
+                background: isLoading || (!isLocked && !input.trim()) ? 'rgba(248,233,238,0.86)' : 'linear-gradient(135deg, #0c1736, #12254d)',
                 color: isLoading || (!isLocked && !input.trim()) ? '#c97890' : '#fff',
                 transition: 'background 0.3s, color 0.3s',
-                boxShadow: isLoading || (!isLocked && !input.trim()) ? 'none' : '0 16px 38px rgba(10,16,36,0.22)'
+                boxShadow: isLoading || (!isLocked && !input.trim()) ? 'none' : '0 16px 38px rgba(10,16,36,0.24), inset 0 1px 0 rgba(219,233,255,0.40)'
               }}>
               {isLoading
                 ? <Loader2 size={18} style={{ animation: 'spin 1s linear infinite' }}/>
