@@ -64,6 +64,19 @@ export const GLOBAL_STYLES: string = `
     mix-blend-mode: multiply;
     z-index: 0;
   }
+  .app-shell::after {
+    content: '';
+    position: fixed;
+    inset: -15%;
+    pointer-events: none;
+    background:
+      radial-gradient(circle at 20% 28%, rgba(255,206,226,0.18), transparent 36%),
+      radial-gradient(circle at 78% 18%, rgba(176,205,255,0.16), transparent 34%),
+      radial-gradient(circle at 50% 72%, rgba(255,245,255,0.14), transparent 42%);
+    mix-blend-mode: screen;
+    animation: auroraDrift 16s ease-in-out infinite;
+    z-index: 0;
+  }
   
   .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border-width: 0; }
   
@@ -74,6 +87,16 @@ export const GLOBAL_STYLES: string = `
   @keyframes spin { to { transform:rotate(360deg); } }
   @keyframes spinSlow { to { transform:rotate(360deg); } }
   @keyframes pulse { 0%,100%{opacity:.25} 50%{opacity:.65} }
+  @keyframes twinkle { 0%,100%{opacity:.72; transform:scale(1);} 50%{opacity:1; transform:scale(1.16);} }
+  @keyframes iridescentShift {
+    0%,100% { filter: saturate(1) brightness(1); }
+    50% { filter: saturate(1.16) brightness(1.07); }
+  }
+  @keyframes auroraDrift {
+    0% { transform: translate3d(-2%, -1%, 0) rotate(0deg); opacity: .58; }
+    50% { transform: translate3d(2%, 1%, 0) rotate(2deg); opacity: .78; }
+    100% { transform: translate3d(-2%, -1%, 0) rotate(0deg); opacity: .58; }
+  }
   /* モーダルカードの上品なスケールイン */
   @keyframes modalReveal { from { opacity:0; transform:translateY(12px) scale(0.96); } to { opacity:1; transform:translateY(0) scale(1); } }
   /* オンボーディング各ステップの、鏡に像が結ぶような出現 */
