@@ -24,6 +24,7 @@ export const ja = {
   // サイドバー / サブスクリプション
   'sidebar.title': 'アーカイブ',
   'sidebar.empty': 'まだ対話がありません',
+  'sidebar.emptyHint': 'あなたと鏡の対話は、\nここに静かに記録されていきます。',
   'subscription.title': 'サブスクリプション',
   'subscription.unlimited': '無限の導き（解放済）',
   'subscription.remainingToday': '本日の残り',
