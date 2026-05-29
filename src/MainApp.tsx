@@ -740,12 +740,12 @@ export function MainApp() {
 
       {/* Main */}
       <main ref={mainRef} style={{ flex: 1, display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
-        <header style={{
+        <header className="app-header" style={{
           padding: 'calc(8px + var(--sat)) calc(12px + var(--sar)) 8px calc(12px + var(--sal))', flexShrink: 0,
           borderBottom: `1px solid ${p.border}`, transition: 'border-color 0.7s ease'
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
+          <div className="app-header-top" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div className="app-header-brand" style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
               <button aria-label={t('a11y.menu')} aria-expanded={sidebarOpen} onClick={() => setSidebarOpen(v => !v)}
                 style={{ minWidth: 44, minHeight: 44, background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 10, flexShrink: 0 }}>
                 <Menu size={18}/>
@@ -759,9 +759,9 @@ export function MainApp() {
               </div>
             </div>
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: 0, flexShrink: 0 }}>
+            <div className="app-header-actions" style={{ display: 'flex', alignItems: 'center', gap: 0, flexShrink: 0 }}>
               {Object.values(PERSONAS).map(px => (
-                <button key={px.id} onClick={() => setPersona(px)} title={px.name} aria-label={t('a11y.switchPersona', { name: px.name })} aria-pressed={persona.id === px.id}
+                <button key={px.id} className="persona-chip" onClick={() => setPersona(px)} title={px.name} aria-label={t('a11y.switchPersona', { name: px.name })} aria-pressed={persona.id === px.id}
                   style={{
                     minWidth: 40, minHeight: 40, borderRadius: 999, cursor: 'pointer', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center',
                     background: persona.id === px.id ? '#fff' : 'transparent',
@@ -772,18 +772,18 @@ export function MainApp() {
                   }}>{px.icon}</button>
               ))}
               <div style={{ width: 1, height: 16, background: '#e5e7eb', margin: '0 6px', flexShrink: 0 }}/>
-              <button aria-label={t('a11y.help')} onClick={() => setShowHelp(true)}
+              <button className="header-icon-btn" aria-label={t('a11y.help')} onClick={() => setShowHelp(true)}
                 style={{ minWidth: 40, minHeight: 40, background: 'none', border: 'none', cursor: 'pointer', color: '#d1d5db', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 8, flexShrink: 0 }}>
                 <HelpCircle size={16} strokeWidth={1.5}/>
               </button>
-              <button aria-label={t('a11y.share')} onClick={handleShareApp}
+              <button className="header-icon-btn" aria-label={t('a11y.share')} onClick={handleShareApp}
                 style={{ minWidth: 40, minHeight: 40, background: 'none', border: 'none', cursor: 'pointer', color: '#d1d5db', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 8, flexShrink: 0 }}>
                 <Share2 size={16} strokeWidth={1.5}/>
               </button>
             </div>
           </div>
 
-          <div role="radiogroup" aria-label={t('a11y.modeSelect')} style={{
+          <div className="mode-switch" role="radiogroup" aria-label={t('a11y.modeSelect')} style={{
             position: 'relative', display: 'flex', background: 'rgba(255,255,255,0.75)', borderRadius: 999,
             padding: 4, border: '1px solid rgba(0,0,0,0.05)', marginTop: 8,
             width: 300, maxWidth: '100%', marginLeft: 'auto', marginRight: 'auto'
@@ -796,7 +796,7 @@ export function MainApp() {
               transition: 'left 0.35s cubic-bezier(0.16,1,0.3,1)'
             }} />
             {modeEntries.map((m: Mode) => (
-              <button key={m.id} role="radio" aria-checked={mode.id === m.id} onClick={() => setMode(m)}
+              <button key={m.id} className="mode-switch-btn" role="radio" aria-checked={mode.id === m.id} onClick={() => setMode(m)}
                 style={{
                   position: 'relative', zIndex: 1, flex: '1 1 0',
                   display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
@@ -811,21 +811,21 @@ export function MainApp() {
           </div>
         </header>
 
-        <div style={{ flex: 1, overflowY: 'auto', padding: '24px calc(18px + var(--sar)) 24px calc(18px + var(--sal))' }}>
+        <div className="chat-scroll-area" style={{ flex: 1, overflowY: 'auto', padding: '24px calc(18px + var(--sar)) 24px calc(18px + var(--sal))' }}>
           <div style={{ maxWidth: 660, margin: '0 auto' }}>
             {messages.length === 0 && !isLoading && (
-              <div style={{ minHeight: '40vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 24 }}>
+              <div className="empty-state" style={{ minHeight: '40vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 24 }}>
                 <div style={{ position: 'relative', animation: 'oracleReveal 1s cubic-bezier(0.16,1,0.3,1) 0.05s both' }}>
                   <div style={{ position: 'absolute', inset: -20, background: `radial-gradient(circle, ${p.accent}22 0%, transparent 70%)`, animation: 'pulse 3s ease-in-out infinite', borderRadius: '50%' }}/>
                   <Compass size={56} strokeWidth={0.6} style={{ color: '#cbd5e1', animation: 'spinSlow 80s linear infinite', position: 'relative' }}/>
                 </div>
-                <div style={{ textAlign: 'center', animation: 'fadeIn 0.9s cubic-bezier(0.16,1,0.3,1) 0.3s both' }}>
+                <div className="empty-state-copy" style={{ textAlign: 'center', animation: 'fadeIn 0.9s cubic-bezier(0.16,1,0.3,1) 0.3s both' }}>
                   <h2 style={{ fontSize: 18, letterSpacing: '0.5em', fontWeight: 300, color: '#94a3b8', textTransform: 'uppercase', marginBottom: 8 }}>Oracle Mirror</h2>
                   <p style={{ fontSize: 10, letterSpacing: '0.45em', color: '#cbd5e1', textTransform: 'uppercase', fontWeight: 700 }}>Reflection of Higher Self</p>
                 </div>
-                <div style={{ display: 'flex', gap: 10, marginTop: 8, justifyContent: 'center', width: '100%', maxWidth: 360 }}>
+                <div className="empty-persona-grid" style={{ display: 'flex', gap: 10, marginTop: 8, justifyContent: 'center', width: '100%', maxWidth: 360 }}>
                   {Object.values(PERSONAS).map((px, pi) => (
-                    <button key={px.id} onClick={() => setPersona(px)} aria-label={t('a11y.selectPersona', { name: px.name })}
+                    <button key={px.id} className="empty-persona-card" onClick={() => setPersona(px)} aria-label={t('a11y.selectPersona', { name: px.name })}
                       style={{
                         flex: '1 1 0', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6,
                         padding: '16px 8px', borderRadius: 18, cursor: 'pointer', border: 'none',
@@ -849,7 +849,7 @@ export function MainApp() {
                 return (
                   <div key={msg.id || idx} style={{ display: 'flex', justifyContent: isUser ? 'flex-end' : 'flex-start' }}>
                     {isUser ? (
-                      <div style={{
+                      <div className="user-message" style={{
                         maxWidth: '85%', textAlign: 'right', paddingRight: 18, borderRight: `2px solid ${p.accent}30`,
                         paddingTop: 8, paddingBottom: 8, animation: 'userReveal 0.5s cubic-bezier(0.16,1,0.3,1) forwards'
                       }}>

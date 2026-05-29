@@ -22,14 +22,14 @@ export const OracleBubble = React.memo(function OracleBubble({ msg, idx, copiedI
   const isRegen    = regeneratingId === msgId;
 
   return (
-    <div style={{ width: '100%', animation: 'oracleReveal 1.2s cubic-bezier(0.16,1,0.3,1) forwards' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginLeft: 14, marginBottom: 8 }}>
+    <div className="oracle-bubble-shell" style={{ width: '100%', animation: 'oracleReveal 1.2s cubic-bezier(0.16,1,0.3,1) forwards' }}>
+      <div className="oracle-bubble-meta" style={{ display: 'flex', alignItems: 'center', gap: 8, marginLeft: 14, marginBottom: 8 }}>
         <span style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 10, letterSpacing: '0.35em', fontWeight: 800, textTransform: 'uppercase', color: msgPersona.accent }}>
           {msgPersona.icon} {msgPersona.name}
         </span>
         {msgMode && <span style={{ fontSize: 10, color: '#cbd5e1', letterSpacing: '0.2em', textTransform: 'uppercase' }}>· {t(`mode.${msgMode.id}.name`)}</span>}
       </div>
-      <div className="oracle-bubble" style={{
+      <div className="oracle-bubble oracle-bubble-card" style={{
         position: 'relative', padding: '24px 28px', background: 'rgba(255,255,255,0.95)', backdropFilter: 'blur(8px)',
         borderRadius: 24, border: `1px solid ${msgPersona.border}`, boxShadow: '0 8px 32px rgba(0,0,0,0.03)',
         opacity: isRegen ? 0.4 : 1, transition: 'opacity 0.4s'
@@ -55,7 +55,7 @@ export const OracleBubble = React.memo(function OracleBubble({ msg, idx, copiedI
             </div>
           </div>
         )}
-        <div style={{ fontSize: 15, lineHeight: 2.1, letterSpacing: '0.04em', color: '#374151', fontWeight: 300 }}>
+        <div className="oracle-bubble-text" style={{ fontSize: 15, lineHeight: 2.1, letterSpacing: '0.04em', color: '#374151', fontWeight: 300 }}>
           {msg.text.split('\n').map((line, i) => {
             const isHeader = /^[①②③【]/.test(line);
             return <p key={i} style={{
@@ -65,8 +65,8 @@ export const OracleBubble = React.memo(function OracleBubble({ msg, idx, copiedI
             }}>{line || '\u00A0'}</p>;
           })}
         </div>
-        <div className="bubble-actions" style={{ marginTop: 24, paddingTop: 10, borderTop: '1px solid #f8fafc', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <div style={{ display: 'flex', gap: 2 }}>
+        <div className="bubble-actions oracle-bubble-footer" style={{ marginTop: 24, paddingTop: 10, borderTop: '1px solid #f8fafc', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div className="oracle-bubble-switchers" style={{ display: 'flex', gap: 2 }}>
             {Object.values(PERSONAS).map(px => (
               <button key={px.id} title={t('a11y.regenerateWithTitle', { name: px.name })} onClick={() => onSwitch(idx, px.id)} disabled={!!regeneratingId} aria-label={t('a11y.regenerateWith', { name: px.name })}
                 style={{
