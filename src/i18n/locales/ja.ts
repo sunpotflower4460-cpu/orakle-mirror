@@ -118,6 +118,7 @@ export const ja = {
   'mode.card.name': '聖像解読',
   'mode.pure.guidance': '論理を手放し、詩的で抽象的なメッセージを受け取ります。感覚に浸りたい時に。',
   'mode.card.guidance': '象徴（カード）からインスピレーションを受け、その響きを感性で言葉にします。',
+  'cards.drawnTitle': '現れたカード',
 
   // 言語名
   'language.ja': '日本語',
