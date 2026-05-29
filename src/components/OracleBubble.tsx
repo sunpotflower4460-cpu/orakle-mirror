@@ -23,19 +23,15 @@ interface DrawnCardViewProps {
 }
 
 function DrawnCardView({ card, index, accent, border, soft }: DrawnCardViewProps) {
-  const hasImage = Boolean(card.image);
+  const [imageFailed, setImageFailed] = React.useState(false);
+  const hasImage = Boolean(card.image) && !imageFailed;
 
   return (
     <article
       style={{
-        minWidth: 138,
-        maxWidth: 172,
-        flex: '1 1 138px',
-        borderRadius: 18,
-        border: `1px solid ${border}`,
-        background: 'rgba(255,255,255,0.88)',
-        boxShadow: `0 10px 28px ${accent}12`,
-        overflow: 'hidden',
+        minWidth: 128,
+        maxWidth: 156,
+        flex: '1 1 132px',
         animation: `cardReveal 0.6s cubic-bezier(0.16,1,0.3,1) ${0.15 + index * 0.12}s both`,
       }}
     >
@@ -43,13 +39,16 @@ function DrawnCardView({ card, index, accent, border, soft }: DrawnCardViewProps
         style={{
           position: 'relative',
           aspectRatio: '3 / 4',
+          borderRadius: 18,
+          border: `1px solid ${border}`,
           background: hasImage
             ? '#f8fafc'
-            : `radial-gradient(circle at 50% 18%, #ffffff 0%, ${soft} 48%, #f8fafc 100%)`,
+            : `linear-gradient(160deg, rgba(255,255,255,0.98), ${soft} 52%, rgba(248,250,252,0.98) 100%)`,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
           overflow: 'hidden',
+          boxShadow: `0 10px 24px ${accent}10`,
         }}
       >
         {hasImage ? (
@@ -57,26 +56,27 @@ function DrawnCardView({ card, index, accent, border, soft }: DrawnCardViewProps
             src={card.image}
             alt={card.imageAlt || card.name}
             loading="lazy"
+            onError={() => setImageFailed(true)}
             style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
           />
         ) : (
           <div
             aria-label={`${card.name} のカード画像枠`}
             style={{
-              width: '72%',
-              height: '78%',
+              width: '74%',
+              height: '80%',
               borderRadius: 16,
-              border: `1px solid ${accent}22`,
-              background: 'linear-gradient(145deg, rgba(255,255,255,0.72), rgba(255,255,255,0.24))',
-              boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.8)',
+              border: `1px solid ${accent}24`,
+              background: 'linear-gradient(145deg, rgba(255,255,255,0.78), rgba(255,255,255,0.28))',
+              boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.85)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               color: accent,
-              opacity: 0.72,
+              opacity: 0.68,
             }}
           >
-            <Sparkles size={22} style={{ animation: 'pulse 3s ease-in-out infinite' }} />
+            <Sparkles size={18} style={{ animation: 'pulse 3s ease-in-out infinite' }} />
           </div>
         )}
         <div
@@ -84,16 +84,18 @@ function DrawnCardView({ card, index, accent, border, soft }: DrawnCardViewProps
           style={{
             position: 'absolute',
             inset: 0,
-            background: 'linear-gradient(to bottom, rgba(255,255,255,0.12), rgba(255,255,255,0) 42%, rgba(15,23,42,0.03))',
+            background: hasImage
+              ? 'linear-gradient(to bottom, rgba(255,255,255,0.1), rgba(255,255,255,0) 44%, rgba(15,23,42,0.03))'
+              : 'linear-gradient(to bottom, rgba(255,255,255,0.18), rgba(255,255,255,0) 52%, rgba(15,23,42,0.02))',
             pointerEvents: 'none',
           }}
         />
       </div>
-      <div style={{ padding: '10px 11px 12px' }}>
-        <div style={{ fontSize: 13, fontWeight: 800, color: accent, letterSpacing: '0.04em', marginBottom: 4 }}>
+      <div style={{ padding: '10px 4px 0' }}>
+        <div style={{ fontSize: 14, lineHeight: 1.45, fontWeight: 700, color: accent, letterSpacing: '0.03em', marginBottom: 4 }}>
           {card.name}
         </div>
-        <div style={{ fontSize: 11, lineHeight: 1.7, color: '#64748b', fontWeight: 400 }}>
+        <div style={{ fontSize: 11, lineHeight: 1.65, color: '#64748b', fontWeight: 400 }}>
           {card.meaning}
         </div>
       </div>
@@ -131,11 +133,11 @@ export const OracleBubble = React.memo(function OracleBubble({ msg, idx, copiedI
           </div>
         )}
         {msg.drawnCards && msg.drawnCards.length > 0 && (
-          <div style={{ marginBottom: 22, padding: '15px 15px 16px', background: `linear-gradient(to bottom right, #ffffff, ${msgPersona.soft})`, borderRadius: 20, border: `1px solid ${msgPersona.border}` }}>
-            <div style={{ display:'flex', alignItems:'center', gap:6, fontSize: 10, letterSpacing: '0.2em', color: '#94a3b8', textTransform: 'uppercase', marginBottom: 12 }}>
-              <Sparkles size={12} style={{ color: msgPersona.accent, animation: 'pulse 3s ease-in-out infinite' }} /> Drawn Cards
+          <div style={{ marginBottom: 22, padding: '15px 15px 0', background: `linear-gradient(to bottom right, #ffffff, ${msgPersona.soft})`, borderRadius: 20, border: `1px solid ${msgPersona.border}` }}>
+            <div style={{ display:'flex', alignItems:'center', gap:6, fontSize: 11, letterSpacing: '0.08em', color: '#94a3b8', marginBottom: 12 }}>
+              <Sparkles size={12} style={{ color: msgPersona.accent, animation: 'pulse 3s ease-in-out infinite' }} /> {t('cards.drawnTitle')}
             </div>
-            <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 22 }}>
               {msg.drawnCards.map((c, ci) => (
                 <DrawnCardView key={`${c.name}-${ci}`} card={c} index={ci} accent={msgPersona.accent} border={msgPersona.border} soft={msgPersona.soft} />
               ))}

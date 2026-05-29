@@ -118,6 +118,7 @@ export const en: Record<keyof typeof ja, string> = {
   'mode.card.name': 'Card Reading',
   'mode.pure.guidance': 'Let go of logic and receive poetic, abstract messages. For when you want to immerse in feeling.',
   'mode.card.guidance': 'Draw inspiration from symbols (cards) and let their resonance become words.',
+  'cards.drawnTitle': 'Revealed Cards',
 
   // Language names
   'language.ja': '日本語',
