@@ -649,7 +649,7 @@ export function MainApp() {
     <div className="app-shell" style={{
       display: 'flex',
       fontFamily: "'Hiragino Mincho ProN', 'Yu Mincho', 'Noto Serif JP', serif", 
-      background: p.soft, transition: 'background 0.7s ease',
+      background: `radial-gradient(circle at 50% -16%, rgba(217,120,149,0.18) 0%, ${p.soft} 34%, #fffafb 100%)`, transition: 'background 0.7s ease',
       overflow: 'hidden', color: '#1e293b', position: 'relative'
     }}>
       <style>{GLOBAL_STYLES}</style>
@@ -661,7 +661,7 @@ export function MainApp() {
 
       {sidebarOpen && (
         <div onClick={() => setSidebarOpen(false)} style={{
-          position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.2)',
+          position: 'fixed', inset: 0, background: 'rgba(18,24,43,0.14)',
           zIndex: 98, backdropFilter: 'blur(2px)'
         }} />
       )}
@@ -670,23 +670,28 @@ export function MainApp() {
       <aside ref={asideRef} aria-label={t('a11y.archive')} style={{
         position: 'fixed', left: 0, top: 0, bottom: 0, zIndex: 99,
         width: sidebarOpen ? 260 : 0,
-        background: 'rgba(255,255,255,0.98)', 
-        borderRight: '1px solid #f1f5f9',
+        background: 'rgba(255,255,255,0.94)', 
+        borderRight: '1px solid #eadde2',
         transition: 'width 0.3s cubic-bezier(0.16,1,0.3,1)',
         overflow: 'hidden',
-        boxShadow: sidebarOpen ? '8px 0 40px rgba(0,0,0,0.07)' : 'none',
+        boxShadow: sidebarOpen ? '10px 0 30px rgba(16,23,47,0.1)' : 'none',
         display: 'flex', flexDirection: 'column'
       }}>
         <div style={{ paddingTop: 'calc(18px + var(--sat))', paddingLeft: 'calc(14px + var(--sal))', paddingRight: 14, paddingBottom: 10, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0, opacity: sidebarOpen ? 1 : 0, transition: 'opacity 0.3s ease 0.12s' }}>
-          <span style={{ fontSize: 10, letterSpacing: '0.4em', fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>{t('sidebar.title')}</span>
-          <button aria-label={t('a11y.newRoom')} onClick={handleNewRoom} style={{ minWidth: 44, minHeight: 44, background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', display: 'flex', alignItems: 'center', justifyContent: 'center', marginRight: -8 }}>
+          <span style={{ fontSize: 10, letterSpacing: '0.4em', fontWeight: 800, color: '#7b8494', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>{t('sidebar.title')}</span>
+          <button aria-label={t('a11y.newRoom')} onClick={handleNewRoom} style={{ minWidth: 44, minHeight: 44, background: 'none', border: 'none', cursor: 'pointer', color: '#7b8494', display: 'flex', alignItems: 'center', justifyContent: 'center', marginRight: -8 }}>
             <Plus size={16}/>
           </button>
         </div>
         
         <div style={{ flex: 1, overflowY: 'auto', padding: '0 8px 16px', paddingLeft: 'calc(8px + var(--sal))', opacity: sidebarOpen ? 1 : 0, transition: 'opacity 0.3s ease 0.12s' }}>
           {rooms.length === 0 && (
-            <p style={{ fontSize: 11, color: '#cbd5e1', textAlign: 'center', padding: '20px 8px', whiteSpace: 'nowrap' }}>{t('sidebar.empty')}</p>
+            <div style={{ border: '1px solid #eadde2', borderRadius: 20, background: 'rgba(255,255,255,0.92)', padding: '28px 12px', textAlign: 'center', color: '#7b8494', boxShadow: '0 6px 20px rgba(16,23,47,0.04)' }}>
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 10, color: p.accent }}>
+                <Compass size={18} strokeWidth={1.25} />
+              </div>
+              <p style={{ fontSize: 12 }}>{t('sidebar.empty')}</p>
+            </div>
           )}
           {rooms.map(room => {
             const isActive = activeRoomId === room.id;
@@ -699,8 +704,8 @@ export function MainApp() {
                 style={{
                   width: '100%', textAlign: 'left', padding: '12px', borderRadius: 14, minHeight: 48,
                   cursor: 'pointer', border: 'none', marginBottom: 4, transition: 'all 0.2s',
-                  background: isActive ? '#f8fafc' : 'transparent',
-                  boxShadow: isActive ? '0 1px 8px rgba(0,0,0,0.05),inset 0 0 0 1px #f1f5f9' : 'none',
+                  background: isActive ? 'rgba(255,255,255,0.92)' : 'transparent',
+                  boxShadow: isActive ? '0 2px 10px rgba(16,23,47,0.06),inset 0 0 0 1px #eadde2' : 'none',
                   display: 'flex', alignItems: 'center', gap: 10
                 }}>
                 <span style={{ color: rp.accent, flexShrink: 0, display: 'flex' }}>{rp.icon}</span>
@@ -717,8 +722,8 @@ export function MainApp() {
         </div>
         
         {/* サイドバー下部：サブスクリプション導線 */}
-        <div style={{ padding: '16px', paddingLeft: 'calc(16px + var(--sal))', borderTop: '1px solid #f1f5f9', background: '#f8fafc', paddingBottom: 'calc(16px + var(--sab))', flexShrink: 0, opacity: sidebarOpen ? 1 : 0, transition: 'opacity 0.3s ease 0.12s' }}>
-          <div style={{ fontSize: 10, letterSpacing: '0.2em', color: '#94a3b8', textTransform: 'uppercase', marginBottom: 12, fontWeight: 700 }}>{t('subscription.title')}</div>
+        <div style={{ padding: '16px', paddingLeft: 'calc(16px + var(--sal))', borderTop: '1px solid #eadde2', background: 'rgba(255,250,251,0.8)', paddingBottom: 'calc(16px + var(--sab))', flexShrink: 0, opacity: sidebarOpen ? 1 : 0, transition: 'opacity 0.3s ease 0.12s' }}>
+          <div style={{ fontSize: 10, letterSpacing: '0.2em', color: '#7b8494', textTransform: 'uppercase', marginBottom: 12, fontWeight: 700 }}>{t('subscription.title')}</div>
           {isPremium ? (
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#10b981', fontSize: 12, fontWeight: 700 }}>
               <Unlock size={14} /> {t('subscription.unlimited')}
@@ -731,7 +736,7 @@ export function MainApp() {
                 <span style={{ fontWeight: 700, color: typeof remainingDisplay === 'number' && remainingDisplay > 0 ? '#334155' : '#f43f5e' }}>{t('subscription.remainingCount', { count: remainingDisplay })}</span>
               </div>
               <button onClick={() => setShowSubscribeModal(true)} style={{
-                width: '100%', padding: '10px 0', background: '#0f172a', color: '#fff',
+                width: '100%', padding: '10px 0', background: '#10172f', color: '#fff',
                 borderRadius: 8, fontSize: 11, fontWeight: 700, cursor: 'pointer', border: 'none',
                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6
               }}>
@@ -746,16 +751,16 @@ export function MainApp() {
       <main ref={mainRef} style={{ flex: 1, display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
         <header className="app-header" style={{
           padding: 'calc(8px + var(--sat)) calc(12px + var(--sar)) 8px calc(12px + var(--sal))', flexShrink: 0,
-          borderBottom: `1px solid ${p.border}`, transition: 'border-color 0.7s ease'
+          borderBottom: `1px solid ${p.border}`, transition: 'border-color 0.7s ease', background: 'rgba(255,255,255,0.62)', backdropFilter: 'blur(6px)'
         }}>
           <div className="app-header-top" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div className="app-header-brand" style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
               <button aria-label={t('a11y.menu')} aria-expanded={sidebarOpen} onClick={() => setSidebarOpen(v => !v)}
-                style={{ minWidth: 44, minHeight: 44, background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 10, flexShrink: 0 }}>
+                style={{ minWidth: 44, minHeight: 44, background: 'none', border: '1px solid #e9d6de', cursor: 'pointer', color: '#7b8494', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 14, flexShrink: 0 }}>
                 <Menu size={18}/>
               </button>
               <div style={{ whiteSpace: 'nowrap' }}>
-                <div style={{ fontSize: 10, letterSpacing: '0.35em', fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', lineHeight: 1 }}>Oracle Mirror</div>
+                <div style={{ fontSize: 10, letterSpacing: '0.35em', fontWeight: 800, color: '#7b8494', textTransform: 'uppercase', lineHeight: 1 }}>Oracle Mirror</div>
                 {/* 混乱を招く「(3回)」の表記を削除し、ペルソナ名のみにスッキリさせました */}
                 <div style={{ fontSize: 10, color: p.accent, fontWeight: 700, marginTop: 4 }}>
                   {p.name}
@@ -769,34 +774,34 @@ export function MainApp() {
                   style={{
                     minWidth: 40, minHeight: 40, borderRadius: 999, cursor: 'pointer', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center',
                     background: persona.id === px.id ? '#fff' : 'transparent',
-                    color: persona.id === px.id ? px.accent : '#d1d5db',
-                    boxShadow: persona.id === px.id ? `0 2px 10px ${px.accent}22,0 0 0 1px ${px.border}` : 'none',
+                    color: persona.id === px.id ? px.accent : '#a8b1be',
+                    boxShadow: persona.id === px.id ? `0 2px 10px ${px.accent}22,0 0 0 1px ${px.border}` : 'inset 0 0 0 1px #ece4e8',
                     transform: persona.id === px.id ? 'scale(1.1)' : 'scale(1)',
                     transition: 'all 0.25s', flexShrink: 0
                   }}>{px.icon}</button>
               ))}
-              <div style={{ width: 1, height: 16, background: '#e5e7eb', margin: '0 6px', flexShrink: 0 }}/>
+              <div style={{ width: 1, height: 16, background: '#e5dce2', margin: '0 6px', flexShrink: 0 }}/>
               <button className="header-icon-btn" aria-label={t('a11y.help')} onClick={() => setShowHelp(true)}
-                style={{ minWidth: 40, minHeight: 40, background: 'none', border: 'none', cursor: 'pointer', color: '#d1d5db', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 8, flexShrink: 0 }}>
+                style={{ minWidth: 40, minHeight: 40, background: 'none', border: '1px solid #ece4e8', cursor: 'pointer', color: '#9aa5b3', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 12, flexShrink: 0 }}>
                 <HelpCircle size={16} strokeWidth={1.5}/>
               </button>
               <button className="header-icon-btn" aria-label={t('a11y.share')} onClick={handleShareApp}
-                style={{ minWidth: 40, minHeight: 40, background: 'none', border: 'none', cursor: 'pointer', color: '#d1d5db', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 8, flexShrink: 0 }}>
+                style={{ minWidth: 40, minHeight: 40, background: 'none', border: '1px solid #ece4e8', cursor: 'pointer', color: '#9aa5b3', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 12, flexShrink: 0 }}>
                 <Share2 size={16} strokeWidth={1.5}/>
               </button>
             </div>
           </div>
 
           <div className="mode-switch" role="radiogroup" aria-label={t('a11y.modeSelect')} style={{
-            position: 'relative', display: 'flex', background: 'rgba(255,255,255,0.75)', borderRadius: 999,
-            padding: 4, border: '1px solid rgba(0,0,0,0.05)', marginTop: 8,
+            position: 'relative', display: 'flex', background: 'rgba(255,255,255,0.84)', borderRadius: 999,
+            padding: 4, border: '1px solid #e9d6de', marginTop: 8,
             width: 300, maxWidth: '100%', marginLeft: 'auto', marginRight: 'auto'
           }}>
             {/* スライドして移動するセグメントインジケータ */}
             <span aria-hidden="true" style={{
               position: 'absolute', top: 4, bottom: 4, width: 'calc(50% - 4px)',
               left: activeModeIndex <= 0 ? 4 : '50%',
-              background: '#0f172a', borderRadius: 999, boxShadow: '0 2px 8px rgba(0,0,0,0.18)',
+              background: '#10172f', borderRadius: 999, boxShadow: '0 2px 8px rgba(16,23,47,0.28)',
               transition: 'left 0.35s cubic-bezier(0.16,1,0.3,1)'
             }} />
             {modeEntries.map((m: Mode) => (
@@ -807,7 +812,7 @@ export function MainApp() {
                   padding: '8px 12px', borderRadius: 999, cursor: 'pointer', border: 'none',
                   whiteSpace: 'nowrap', fontSize: 10, letterSpacing: '0.15em',
                   textTransform: 'uppercase', fontWeight: 700, transition: 'color 0.3s', background: 'transparent',
-                  color: mode.id === m.id ? '#fff' : '#9ca3af'
+                  color: mode.id === m.id ? '#fff' : '#8d96a7'
                 }}>
                 {m.icon} {t(`mode.${m.id}.name`)}
               </button>
@@ -907,7 +912,7 @@ export function MainApp() {
           <div className="input-shell" style={{
             display: 'flex', alignItems: 'flex-end', gap: 8, background: 'rgba(255,255,255,0.95)', backdropFilter: 'blur(8px)',
             borderRadius: 28, padding: '8px 8px 8px 20px',
-            border: `1px solid ${inputFocused ? `${p.accent}66` : p.border}`,
+            border: `1px solid ${inputFocused ? `${p.accent}66` : '#e9d6de'}`,
             transform: inputFocused ? 'translateY(-1px)' : 'translateY(0)',
             boxShadow: inputFocused
               ? `0 8px 34px ${p.accent}2e, 0 1px 6px rgba(0,0,0,0.05)`
@@ -949,8 +954,8 @@ export function MainApp() {
                 width: 44, height: 44, borderRadius: 999, border: 'none', display: 'flex',
                 alignItems: 'center', justifyContent: 'center', flexShrink: 0,
                 cursor: isLoading || (!isLocked && !input.trim()) ? 'not-allowed' : 'pointer',
-                background: isLoading || (!isLocked && !input.trim()) ? '#f1f5f9' : p.accent,
-                color: isLoading || (!isLocked && !input.trim()) ? '#cbd5e1' : '#fff',
+                background: isLoading || (!isLocked && !input.trim()) ? '#f2f3f7' : '#10172f',
+                color: isLoading || (!isLocked && !input.trim()) ? '#bec7d3' : '#fff',
                 transition: 'background 0.3s, color 0.3s',
                 boxShadow: isLoading || (!isLocked && !input.trim()) ? 'none' : `0 3px 12px ${p.accent}40`
               }}>

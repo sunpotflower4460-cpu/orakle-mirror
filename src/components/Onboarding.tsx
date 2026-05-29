@@ -45,33 +45,33 @@ export function Onboarding({ onComplete }: OnboardingProps) {
   const back = () => setStep(s => Math.max(s - 1, 0));
 
   const titleId = 'onboardingTitle';
-  const bodyStyle: React.CSSProperties = { fontSize: 13, color: '#64748b', lineHeight: 1.9, marginTop: 12 };
-  const headingStyle: React.CSSProperties = { fontSize: 18, fontWeight: 400, color: '#334155', letterSpacing: '0.06em', margin: 0 };
+  const bodyStyle: React.CSSProperties = { fontSize: 14, color: '#5f6b7a', lineHeight: 1.95, marginTop: 12 };
+  const headingStyle: React.CSSProperties = { fontSize: 28, fontWeight: 400, color: '#273044', letterSpacing: '0.08em', margin: 0 };
 
   return (
     <div className="onboarding-overlay" role="dialog" aria-modal="true" aria-labelledby={titleId} style={{
       position: 'fixed', inset: 0, zIndex: 1100,
-      background: `radial-gradient(circle at 50% 0%, ${PERSONAS[selectedPersona].soft} 0%, rgba(255,255,255,0.96) 60%)`,
+      background: 'radial-gradient(circle at 50% 0%, rgba(217,120,149,0.16) 0%, rgba(255,250,251,0.96) 44%, rgba(253,246,247,0.98) 100%)',
       backdropFilter: 'blur(8px)',
       display: 'flex', alignItems: 'center', justifyContent: 'center',
       padding: '16px', paddingTop: 'calc(16px + var(--sat))', paddingBottom: 'calc(16px + var(--sab))',
       animation: 'fadeIn 0.3s ease'
     }}>
       <div className="onboarding-card" style={{
-        background: '#fff', maxWidth: 440, width: '100%', maxHeight: '100%',
-        borderRadius: 28, boxShadow: '0 32px 80px rgba(0,0,0,0.12)', border: '1px solid #f1f5f9',
+        background: 'rgba(255,255,255,0.9)', maxWidth: 440, width: '100%', maxHeight: '100%',
+        borderRadius: 34, boxShadow: '0 18px 48px rgba(16,23,47,0.08)', border: '1px solid #eadde2',
         overflowY: 'auto', padding: 28, display: 'flex', flexDirection: 'column',
         animation: 'modalReveal 0.45s cubic-bezier(0.16,1,0.3,1)'
       }}>
         {/* 言語切替(タイトルの時点で日本語／英語を選べる) */}
         <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 8 }}>
-          <div role="group" aria-label={t('help.language')} style={{ display: 'flex', gap: 4, background: '#f8fafc', borderRadius: 999, padding: 3 }}>
+          <div role="group" aria-label={t('help.language')} style={{ display: 'flex', gap: 4, background: '#f2f3f7', borderRadius: 999, padding: 4, border: '1px solid #ece7eb' }}>
             {LOCALES.map(loc => (
               <button key={loc} onClick={() => setLocale(loc)} aria-pressed={locale === loc} style={{
                 padding: '6px 12px', minHeight: 36, borderRadius: 999, border: 'none', cursor: 'pointer',
                 fontSize: 11, fontWeight: 700, transition: 'all 0.2s',
-                background: locale === loc ? '#0f172a' : 'transparent',
-                color: locale === loc ? '#fff' : '#94a3b8'
+                background: locale === loc ? '#10172f' : 'transparent',
+                color: locale === loc ? '#fff' : '#9aa5b3'
               }}>{t(`language.${loc}`)}</button>
             ))}
           </div>
@@ -82,10 +82,10 @@ export function Onboarding({ onComplete }: OnboardingProps) {
           {step === 0 && (
             <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flex: 1, gap: 8 }}>
               <div style={{ position: 'relative', marginBottom: 12 }}>
-                <div style={{ position: 'absolute', inset: -16, background: `radial-gradient(circle, ${accent}22 0%, transparent 70%)`, animation: 'pulse 3s ease-in-out infinite', borderRadius: '50%' }} />
+                <div style={{ position: 'absolute', inset: -16, background: `radial-gradient(circle, ${accent}1c 0%, transparent 70%)`, animation: 'pulse 3s ease-in-out infinite', borderRadius: '50%' }} />
                 <Compass size={52} strokeWidth={0.6} style={{ color: '#cbd5e1', animation: 'spinSlow 80s linear infinite', position: 'relative' }} />
               </div>
-              <div style={{ fontSize: 10, letterSpacing: '0.45em', color: '#cbd5e1', textTransform: 'uppercase', fontWeight: 700 }}>Oracle Mirror</div>
+              <div style={{ fontSize: 10, letterSpacing: '0.45em', color: '#c9bbc3', textTransform: 'uppercase', fontWeight: 700 }}>Oracle Mirror</div>
               <h2 className="onboarding-heading" id={titleId} style={headingStyle}>{t('onboarding.concept.title')}</h2>
               <p className="onboarding-body" style={bodyStyle}><MultiLine text={t('onboarding.concept.body')} /></p>
             </div>
@@ -114,7 +114,7 @@ export function Onboarding({ onComplete }: OnboardingProps) {
                   );
                 })}
               </div>
-              <p className="onboarding-body" style={{ fontSize: 12, color: '#64748b', lineHeight: 1.8, marginTop: 18, paddingLeft: 12, borderLeft: `2px solid ${accent}40` }}>
+              <p className="onboarding-body" style={{ fontSize: 12, color: '#5f6b7a', lineHeight: 1.8, marginTop: 18, paddingLeft: 12, borderLeft: `2px solid ${accent}40` }}>
                 {t(`persona.${selectedPersona}.guidance`)}
               </p>
             </div>
@@ -127,8 +127,8 @@ export function Onboarding({ onComplete }: OnboardingProps) {
               <div style={{ marginTop: 18 }}>
                 {Object.values(MODES).map((m: Mode) => (
                   <div key={m.id} style={{ marginBottom: 14, paddingLeft: 12, borderLeft: '2px solid #f1f5f9' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 700, color: '#334155', marginBottom: 4 }}>{m.icon} {t(`mode.${m.id}.name`)}</div>
-                    <p className="onboarding-body" style={{ fontSize: 12, color: '#64748b', lineHeight: 1.7 }}>{t(`mode.${m.id}.guidance`)}</p>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 700, color: '#273044', marginBottom: 4 }}>{m.icon} {t(`mode.${m.id}.name`)}</div>
+                    <p className="onboarding-body" style={{ fontSize: 12, color: '#5f6b7a', lineHeight: 1.7 }}>{t(`mode.${m.id}.guidance`)}</p>
                   </div>
                 ))}
               </div>
@@ -156,7 +156,7 @@ export function Onboarding({ onComplete }: OnboardingProps) {
           {Array.from({ length: TOTAL_STEPS }, (_, i) => (
             <span key={i} style={{
               width: i === step ? 18 : 6, height: 6, borderRadius: 999,
-              background: i === step ? accent : '#e2e8f0', transition: 'all 0.3s'
+              background: i === step ? '#d96f8c' : '#e4dfe4', transition: 'all 0.3s'
             }} />
           ))}
         </div>
@@ -165,24 +165,24 @@ export function Onboarding({ onComplete }: OnboardingProps) {
         <div className="onboarding-nav" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           {step > 0 ? (
             <button className="onboarding-secondary" onClick={back} aria-label={t('onboarding.back')} style={{
-              minWidth: 44, minHeight: 48, padding: '0 16px', background: '#f8fafc', color: '#64748b',
-              border: '1px solid #e2e8f0', borderRadius: 999, cursor: 'pointer', fontSize: 12, fontWeight: 700,
+              minWidth: 44, minHeight: 48, padding: '0 16px', background: 'rgba(255,255,255,0.8)', color: '#5f6b7a',
+              border: '1px solid #e0d6dc', borderRadius: 999, cursor: 'pointer', fontSize: 12, fontWeight: 700,
               display: 'flex', alignItems: 'center', gap: 6
             }}><ArrowLeft size={14} /> {t('onboarding.back')}</button>
           ) : (
             <button className="onboarding-secondary" onClick={() => onComplete()} style={{
-              minHeight: 48, padding: '0 16px', background: '#f8fafc', color: '#64748b',
-              border: '1px solid #e2e8f0', borderRadius: 999, cursor: 'pointer', fontSize: 11, fontWeight: 700, letterSpacing: '0.1em'
+              minHeight: 48, padding: '0 16px', background: 'rgba(255,255,255,0.8)', color: '#5f6b7a',
+              border: '1px solid #e0d6dc', borderRadius: 999, cursor: 'pointer', fontSize: 11, fontWeight: 700, letterSpacing: '0.1em'
             }}>{t('onboarding.skip')}</button>
           )}
 
           <div className="onboarding-nav-spacer" style={{ flex: 1 }} />
 
           <button className="onboarding-primary" onClick={isLast ? () => onComplete(selectedPersona) : next} style={{
-            minHeight: 48, padding: '0 26px', background: '#0f172a', color: '#fff',
+            minHeight: 48, padding: '0 26px', background: '#10172f', color: '#fff',
             border: 'none', borderRadius: 999, cursor: 'pointer', fontSize: 11, fontWeight: 700,
             letterSpacing: '0.2em', textTransform: 'uppercase',
-            display: 'flex', alignItems: 'center', gap: 8, boxShadow: '0 8px 24px rgba(15,23,42,0.2)'
+            display: 'flex', alignItems: 'center', gap: 8, boxShadow: '0 8px 24px rgba(16,23,47,0.22)'
           }}>
             {isLast ? t('onboarding.begin') : t('onboarding.next')}
             {!isLast && <ArrowRight size={14} />}

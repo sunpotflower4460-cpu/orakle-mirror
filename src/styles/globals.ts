@@ -12,11 +12,11 @@ export const GLOBAL_STYLES: string = `
   body { 
     overscroll-behavior: contain; 
     -webkit-overflow-scrolling: touch; 
-    background: #0f172a; 
+    background: #fffafb; 
   }
   ::-webkit-scrollbar { width:4px; }
   ::-webkit-scrollbar-track { background:transparent; }
-  ::-webkit-scrollbar-thumb { background:#e2e8f0; border-radius:99px; }
+  ::-webkit-scrollbar-thumb { background:#e9d6de; border-radius:99px; }
   textarea { 
     font-family:inherit; 
     font-size: 16px; 
