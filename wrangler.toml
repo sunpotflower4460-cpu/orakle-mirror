@@ -1,0 +1,15 @@
+name = "orakle-mirror"
+compatibility_date = "2025-01-15"
+
+# Cloudflare Workers Static Assets configuration for the Vite frontend.
+#
+# The Cloudflare build currently runs `npm run build` and then `npx wrangler deploy`.
+# Without this explicit config, Wrangler tries to auto-detect/configure the Vite project
+# and fails on Vite 5 with:
+# "The version of Vite used in the project cannot be automatically configured."
+#
+# Keeping an explicit assets directory lets Wrangler deploy the already-built `dist/`
+# output directly, without requiring a Vite 6 migration just to deploy.
+[assets]
+directory = "./dist"
+not_found_handling = "single-page-application"

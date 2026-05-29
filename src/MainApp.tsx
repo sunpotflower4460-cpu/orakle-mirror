@@ -167,6 +167,16 @@ export function MainApp() {
         console.error('⚠️ [CRITICAL WARNING] App is running in PRODUCTION with mock plugins!');
       }
 
+      // RevenueCat の初期設定（ネイティブ環境かつ API キーが設定されている場合のみ）
+      const rcApiKey = import.meta.env.VITE_REVENUECAT_IOS_API_KEY;
+      if (rcApiKey && typeof Purchases.configure === 'function') {
+        try {
+          await Purchases.configure({ apiKey: rcApiKey });
+        } catch (e) {
+          console.error('[RevenueCat] configure failed:', e);
+        }
+      }
+
       let parsedStorage = { rooms: {}, roomOrder: [] };
       let premiumStatus = false;
       let todayCount = 0;
@@ -568,6 +578,12 @@ export function MainApp() {
 
   }, [activeRoomId, incrementUsage, showToast, t]);
 
+  const handleDeleteAllHistory = useCallback((): void => {
+    setStorage({ rooms: {}, roomOrder: [] });
+    setActiveRoomId(null);
+    setError(null);
+  }, []);
+
   const handleDeleteRoom = useCallback((roomId: string, e: React.MouseEvent<HTMLButtonElement>): void => {
     e.stopPropagation();
     setStorage(prev => {
@@ -636,7 +652,7 @@ export function MainApp() {
 
       {toast && <Toast message={toast} onDone={clearToast}/>}
       {showOnboarding && <Onboarding onComplete={handleOnboardingComplete}/>}
-      {showHelp && <HelpModal onClose={() => setShowHelp(false)}/>}
+      {showHelp && <HelpModal onClose={() => setShowHelp(false)} onDeleteAllHistory={handleDeleteAllHistory}/>}
       {showSubscribeModal && <SubscribeModal onClose={() => setShowSubscribeModal(false)} onSubscribe={handleSubscribe} onRestore={handleRestore} isPurchasing={isPurchasing} />}
 
       {sidebarOpen && (

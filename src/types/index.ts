@@ -120,6 +120,7 @@ export interface CustomerInfo {
 
 export interface PurchasesPlugin {
   isMock?: boolean;
+  configure?(options: { apiKey: string }): Promise<void>;
   getOfferings(): Promise<Offerings>;
   purchasePackage(options: { aPackage: PurchasePackage }): Promise<{ customerInfo: CustomerInfo }>;
   restorePurchases(): Promise<{ customerInfo: CustomerInfo }>;

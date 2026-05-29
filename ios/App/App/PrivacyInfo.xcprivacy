@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  PrivacyInfo.xcprivacy — Oracle Mirror
+  
+  This file declares the privacy practices of the app and its SDKs for Apple's
+  required reason API reporting. Update this file whenever new APIs or SDKs are
+  integrated. Verify reason codes against the latest Apple documentation:
+  https://developer.apple.com/documentation/bundleresources/privacy_manifest_files
+  
+  NSPrivacyAccessedAPITypes entries are required for APIs that Apple classifies
+  as "Required Reason APIs". The reason codes below correspond to legitimate use
+  cases; confirm each one against Apple's published reason code list in Xcode /
+  Apple documentation before submitting.
+-->
+<plist version="1.0">
+<dict>
+  <!-- Whether the app or any included SDKs collect data linked to the user. -->
+  <key>NSPrivacyTracking</key>
+  <false/>
+
+  <!-- List of tracking domains used for cross-site / cross-app tracking.
+       Oracle Mirror does not perform advertising tracking. -->
+  <key>NSPrivacyTrackingDomains</key>
+  <array/>
+
+  <!-- Required Reason APIs used by this app and its SDKs.
+       @capacitor/preferences uses NSUserDefaults (UserDefaults API). -->
+  <key>NSPrivacyAccessedAPITypes</key>
+  <array>
+    <dict>
+      <!-- UserDefaults — used by @capacitor/preferences to store local app data
+           (conversation history, locale preference, usage counts, onboarding state).
+           Reason CA92.1: Access info from the same app that wrote to UserDefaults.
+           Verify this reason code against the latest Apple documentation. -->
+      <key>NSPrivacyAccessedAPIType</key>
+      <string>NSPrivacyAccessedAPICategoryUserDefaults</string>
+      <key>NSPrivacyAccessedAPITypeReasons</key>
+      <array>
+        <string>CA92.1</string>
+      </array>
+    </dict>
+  </array>
+
+  <!-- Types of data collected by this app and linked/not linked to identity.
+       Oracle Mirror does not register accounts; all data is local or ephemeral. -->
+  <key>NSPrivacyCollectedDataTypes</key>
+  <array>
+    <dict>
+      <!-- User-entered content (prompts / oracle responses stored locally) -->
+      <key>NSPrivacyCollectedDataType</key>
+      <string>NSPrivacyCollectedDataTypeOtherUserContent</string>
+      <key>NSPrivacyCollectedDataTypeLinked</key>
+      <false/>
+      <key>NSPrivacyCollectedDataTypeTracking</key>
+      <false/>
+      <key>NSPrivacyCollectedDataTypePurposes</key>
+      <array>
+        <string>NSPrivacyCollectedDataTypePurposeAppFunctionality</string>
+      </array>
+    </dict>
+  </array>
+</dict>
+</plist>

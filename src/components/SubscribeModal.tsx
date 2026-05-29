@@ -60,9 +60,10 @@ export function SubscribeModal({ onClose, onSubscribe, onRestore, isPurchasing }
         </p>
 
         {/* App Store審査対応: 価格表示 */}
-        <div style={{ fontSize: 14, fontWeight: 700, color: '#334155', marginBottom: 16 }}>
-          {t('subscribe.monthly', { price })} <span style={{ fontSize: 10, fontWeight: 400, color: '#94a3b8' }}>{t('subscribe.autoRenew')}</span>
+        <div style={{ fontSize: 14, fontWeight: 700, color: '#334155', marginBottom: 8 }}>
+          {t('subscribe.monthly', { price })}
         </div>
+        <div style={{ fontSize: 10, color: '#94a3b8', marginBottom: 16 }}>{t('subscribe.autoRenew')}</div>
 
         <button onClick={onSubscribe} disabled={isPurchasing} style={{
           width: '100%', padding: '16px 0', background: 'linear-gradient(135deg, #0f172a 0%, #334155 100%)', color: '#fff',
@@ -92,6 +93,9 @@ export function SubscribeModal({ onClose, onSubscribe, onRestore, isPurchasing }
           </button>
 
           <LegalLinks style={{ marginTop: 12 }} />
+          <p style={{ fontSize: 10, color: '#94a3b8', lineHeight: 1.6, marginTop: 12 }}>
+            {t('subscribe.subscriptionNote')}
+          </p>
         </div>
       </div>
     </div>
