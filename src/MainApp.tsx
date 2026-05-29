@@ -1,5 +1,6 @@
 // このファイルは Phase 4.7 で TS strict 化済み。
 import React, { useState, useRef, useEffect, useCallback, useMemo, useLayoutEffect } from 'react';
+import { Capacitor } from '@capacitor/core';
 import {
   Wind, Loader2, Menu,
   Plus, Compass, HelpCircle, X, Share2, Diamond,
@@ -97,6 +98,34 @@ export function MainApp() {
   useEffect(() => {
     StatusBar.setBackgroundColor({ color: persona.soft }).catch(() => {});
   }, [persona]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const matchMedia = window.matchMedia?.bind(window);
+    const isStandalone = Boolean(matchMedia?.('(display-mode: standalone)').matches)
+      || (window.navigator as Navigator & { standalone?: boolean }).standalone === true;
+    const supports = {
+      backdropFilter: CSS.supports('backdrop-filter: blur(1px)') || CSS.supports('-webkit-backdrop-filter: blur(1px)'),
+      mixBlendMode: CSS.supports('mix-blend-mode: screen'),
+      dvh: CSS.supports('height: 100dvh'),
+    };
+    const safeArea = getComputedStyle(document.documentElement);
+    window.__oracleMirrorDiagnostics = {
+      platform: Capacitor.getPlatform(),
+      isNativePlatform: Capacitor.isNativePlatform(),
+      isStandalone,
+      prefersReducedMotion: Boolean(matchMedia?.('(prefers-reduced-motion: reduce)').matches),
+      supports,
+      safeArea: {
+        sat: safeArea.getPropertyValue('--sat').trim(),
+        sar: safeArea.getPropertyValue('--sar').trim(),
+        sab: safeArea.getPropertyValue('--sab').trim(),
+        sal: safeArea.getPropertyValue('--sal').trim(),
+      },
+    };
+    // eslint-disable-next-line no-console
+    console.info('[oracle-mirror] ui-diagnostics', window.__oracleMirrorDiagnostics);
+  }, []);
 
   const sidebarOpenRef = useRef(sidebarOpen);
   useLayoutEffect(() => { sidebarOpenRef.current = sidebarOpen; }, [sidebarOpen]);
