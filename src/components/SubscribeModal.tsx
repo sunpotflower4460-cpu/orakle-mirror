@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Loader2, Lock, Unlock, RefreshCw } from 'lucide-react';
 import { Purchases } from '../lib/capacitorMocks';
 import { FREE_LIMIT } from '../lib/constants';
+import { LegalLinks } from './LegalLinks';
 import { useT } from '../i18n';
 
 interface SubscribeModalProps {
@@ -89,6 +90,8 @@ export function SubscribeModal({ onClose, onSubscribe, onRestore, isPurchasing }
             {isPurchasing ? <Loader2 size={12} style={{ animation: 'spin 1s linear infinite' }} /> : <RefreshCw size={12} />}
             {t('subscribe.restore')}
           </button>
+
+          <LegalLinks style={{ marginTop: 12 }} />
         </div>
       </div>
     </div>
