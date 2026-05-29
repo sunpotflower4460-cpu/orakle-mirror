@@ -8,9 +8,10 @@ import type { Mode } from '../types';
 
 interface HelpModalProps {
   onClose: () => void;
+  onDeleteAllHistory: () => void;
 }
 
-export function HelpModal({ onClose }: HelpModalProps) {
+export function HelpModal({ onClose, onDeleteAllHistory }: HelpModalProps) {
   const { locale, setLocale, t } = useLocale();
 
   useEffect(() => {
@@ -76,6 +77,21 @@ export function HelpModal({ onClose }: HelpModalProps) {
 
         {/* App Store審査必須要件：プライバシーポリシーと利用規約への安全なリンク */}
         <LegalLinks style={{ marginTop: 24 }} />
+
+        {/* データ管理：全履歴削除 */}
+        <div style={{ marginTop: 24, paddingTop: 16, borderTop: '1px solid #f8fafc', textAlign: 'center' }}>
+          <button onClick={() => {
+            if (window.confirm(t('help.deleteAllHistoryConfirm'))) {
+              onDeleteAllHistory();
+              onClose();
+            }
+          }} style={{
+            background: 'none', border: '1px solid #fee2e2', color: '#ef4444',
+            borderRadius: 999, padding: '8px 20px', fontSize: 11, cursor: 'pointer', letterSpacing: '0.05em'
+          }}>
+            {t('help.deleteAllHistory')}
+          </button>
+        </div>
 
         <button onClick={onClose} style={{
           width: '100%', padding: '14px 0', background: '#0f172a', color: '#fff', minHeight: 48,

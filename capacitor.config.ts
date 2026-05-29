@@ -1,8 +1,7 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  // TODO(phase-7): 本番申請前に Apple Developer で取得する正式な Bundle ID に差し替える
-  appId: 'com.example.oraclemirror',
+  appId: 'com.sunpotflower.oraclemirror',
   appName: 'Oracle Mirror',
   webDir: 'dist',
   ios: {

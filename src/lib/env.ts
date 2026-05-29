@@ -45,6 +45,20 @@ export const PRIVACY_URL: string =
     ? import.meta.env.VITE_PRIVACY_URL
     : '';
 
+export const SUPPORT_URL: string =
+  (typeof import.meta !== 'undefined'
+    && import.meta.env
+    && typeof import.meta.env.VITE_SUPPORT_URL === 'string')
+    ? import.meta.env.VITE_SUPPORT_URL
+    : '';
+
+export const SUPPORT_EMAIL: string =
+  (typeof import.meta !== 'undefined'
+    && import.meta.env
+    && typeof import.meta.env.VITE_SUPPORT_EMAIL === 'string')
+    ? import.meta.env.VITE_SUPPORT_EMAIL
+    : '';
+
 /**
  * BACKEND_URL がプレースホルダ／未設定であるかを判定する。
  * 部分一致で既知のプレースホルダー断片を検出する。
@@ -100,10 +114,9 @@ export function assertProductionReady(): void {
   if (isLegalUrlPlaceholder(PRIVACY_URL)) {
     errors.push('VITE_PRIVACY_URL is missing or placeholder');
   }
-  // Phase 6 完了まで Purchases.isMock === true のままになる（capacitorMocks.ts を参照）。
-  // この check は意図的な fail-fast: Phase 6 で RevenueCat 実プラグインに差し替えた時点で
-  // isMock が undefined になり、ガードを通過するようになる。
-  // それまでの本番ビルド起動停止は「誤って Phase 6 前にリリースする事故を防ぐ」フェイルセーフ。
+  if (!SUPPORT_URL.trim() && !SUPPORT_EMAIL.trim()) {
+    errors.push('VITE_SUPPORT_URL or VITE_SUPPORT_EMAIL is required');
+  }
   if (Purchases.isMock) {
     errors.push('RevenueCat Purchases plugin is still running in mock mode');
   }

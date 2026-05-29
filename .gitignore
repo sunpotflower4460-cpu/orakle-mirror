@@ -1,22 +1,24 @@
-OS / Editor
+# OS / Editor
 .DS_Store
 Thumbs.db
 .vscode/*
 !.vscode/extensions.json
 .idea
 
-Logs
+# Logs
 *.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-Env
+# Env
 .env
 .env.local
 .env.*.local
+.env.production
+.env.production.local
 
-念のため将来のため
+# Build
 node_modules
 dist
 dist-ssr
@@ -24,7 +26,7 @@ dist-ssr
 *.tsbuildinfo
 *.local
 
-iOS(Phase 2 以降で利用)
+# iOS
 ios/App/Pods
 ios/App/App/public
 ios/DerivedData

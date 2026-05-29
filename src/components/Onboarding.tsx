@@ -143,6 +143,9 @@ export function Onboarding({ onComplete }: OnboardingProps) {
               </div>
               <h2 id={titleId} style={headingStyle}>{t('onboarding.ready.title')}</h2>
               <p style={bodyStyle}><MultiLine text={t('onboarding.ready.body')} /></p>
+              <p style={{ fontSize: 10, color: '#94a3b8', lineHeight: 1.6, marginTop: 16, padding: '0 8px' }}>
+                {t('onboarding.disclaimer')}
+              </p>
             </div>
           )}
         </div>
