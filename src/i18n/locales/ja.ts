@@ -22,7 +22,9 @@ export const ja = {
   'a11y.regenerateWithTitle': '{name}の視点で再生成 (1回消費)',
 
   // サイドバー / サブスクリプション
+  'sidebar.title': 'アーカイブ',
   'sidebar.empty': 'まだ対話がありません',
+  'subscription.title': 'サブスクリプション',
   'subscription.unlimited': '無限の導き（解放済）',
   'subscription.remainingToday': '本日の残り',
   'subscription.remainingCount': '{count} 回',
@@ -68,6 +70,7 @@ export const ja = {
   'subscribe.subscriptionNote': 'サブスクリプションは月ごとに自動更新されます。解約はApp Storeのアカウント設定からいつでも行えます。',
 
   // ヘルプモーダル
+  'help.title': 'ミラーガイド',
   'help.channelsTitle': 'Channels — 対話の目的',
   'help.oraclesTitle': 'Oracles — 話し手の個性',
   'help.disclaimerTitle': '【免責・制限事項】',

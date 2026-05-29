@@ -22,7 +22,9 @@ export const en: Record<keyof typeof ja, string> = {
   'a11y.regenerateWithTitle': 'Regenerate from {name}’s view (uses 1)',
 
   // Sidebar / subscription
+  'sidebar.title': 'Archive',
   'sidebar.empty': 'No reflections yet',
+  'subscription.title': 'Subscription',
   'subscription.unlimited': 'Infinite guidance (unlocked)',
   'subscription.remainingToday': 'Remaining today',
   'subscription.remainingCount': '{count} left',
@@ -68,6 +70,7 @@ export const en: Record<keyof typeof ja, string> = {
   'subscribe.subscriptionNote': 'Subscription renews monthly. You can cancel anytime from your App Store account settings.',
 
   // Help modal
+  'help.title': 'Mirror Guide',
   'help.channelsTitle': 'Channels — purpose of the dialogue',
   'help.oraclesTitle': 'Oracles — voices of the mirror',
   'help.disclaimerTitle': '[Disclaimer]',
