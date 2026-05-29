@@ -121,3 +121,74 @@ export interface CustomerInfo {
     active: Record<string, unknown>;
   };
 }
+
+// ─── Plugin Interfaces (Capacitor) ─────────────────────
+// Phase 6 で実プラグインに差し替える際、これらのインターフェースは
+// 実プラグインの型と互換になるよう設計されている
+
+export interface PluginListenerHandle {
+  remove: () => Promise<void>;
+}
+
+export interface KeyboardInfo {
+  keyboardHeight: number;
+}
+
+export type KeyboardEventName = 'keyboardWillShow' | 'keyboardWillHide' | 'keyboardDidShow' | 'keyboardDidHide';
+
+export interface PurchasesPlugin {
+  isMock?: boolean;
+  configure?(options: { apiKey: string }): Promise<void>;
+  getOfferings(): Promise<Offerings>;
+  purchasePackage(options: { aPackage: PurchasePackage }): Promise<{ customerInfo: CustomerInfo }>;
+  restorePurchases(): Promise<{ customerInfo: CustomerInfo }>;
+}
+
+export interface SplashScreenPlugin {
+  isMock?: boolean;
+  hide(): Promise<void>;
+}
+
+export interface KeyboardPlugin {
+  isMock?: boolean;
+  addListener(eventName: 'keyboardWillShow', callback: (info: KeyboardInfo) => void): Promise<PluginListenerHandle>;
+  addListener(eventName: 'keyboardWillHide', callback: () => void): Promise<PluginListenerHandle>;
+  addListener(eventName: KeyboardEventName, callback: (info?: KeyboardInfo) => void): Promise<PluginListenerHandle>;
+}
+
+export interface StatusBarPlugin {
+  isMock?: boolean;
+  setBackgroundColor(options: { color: string }): Promise<void>;
+}
+
+export interface BrowserPlugin {
+  isMock?: boolean;
+  open(options: { url: string }): Promise<void>;
+}
+
+// ─── API / LLM Types ───────────────────────────────────
+
+export interface SamplingParams {
+  temperature: number;
+  topP: number;
+  topK?: number;
+}
+
+export interface TwoStageResult {
+  raw: string;
+  final: string;
+  receptionMs: number;
+  discernmentMs: number;
+}
+
+export interface BackendErrorResponse {
+  error?: {
+    code?: string;
+    message?: string;
+  };
+}
+
+export interface FatalError extends Error {
+  fatal: true;
+  cause?: unknown;
+}
