@@ -11,6 +11,8 @@
     "ios:sync": "npm run build && npx cap sync ios",
     "ios:open": "npx cap open ios",
     "ios:run": "npm run build && npx cap sync ios && npx cap run ios",
+    "deploy:cloudflare": "wrangler deploy --config wrangler.toml",
+    "deploy:cloudflare:upload": "wrangler versions upload --config wrangler.toml",
     "appstore:check": "node scripts/appstore-check.mjs"
   },
   "dependencies": {
