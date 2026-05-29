@@ -4,7 +4,13 @@ export const getAudioContext = (): AudioContext | null => {
   if (!sharedAudioCtx || sharedAudioCtx.state === 'closed') {
     const AudioContextClass: typeof AudioContext | undefined =
       window.AudioContext || (window as Window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
-    if (AudioContextClass) sharedAudioCtx = new AudioContextClass();
+    if (AudioContextClass) {
+      try {
+        sharedAudioCtx = new AudioContextClass();
+      } catch (e) {
+        console.warn('[audio] AudioContext creation failed', e);
+      }
+    }
   }
   if (sharedAudioCtx && sharedAudioCtx.state === 'suspended') sharedAudioCtx.resume();
   return sharedAudioCtx;
