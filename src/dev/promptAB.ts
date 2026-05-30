@@ -732,7 +732,8 @@ export const exportMatrixAsCSV = (): void => {
     return;
   }
 
-  exportAsCSV(rows, [...MATRIX_RESULT_COLUMNS], `phase-4-11-matrix-${Date.now()}.csv`);
+  const csvRows = rows.map((row) => ({ ...row }));
+  exportAsCSV(csvRows, [...MATRIX_RESULT_COLUMNS], `phase-4-11-matrix-${Date.now()}.csv`);
 };
 
 if (import.meta.env.DEV && typeof window !== 'undefined') {
