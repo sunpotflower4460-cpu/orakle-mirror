@@ -46,7 +46,7 @@ export function Onboarding({ onComplete }: OnboardingProps) {
   const back = () => setStep(s => Math.max(s - 1, 0));
 
   const titleId = 'onboardingTitle';
-  const bodyStyle: React.CSSProperties = { fontSize: 15, color: '#55627a', lineHeight: 2.12, marginTop: 14, letterSpacing: '0.035em' };
+  const bodyStyle: React.CSSProperties = { fontSize: 15, color: '#55627a', lineHeight: 1.85, marginTop: 12, letterSpacing: '0.035em' };
   const headingStyle: React.CSSProperties = { fontSize: 30, fontWeight: 400, color: '#202d48', letterSpacing: '0.13em', margin: 0, lineHeight: 1.5 };
 
   return (
@@ -97,10 +97,10 @@ export function Onboarding({ onComplete }: OnboardingProps) {
         <div className="onboarding-step" key={step} style={{ flex: 1, animation: 'stepReveal 0.5s cubic-bezier(0.16,1,0.3,1)', minHeight: 280, display: 'flex', flexDirection: 'column' }}>
           {step === 0 && (
             <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flex: 1, gap: 0 }}>
-              <div style={{ marginBottom: 16 }}>
+              <div style={{ marginBottom: 12 }}>
                 <OracleOrb size={116} variant="diamond" />
               </div>
-              <div style={{ fontSize: 20, letterSpacing: '0.32em', color: '#2a3c63', textTransform: 'uppercase', fontWeight: 500, marginBottom: 14, fontFamily: "'Garamond', 'Times New Roman', serif" }}>ORACLE MIRROR</div>
+              <div style={{ fontSize: 20, letterSpacing: '0.32em', color: '#2a3c63', textTransform: 'uppercase', fontWeight: 500, marginBottom: 10, fontFamily: "'Garamond', 'Times New Roman', serif" }}>ORACLE MIRROR</div>
               <h2 className="onboarding-heading" id={titleId} style={headingStyle}>{t('onboarding.concept.title')}</h2>
               <p className="onboarding-body" style={bodyStyle}><MultiLine text={t('onboarding.concept.body')} /></p>
             </div>

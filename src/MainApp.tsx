@@ -898,7 +898,7 @@ export function MainApp() {
                   <OracleOrb size={108} variant="compass" />
 
                   {/* ORACLE MIRROR below logo */}
-                  <div style={{ marginTop: 24, textAlign: 'center' }}>
+                  <div style={{ marginTop: 18, textAlign: 'center' }}>
                     <h2 style={{ fontSize: 22, letterSpacing: '0.42em', fontWeight: 500, color: '#8994a6', textTransform: 'uppercase', margin: 0, lineHeight: 1 }}>Oracle Mirror</h2>
                   </div>
 
