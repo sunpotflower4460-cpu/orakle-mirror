@@ -53,6 +53,10 @@ export const buildDiscernmentSystem = (): string => {
 // ────────────────────────────────────────────────────────
 // Layer 2: developer(場の設定と許可・指示ではなく描写)
 // ────────────────────────────────────────────────────────
+/**
+ * @deprecated Phase 4.10 以降は buildReceptionDeveloper / buildDiscernmentDeveloper に分割されました。
+ * 現在この関数はどこからも呼び出されていません。Phase 5.5 で物理削除予定。
+ */
 export const buildDeveloperContext = (
   persona: Persona,
   mode: Mode,
@@ -227,8 +231,8 @@ ${rawTransmission}
 
 「この言葉は、受け手の側で、意図とは違うものとして
  受け取られてしまう余地はないか」
-「ここで使われている象徴は、受け手にとって
- 暗すぎたり、重すぎたりしていないか」
+「Stage 1 が、中立な象徴に不要な暗さや重さを付着させていないか
+ (象徴が本来持つ深みや困難な側面は、そのまま通す)」
 「主語が抜けて、誰のことか分からなくなっていないか」
 「読点や改行が、響きの呼吸を妨げていないか」
 
