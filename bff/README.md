@@ -1,7 +1,7 @@
 # Oracle Mirror BFF
 
 Cloudflare Workers 上で動作する Backend For Frontend。
-Gemini API キーをクライアントから秘匿し、ChatMessage 配列 → Gemini API への変換と
+OpenAI API キーをクライアントから秘匿し、ChatMessage 配列 → OpenAI Responses API への変換と
 レート制限・CORS 制御を担う。
 
 ## 開発
@@ -18,7 +18,7 @@ Gemini API キーをクライアントから秘匿し、ChatMessage 配列 → G
 cd bff
 npm install
 cp .dev.vars.example .dev.vars
-# .dev.vars の GEMINI_API_KEY に開発用の値を記入
+# .dev.vars の OPENAI_API_KEY に開発用の値を記入
 ```
 
 ### ローカル起動
@@ -96,7 +96,20 @@ curl -X POST http://localhost:8787/oracle \
 将来サーバー間呼び出しを許可する場合は、API キーや署名ヘッダによる別経路の認証を追加してください
 （CORS だけでは防衛にならない）。
 
-## デプロイ(人間タスク M-3)
+## デプロイ
+
+```bash
+cd bff
+npm install
+npx wrangler secret put OPENAI_API_KEY
+npx wrangler deploy
+```
+
+デプロイ後、フロント側のビルド環境変数に以下を設定して再ビルドしてください:
+
+```bash
+VITE_BACKEND_URL=https://oracle-mirror-bff.<subdomain>.workers.dev/oracle
+```
 
 詳細は本リポジトリ直下の実行設計書を参照。エージェントは本ディレクトリのコード作成までを担当し、
 実際の `wrangler login` / `wrangler secret put` / `wrangler deploy` は人間が手動で行う。

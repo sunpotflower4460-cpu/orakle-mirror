@@ -32,43 +32,7 @@ export interface OracleResponseError {
 }
 
 export interface Env {
-  GEMINI_API_KEY: string;
-  GEMINI_MODEL: string;
+  OPENAI_API_KEY: string;
+  OPENAI_MODEL: string;
   ALLOWED_ORIGINS: string;
-}
-
-// Gemini API の型(必要最小限)
-export interface GeminiHistoryPart {
-  text: string;
-}
-
-export interface GeminiHistoryEntry {
-  role: 'user' | 'model';
-  parts: GeminiHistoryPart[];
-}
-
-export interface GeminiPayload {
-  contents: GeminiHistoryEntry[];
-  systemInstruction: { parts: GeminiHistoryPart[] };
-  generationConfig: {
-    temperature: number;
-    topP: number;
-    topK?: number;
-    maxOutputTokens: number;
-  };
-}
-
-export interface GeminiResponseCandidate {
-  content: {
-    parts: { text: string }[];
-  };
-}
-
-export interface GeminiResponse {
-  candidates?: GeminiResponseCandidate[];
-  error?: {
-    message?: string;
-    code?: number;
-    status?: string;
-  };
 }
