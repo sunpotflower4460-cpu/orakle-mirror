@@ -74,13 +74,10 @@ export function Onboarding({ onComplete }: OnboardingProps) {
         <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 12 }}>
           <div role="group" aria-label={t('help.language')} style={{
             display: 'flex', gap: 3,
-            flexDirection: 'column',
-            alignItems: 'flex-end',
-            background: 'rgba(255,255,255,0.52)', borderRadius: 16, padding: 8,
+            alignItems: 'center',
+            background: 'rgba(255,255,255,0.52)', borderRadius: 16, padding: '6px 8px',
             border: '1px solid rgba(210,220,238,0.42)'
           }}>
-            <span style={{ fontSize: 11, letterSpacing: '0.08em', color: '#6e7d98', marginBottom: 3 }}>日本語 / English</span>
-            <div style={{ display: 'flex', gap: 3, height: 42 }}>
             {LOCALES.map(loc => (
               <button key={loc} onClick={() => setLocale(loc)} aria-pressed={locale === loc} style={{
                 padding: '6px 16px', borderRadius: 999, border: 'none', cursor: 'pointer',
@@ -89,7 +86,6 @@ export function Onboarding({ onComplete }: OnboardingProps) {
                 color: locale === loc ? '#20304b' : '#7e8da7'
               }}>{t(`language.${loc}`)}</button>
             ))}
-            </div>
           </div>
         </div>
 
