@@ -18,4 +18,16 @@ interface Window {
       sal: string;
     };
   };
+  __abResults?: {
+    aPatternRaw?: string;
+    aPatternFinal?: string;
+    bPatternRaw?: string;
+    bPatternFinal?: string;
+    cPatternRaw?: string;
+    cPatternFinal?: string;
+    dPatternRaw?: string;
+    dPatternFinal?: string;
+    ePatternRaw?: string;
+    ePatternFinal?: string;
+  };
 }
