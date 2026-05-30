@@ -2,7 +2,7 @@
   "name": "oracle-mirror-bff",
   "version": "0.1.0",
   "private": true,
-  "description": "BFF for Oracle Mirror — hides Gemini API key behind Cloudflare Workers",
+  "description": "BFF for Oracle Mirror — hides OpenAI API key behind Cloudflare Workers",
   "scripts": {
     "dev": "wrangler dev",
     "deploy": "wrangler deploy",
