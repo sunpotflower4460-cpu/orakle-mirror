@@ -24,6 +24,8 @@ import { HelpModal } from './components/HelpModal';
 import { OracleBubble } from './components/OracleBubble';
 import { OracleOrb } from './components/OracleOrb';
 import { Onboarding } from './components/Onboarding';
+import { ExternalGuidanceBanner } from './components/ExternalGuidanceBanner';
+import { detectGuidance } from './lib/guidanceDetector';
 import { useT } from './i18n';
 import type { Storage, OracleCard, Message, PersonaId, Mode } from './types';
 
@@ -961,6 +963,10 @@ export function MainApp() {
                     ) : (
                       <div style={{ width: '100%' }}>
                         <OracleBubble msg={msg} idx={idx} copiedId={copiedId} regeneratingId={regenId} onCopy={handleCopy} onSwitch={handleSwitch} />
+                        <ExternalGuidanceBanner matches={detectGuidance([
+                          idx > 0 && messages[idx - 1].role === 'user' ? messages[idx - 1].text : '',
+                          msg.text,
+                        ])} />
                       </div>
                     )}
                   </div>
