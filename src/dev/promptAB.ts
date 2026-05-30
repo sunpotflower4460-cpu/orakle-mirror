@@ -21,10 +21,13 @@ if (!import.meta.env.DEV) {
 import type { ChatMessage, Persona, Mode, OracleCard } from '../types';
 import { PERSONAS } from '../constants/personas';
 import { MODES } from '../constants/modes';
+import { fetchOracleTwoStage } from '../lib/api';
 import {
   buildReceptionMessages,
   buildDiscernmentMessages,
 } from '../lib/prompt';
+import { exportAsCSV, exportAsJSON } from './exportResults';
+import { MATRIX_CASES } from './matrixCases';
 
 // ──────────────────────────────────────────────
 // Phase 4.9 ローカル再現: D パターン用
@@ -403,6 +406,135 @@ const formatMessages = (msgs: ChatMessage[]): string => {
     .join('\n\n' + '─'.repeat(40) + '\n\n');
 };
 
+const getComparisonMessages = (
+  persona: Persona,
+  mode: Mode,
+  cards: OracleCard[],
+  userInput: string
+) => {
+  const aMsgs = _a_buildMessages(persona, mode, cards, userInput);
+  const bReceptionMsgs = _b_buildReceptionMessages(persona, mode, cards, userInput);
+  const bDiscernmentMsgs = _b_buildDiscernmentMessages(persona, '<B_RAW_PLACEHOLDER>');
+  const cReceptionMsgs = _c_buildReceptionMessages(persona, mode, cards, userInput);
+  const cDiscernmentMsgs = _c_buildDiscernmentMessages(persona, '<C_RAW_PLACEHOLDER>');
+  const dReceptionMsgs = _d_buildReceptionMessages(persona, mode, cards, userInput);
+  const dDiscernmentMsgs = _d_buildDiscernmentMessages(persona, '<D_RAW_PLACEHOLDER>');
+  const eReceptionMsgs = buildReceptionMessages(persona, mode, cards, [], userInput);
+  const eDiscernmentMsgs = buildDiscernmentMessages(persona, '<E_RAW_PLACEHOLDER>');
+
+  return {
+    aMsgs,
+    bReceptionMsgs,
+    bDiscernmentMsgs,
+    cReceptionMsgs,
+    cDiscernmentMsgs,
+    dReceptionMsgs,
+    dDiscernmentMsgs,
+    eReceptionMsgs,
+    eDiscernmentMsgs,
+  };
+};
+
+const storeABResults = (ePatternRaw: string, ePatternFinal: string): void => {
+  if (typeof window === 'undefined') return;
+  if (!window.__abResults) window.__abResults = {};
+  window.__abResults.ePatternRaw = ePatternRaw;
+  window.__abResults.ePatternFinal = ePatternFinal;
+};
+
+const logComparisonMessages = (
+  messages: ReturnType<typeof getComparisonMessages>
+): void => {
+  console.group('[Oracle Mirror] Prompt A/B/C/D/E Comparison');
+
+  console.group('── A パターン (Phase 4.5 以前: 単一ステージ)');
+  console.log(formatMessages(messages.aMsgs));
+  console.groupEnd();
+
+  console.group('── B パターン (Phase 4.6: 二段階導入直後)');
+  console.group('Stage 1 Reception');
+  console.log(formatMessages(messages.bReceptionMsgs));
+  console.groupEnd();
+  console.group('Stage 2 Discernment');
+  console.log(formatMessages(messages.bDiscernmentMsgs));
+  console.groupEnd();
+  console.groupEnd();
+
+  console.group('── C パターン (Phase 4.9: チューニング往復あり・旧 Stage 2)');
+  console.group('Stage 1 Reception');
+  console.log(formatMessages(messages.cReceptionMsgs));
+  console.groupEnd();
+  console.group('Stage 2 Discernment');
+  console.log(formatMessages(messages.cDiscernmentMsgs));
+  console.groupEnd();
+  console.groupEnd();
+
+  console.group('── D パターン (Phase 4.9: ローカル再現)');
+  console.group('Stage 1 Reception');
+  console.log(formatMessages(messages.dReceptionMsgs));
+  console.groupEnd();
+  console.group('Stage 2 Discernment');
+  console.log(formatMessages(messages.dDiscernmentMsgs));
+  console.groupEnd();
+  console.groupEnd();
+
+  console.group('── E パターン (Phase 4.10: 現行 buildReceptionMessages / buildDiscernmentMessages)');
+  console.group('Stage 1 Reception');
+  console.log(formatMessages(messages.eReceptionMsgs));
+  console.groupEnd();
+  console.group('Stage 2 Discernment');
+  console.log(formatMessages(messages.eDiscernmentMsgs));
+  console.groupEnd();
+  console.log('[window.__abResults.ePatternRaw / ePatternFinal] に格納済み');
+  console.groupEnd();
+
+  console.groupEnd();
+};
+
+const getCardModeCards = (): OracleCard[] => {
+  return MATRIX_CASES.find((matrixCase) => matrixCase.cards.length > 0)?.cards ?? [];
+};
+
+const sleep = async (ms: number): Promise<void> => {
+  if (ms <= 0) return;
+  await new Promise((resolve) => setTimeout(resolve, ms));
+};
+
+const MATRIX_RESULT_COLUMNS = [
+  'cellIndex',
+  'personaId',
+  'modeId',
+  'caseId',
+  'query',
+  'ePatternRaw',
+  'ePatternFinal',
+  'startedAt',
+  'finishedAt',
+  'durationMs',
+  'errorMessage',
+] as const;
+
+export interface MatrixResultRow {
+  cellIndex: number;
+  personaId: Persona['id'];
+  modeId: string;
+  caseId: string;
+  query: string;
+  ePatternRaw: string;
+  ePatternFinal: string;
+  startedAt: string;
+  finishedAt: string;
+  durationMs: number;
+  errorMessage: string;
+}
+
+const getMatrixResults = (): MatrixResultRow[] => {
+  if (typeof window === 'undefined' || !Array.isArray(window.__matrixResults)) {
+    return [];
+  }
+  return window.__matrixResults as MatrixResultRow[];
+};
+
 // ──────────────────────────────────────────────
 // メイン比較実行関数
 // ──────────────────────────────────────────────
@@ -421,76 +553,35 @@ export const runPromptABComparison = (
   const persona = PERSONAS[personaId];
   const mode = MODES.PURE;
   const cards: OracleCard[] = [];
+  const messages = getComparisonMessages(persona, mode, cards, userInput);
 
-  // ── A パターン ─────────────────────────────
-  const aMsgs = _a_buildMessages(persona, mode, cards, userInput);
+  storeABResults(
+    formatMessages(messages.eReceptionMsgs),
+    formatMessages(messages.eDiscernmentMsgs)
+  );
+  logComparisonMessages(messages);
+};
 
-  // ── B パターン ─────────────────────────────
-  const bReceptionMsgs = _b_buildReceptionMessages(persona, mode, cards, userInput);
-  const bDiscernmentMsgs = _b_buildDiscernmentMessages(persona, '<B_RAW_PLACEHOLDER>');
+export const runABComparison = async (
+  personaId: Persona['id'] = 'lumina'
+): Promise<void> => {
+  const persona = PERSONAS[personaId];
 
-  // ── C パターン ─────────────────────────────
-  const cReceptionMsgs = _c_buildReceptionMessages(persona, mode, cards, userInput);
-  const cDiscernmentMsgs = _c_buildDiscernmentMessages(persona, '<C_RAW_PLACEHOLDER>');
-
-  // ── D パターン（Phase 4.9 ローカル再現）────
-  const dReceptionMsgs = _d_buildReceptionMessages(persona, mode, cards, userInput);
-  const dDiscernmentMsgs = _d_buildDiscernmentMessages(persona, '<D_RAW_PLACEHOLDER>');
-
-  // ── E パターン（Phase 4.10 現行）───────────
-  const eReceptionMsgs = buildReceptionMessages(persona, mode, cards, [], userInput);
-  const eDiscernmentMsgs = buildDiscernmentMessages(persona, '<E_RAW_PLACEHOLDER>');
-
-  // ── window.__abResults への格納 ─────────────
-  if (!window.__abResults) window.__abResults = {};
-  window.__abResults.ePatternRaw = formatMessages(eReceptionMsgs);
-  window.__abResults.ePatternFinal = formatMessages(eDiscernmentMsgs);
-
-  // ── コンソール出力 ───────────────────────────
-  console.group('[Oracle Mirror] Prompt A/B/C/D/E Comparison');
-
-  console.group('── A パターン (Phase 4.5 以前: 単一ステージ)');
-  console.log(formatMessages(aMsgs));
-  console.groupEnd();
-
-  console.group('── B パターン (Phase 4.6: 二段階導入直後)');
-  console.group('Stage 1 Reception');
-  console.log(formatMessages(bReceptionMsgs));
-  console.groupEnd();
-  console.group('Stage 2 Discernment');
-  console.log(formatMessages(bDiscernmentMsgs));
-  console.groupEnd();
-  console.groupEnd();
-
-  console.group('── C パターン (Phase 4.9: チューニング往復あり・旧 Stage 2)');
-  console.group('Stage 1 Reception');
-  console.log(formatMessages(cReceptionMsgs));
-  console.groupEnd();
-  console.group('Stage 2 Discernment');
-  console.log(formatMessages(cDiscernmentMsgs));
-  console.groupEnd();
-  console.groupEnd();
-
-  console.group('── D パターン (Phase 4.9: ローカル再現)');
-  console.group('Stage 1 Reception');
-  console.log(formatMessages(dReceptionMsgs));
-  console.groupEnd();
-  console.group('Stage 2 Discernment');
-  console.log(formatMessages(dDiscernmentMsgs));
-  console.groupEnd();
-  console.groupEnd();
-
-  console.group('── E パターン (Phase 4.10: 現行 buildReceptionMessages / buildDiscernmentMessages)');
-  console.group('Stage 1 Reception');
-  console.log(formatMessages(eReceptionMsgs));
-  console.groupEnd();
-  console.group('Stage 2 Discernment');
-  console.log(formatMessages(eDiscernmentMsgs));
-  console.groupEnd();
-  console.log('[window.__abResults.ePatternRaw / ePatternFinal] に格納済み');
-  console.groupEnd();
-
-  console.groupEnd();
+  for (const matrixCase of MATRIX_CASES) {
+    console.group(`=== ${matrixCase.id}: ${matrixCase.label} ===`);
+    const messages = getComparisonMessages(
+      persona,
+      matrixCase.mode,
+      matrixCase.cards,
+      matrixCase.query
+    );
+    storeABResults(
+      formatMessages(messages.eReceptionMsgs),
+      formatMessages(messages.eDiscernmentMsgs)
+    );
+    logComparisonMessages(messages);
+    console.groupEnd();
+  }
 };
 
 /**
@@ -537,3 +628,119 @@ export const runDEComparison = (
 
   console.groupEnd();
 };
+
+export const runFullMatrix = async (
+  options: { sleepMs?: number } = {}
+): Promise<MatrixResultRow[]> => {
+  if (!import.meta.env.DEV) {
+    return [];
+  }
+
+  const sleepMs = options.sleepMs ?? 1500;
+  const results: MatrixResultRow[] = [];
+  const personas = [PERSONAS.lumina, PERSONAS.zenith, PERSONAS.archivist];
+  const modes = [MODES.PURE, MODES.CARD];
+  const defaultCardModeCards = getCardModeCards();
+  const total = personas.length * modes.length * MATRIX_CASES.length;
+  let cellIndex = 0;
+
+  for (const persona of personas) {
+    for (const mode of modes) {
+      for (const matrixCase of MATRIX_CASES) {
+        cellIndex += 1;
+
+        const cards = mode.id === 'card'
+          ? matrixCase.cards.length > 0
+            ? matrixCase.cards
+            : defaultCardModeCards
+          : [];
+        const startedAt = new Date().toISOString();
+        const started = Date.now();
+        const row: MatrixResultRow = {
+          cellIndex,
+          personaId: persona.id,
+          modeId: mode.id,
+          caseId: matrixCase.id,
+          query: matrixCase.query,
+          ePatternRaw: '',
+          ePatternFinal: '',
+          startedAt,
+          finishedAt: startedAt,
+          durationMs: 0,
+          errorMessage: '',
+        };
+
+        console.log(
+          `[${cellIndex}/${total}] persona=${persona.id} mode=${mode.id} case=${matrixCase.label}`
+        );
+
+        try {
+          const receptionMsgs = buildReceptionMessages(
+            persona,
+            mode,
+            cards,
+            [],
+            matrixCase.query
+          );
+          const result = await fetchOracleTwoStage(receptionMsgs, (raw) =>
+            buildDiscernmentMessages(persona, raw)
+          );
+          row.ePatternRaw = result.raw;
+          row.ePatternFinal = result.final;
+          console.log(
+            `[${cellIndex}/${total}] completed persona=${persona.id} mode=${mode.id} case=${matrixCase.id}`
+          );
+        } catch (error: unknown) {
+          row.errorMessage = error instanceof Error ? error.message : String(error);
+          console.error(
+            `[${cellIndex}/${total}] failed persona=${persona.id} mode=${mode.id} case=${matrixCase.id}`,
+            row.errorMessage
+          );
+        } finally {
+          row.finishedAt = new Date().toISOString();
+          row.durationMs = Date.now() - started;
+          results.push(row);
+          if (typeof window !== 'undefined') {
+            window.__matrixResults = results;
+          }
+        }
+
+        if (cellIndex < total) {
+          await sleep(sleepMs);
+        }
+      }
+    }
+  }
+
+  return results;
+};
+
+export const exportMatrixAsJSON = (): void => {
+  const rows = getMatrixResults();
+  if (rows.length === 0) {
+    console.warn('[exportMatrixAsJSON] no matrix results found');
+    return;
+  }
+
+  exportAsJSON(rows, `phase-4-11-matrix-${Date.now()}.json`);
+};
+
+export const exportMatrixAsCSV = (): void => {
+  const rows = getMatrixResults();
+  if (rows.length === 0) {
+    console.warn('[exportMatrixAsCSV] no matrix results found');
+    return;
+  }
+
+  const csvRows = rows.map((row) => ({ ...row }));
+  exportAsCSV(csvRows, [...MATRIX_RESULT_COLUMNS], `phase-4-11-matrix-${Date.now()}.csv`);
+};
+
+if (import.meta.env.DEV && typeof window !== 'undefined') {
+  window.runPromptABComparison = runPromptABComparison;
+  window.runABComparison = runABComparison;
+  window.runDEComparison = runDEComparison;
+  window.runFullMatrix = runFullMatrix;
+  window.exportMatrixAsJSON = exportMatrixAsJSON;
+  window.exportMatrixAsCSV = exportMatrixAsCSV;
+}
