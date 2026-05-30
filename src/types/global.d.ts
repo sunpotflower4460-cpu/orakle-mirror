@@ -30,4 +30,37 @@ interface Window {
     ePatternRaw?: string;
     ePatternFinal?: string;
   };
+  __matrixResults?: Array<{
+    cellIndex: number;
+    personaId: string;
+    modeId: string;
+    caseId: string;
+    query: string;
+    ePatternRaw: string;
+    ePatternFinal: string;
+    startedAt: string;
+    finishedAt: string;
+    durationMs: number;
+    errorMessage: string;
+  }>;
+  runPromptABComparison?: (userInput?: string, personaId?: 'lumina' | 'zenith' | 'archivist') => void;
+  runABComparison?: (personaId?: 'lumina' | 'zenith' | 'archivist') => Promise<void>;
+  runDEComparison?: (userInput?: string) => void;
+  runFullMatrix?: (options?: { sleepMs?: number }) => Promise<
+    Array<{
+      cellIndex: number;
+      personaId: string;
+      modeId: string;
+      caseId: string;
+      query: string;
+      ePatternRaw: string;
+      ePatternFinal: string;
+      startedAt: string;
+      finishedAt: string;
+      durationMs: number;
+      errorMessage: string;
+    }>
+  >;
+  exportMatrixAsJSON?: () => void;
+  exportMatrixAsCSV?: () => void;
 }
