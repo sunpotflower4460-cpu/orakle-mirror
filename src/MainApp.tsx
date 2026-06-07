@@ -13,7 +13,7 @@ import { PERSONAS } from './constants/personas';
 import { LS_KEY, genId, FREE_LIMIT, MAX_ROOMS } from './lib/constants';
 import { buildDiscernmentMessages, buildReceptionMessages } from './lib/prompt';
 import { clip } from './lib/clipboard';
-import { getAudioContext, playMagicSound } from './lib/audio';
+import { getAudioContext, playMagicSound, playOffer } from './lib/audio';
 import { IS_PROD, USE_JS_KEYBOARD_PADDING } from './lib/env';
 import { safeStartTransition } from './lib/react-compat';
 import { Preferences, Share, Purchases, SplashScreen, Keyboard, StatusBar } from './lib/capacitorMocks';
@@ -441,7 +441,8 @@ export function MainApp() {
 
     const currentStorage = storageRef.current;
     
-    getAudioContext(); 
+    getAudioContext();
+    playOffer(); // 問いを鏡へ手放す、控えめな上昇音
     setInput(''); setError(null); setIsLoading(true);
 
     const targetRoomId = activeRoomId || genId();
@@ -560,6 +561,7 @@ export function MainApp() {
     if (!targetMsg || targetMsg.role !== 'model') return;
 
     getAudioContext();
+    playOffer(); // 別の鏡へ問いを委ね直す、控えめな上昇音
 
     const targetPersona = PERSONAS[targetPersonaId];
     const targetMode    = (targetMsg.modeId && MODES[targetMsg.modeId.toUpperCase() as 'PURE' | 'CARD']) || MODES.PURE;
