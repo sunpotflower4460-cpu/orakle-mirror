@@ -57,9 +57,10 @@ function ensureGraph(ctx: AudioContext): { master: GainNode; verb: ConvolverNode
     }
     if (!reverb) {
       reverb = ctx.createConvolver();
-      reverb.buffer = buildImpulse(ctx, 3.0, 3.2);
+      // 軽めの残響: 余韻は短く、空気感だけを添える
+      reverb.buffer = buildImpulse(ctx, 1.8, 2.8);
       reverbGain = ctx.createGain();
-      reverbGain.gain.value = 0.5;
+      reverbGain.gain.value = 0.34;
       reverb.connect(reverbGain);
       reverbGain.connect(masterGain);
     }
@@ -130,10 +131,75 @@ function voice(
   osc.stop(t0 + o.duration + 0.08);
 }
 
+interface BellOpts {
+  freq: number;
+  delay: number;
+  peak: number;
+  /** ほぼ無音まで減衰する秒数 */
+  decay: number;
+  /** 定位 -1(左)〜+1(右) */
+  pan?: number;
+  reverbSend?: number;
+}
+
+/**
+ * 音楽箱／グロッケンのような澄んだ鈴の粒を一つ鳴らす。
+ * 基音に整数倍の倍音を弱く重ね、素早い打鍵→短い減衰で「きらめき」を作る。
+ * StereoPanner で左右に散らし、光の粒が降り注ぐ広がりを出す(未対応環境は中央)。
+ */
+function bell(
+  ctx: AudioContext,
+  master: GainNode,
+  verb: ConvolverNode | null,
+  o: BellOpts,
+): void {
+  const t0 = ctx.currentTime + o.delay;
+
+  const out = ctx.createGain();
+  out.gain.value = Math.max(0.0002, o.peak);
+
+  // 倍音構成(高い倍音ほど弱く・速く減衰 → 澄んだ鈴の音色)
+  const partials = [
+    { mult: 1.0, amp: 1.0, dec: o.decay },
+    { mult: 2.0, amp: 0.42, dec: o.decay * 0.6 },
+    { mult: 3.01, amp: 0.16, dec: o.decay * 0.4 },
+  ];
+  for (const p of partials) {
+    const osc = ctx.createOscillator();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(o.freq * p.mult, t0);
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(0.0001, t0);
+    g.gain.exponentialRampToValueAtTime(p.amp, t0 + 0.004); // 鋭い打鍵
+    g.gain.exponentialRampToValueAtTime(0.0001, t0 + p.dec);
+    osc.connect(g);
+    g.connect(out);
+    osc.start(t0);
+    osc.stop(t0 + p.dec + 0.05);
+  }
+
+  let node: AudioNode = out;
+  const panner = ctx.createStereoPanner?.();
+  if (panner) {
+    panner.pan.setValueAtTime(Math.max(-1, Math.min(1, o.pan ?? 0)), t0);
+    out.connect(panner);
+    node = panner;
+  }
+  node.connect(master);
+
+  if (verb && (o.reverbSend ?? 0) > 0) {
+    const send = ctx.createGain();
+    send.gain.value = o.reverbSend ?? 0;
+    node.connect(send);
+    send.connect(verb);
+  }
+}
+
 /**
  * 神託が降りてくる瞬間の音。
- * 温かな根音のドローンの上に、長三和音をやさしく階段状に重ね、
- * 残響の中へ溶かす。遠い聖堂の鐘のような、解決した安らぎ。
+ * 高音ペンタトニックの鈴が「シャララン」と速く駆け上がり、
+ * そこから光の粒が降りそそぐように散っていく。土台に淡い温かなにじみ。
+ * 残響は軽く、空気感だけを添える。
  */
 export const playMagicSound = (): void => {
   try {
@@ -143,22 +209,40 @@ export const playMagicSound = (): void => {
     if (!graph) return;
     const { master, verb } = graph;
 
-    // 根音のドローン(土台の温かみ)
+    // 土台:温かな光のにじみ(きらめきが薄くならないための、ごく淡いグロウ)
     voice(ctx, master, verb, {
-      freq: 220.0, delay: 0, attack: 0.18, duration: 2.8, peak: 0.022, cutoff: 1700, reverbSend: 0.45,
+      freq: 440.0, delay: 0, attack: 0.22, duration: 1.9, peak: 0.015, cutoff: 3000, reverbSend: 0.3,
+    });
+    voice(ctx, master, verb, {
+      freq: 659.25, delay: 0.05, attack: 0.26, duration: 2.1, peak: 0.013, cutoff: 3400, reverbSend: 0.3,
     });
 
-    // 階段状に立ちのぼる A メジャーの調べ(A4 → C#5 → E5 → A5)
-    const ascent = [
-      { freq: 440.0, peak: 0.040, duration: 2.2 },
-      { freq: 554.37, peak: 0.038, duration: 2.3 },
-      { freq: 659.25, peak: 0.036, duration: 2.4 },
-      { freq: 880.0, peak: 0.030, duration: 2.6 },
-    ];
-    ascent.forEach((n, i) => {
-      voice(ctx, master, verb, {
-        freq: n.freq, delay: i * 0.14, attack: 0.035, duration: n.duration,
-        peak: n.peak, cutoff: 5200, reverbSend: 0.68,
+    // A メジャーペンタトニック(高音)。立ちのぼる速い run = シャララ
+    const run = [880.0, 987.77, 1108.73, 1318.51, 1479.98, 1760.0, 1975.53, 2217.46, 2637.02];
+    let t = 0;
+    run.forEach((freq, i) => {
+      bell(ctx, master, verb, {
+        freq,
+        delay: t + (Math.random() - 0.5) * 0.012, // 自然な揺らぎ
+        peak: 0.030 - i * 0.0014,
+        decay: 1.25 - i * 0.06,
+        pan: (Math.random() - 0.5) * 0.9,
+        reverbSend: 0.34,
+      });
+      t += 0.052;
+    });
+
+    // 降りそそぐ光の粒:高音から散らしながら、やわらかく舞い降りる = ラン…
+    const sprinkle = [2637.02, 2217.46, 1975.53, 1760.0, 1479.98, 1318.51, 1108.73];
+    sprinkle.forEach((freq, i) => {
+      const starDust = Math.random() < 0.28 ? 2 : 1; // 時おり上のオクターブで星屑
+      bell(ctx, master, verb, {
+        freq: freq * starDust,
+        delay: t + i * 0.085 + (Math.random() - 0.5) * 0.03,
+        peak: 0.019 - i * 0.0011,
+        decay: 0.7 + i * 0.06,
+        pan: (Math.random() - 0.5) * 1.0,
+        reverbSend: 0.4,
       });
     });
   } catch (e) {
