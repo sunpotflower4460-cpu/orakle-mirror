@@ -8,8 +8,9 @@
 
 export let sharedAudioCtx: AudioContext | null = null;
 
-// 一度だけ構築する共有グラフ(マスター音量 + 残響バス)
+// 一度だけ構築する共有グラフ(マスター音量 + ヴェール + 残響バス)
 let masterGain: GainNode | null = null;
+let masterVeil: BiquadFilterNode | null = null;
 let reverb: ConvolverNode | null = null;
 let reverbGain: GainNode | null = null;
 
@@ -52,8 +53,14 @@ function ensureGraph(ctx: AudioContext): { master: GainNode; verb: ConvolverNode
   try {
     if (!masterGain) {
       masterGain = ctx.createGain();
-      masterGain.gain.value = 0.82; // 全体を控えめに
-      masterGain.connect(ctx.destination);
+      masterGain.gain.value = 0.6; // 全体をさらに控えめに
+      // 薄い膜(ヴェール): 高域をやわらかく丸め、ふわっと霞んだ質感にする
+      masterVeil = ctx.createBiquadFilter();
+      masterVeil.type = 'lowpass';
+      masterVeil.frequency.value = 3400;
+      masterVeil.Q.value = 0.5;
+      masterGain.connect(masterVeil);
+      masterVeil.connect(ctx.destination);
     }
     if (!reverb) {
       reverb = ctx.createConvolver();
@@ -137,6 +144,8 @@ interface BellOpts {
   peak: number;
   /** ほぼ無音まで減衰する秒数 */
   decay: number;
+  /** 立ち上がり秒。長いほど打鍵が和らぎ、ふわっと滲む */
+  attack?: number;
   /** 定位 -1(左)〜+1(右) */
   pan?: number;
   reverbSend?: number;
@@ -157,12 +166,13 @@ function bell(
 
   const out = ctx.createGain();
   out.gain.value = Math.max(0.0002, o.peak);
+  const attack = o.attack ?? 0.022; // やわらかな打鍵(ふわっと滲む)
 
-  // 倍音構成(高い倍音ほど弱く・速く減衰 → 澄んだ鈴の音色)
+  // 倍音構成(高い倍音ほど弱く・速く減衰)。上倍音を控えめにして、丸く霞んだ音色に。
   const partials = [
     { mult: 1.0, amp: 1.0, dec: o.decay },
-    { mult: 2.0, amp: 0.42, dec: o.decay * 0.6 },
-    { mult: 3.01, amp: 0.16, dec: o.decay * 0.4 },
+    { mult: 2.0, amp: 0.26, dec: o.decay * 0.55 },
+    { mult: 3.01, amp: 0.06, dec: o.decay * 0.4 },
   ];
   for (const p of partials) {
     const osc = ctx.createOscillator();
@@ -170,7 +180,7 @@ function bell(
     osc.frequency.setValueAtTime(o.freq * p.mult, t0);
     const g = ctx.createGain();
     g.gain.setValueAtTime(0.0001, t0);
-    g.gain.exponentialRampToValueAtTime(p.amp, t0 + 0.004); // 鋭い打鍵
+    g.gain.exponentialRampToValueAtTime(p.amp, t0 + attack);
     g.gain.exponentialRampToValueAtTime(0.0001, t0 + p.dec);
     osc.connect(g);
     g.connect(out);
@@ -211,10 +221,10 @@ export const playMagicSound = (): void => {
 
     // 土台:温かな光のにじみ(きらめきが薄くならないための、ごく淡いグロウ)
     voice(ctx, master, verb, {
-      freq: 440.0, delay: 0, attack: 0.22, duration: 1.9, peak: 0.015, cutoff: 3000, reverbSend: 0.3,
+      freq: 440.0, delay: 0, attack: 0.30, duration: 1.9, peak: 0.011, cutoff: 2600, reverbSend: 0.32,
     });
     voice(ctx, master, verb, {
-      freq: 659.25, delay: 0.05, attack: 0.26, duration: 2.1, peak: 0.013, cutoff: 3400, reverbSend: 0.3,
+      freq: 659.25, delay: 0.05, attack: 0.34, duration: 2.1, peak: 0.009, cutoff: 2900, reverbSend: 0.32,
     });
 
     // A メジャーペンタトニック(高音)。立ちのぼる速い run = シャララ
@@ -224,25 +234,25 @@ export const playMagicSound = (): void => {
       bell(ctx, master, verb, {
         freq,
         delay: t + (Math.random() - 0.5) * 0.012, // 自然な揺らぎ
-        peak: 0.030 - i * 0.0014,
-        decay: 1.25 - i * 0.06,
+        peak: 0.017 - i * 0.0009,
+        decay: 1.15 - i * 0.05,
         pan: (Math.random() - 0.5) * 0.9,
-        reverbSend: 0.34,
+        reverbSend: 0.36,
       });
-      t += 0.052;
+      t += 0.054;
     });
 
     // 降りそそぐ光の粒:高音から散らしながら、やわらかく舞い降りる = ラン…
     const sprinkle = [2637.02, 2217.46, 1975.53, 1760.0, 1479.98, 1318.51, 1108.73];
     sprinkle.forEach((freq, i) => {
-      const starDust = Math.random() < 0.28 ? 2 : 1; // 時おり上のオクターブで星屑
+      const starDust = Math.random() < 0.16 ? 2 : 1; // ごく時おり上のオクターブで星屑
       bell(ctx, master, verb, {
         freq: freq * starDust,
-        delay: t + i * 0.085 + (Math.random() - 0.5) * 0.03,
-        peak: 0.019 - i * 0.0011,
-        decay: 0.7 + i * 0.06,
+        delay: t + i * 0.088 + (Math.random() - 0.5) * 0.03,
+        peak: 0.011 - i * 0.0007,
+        decay: 0.75 + i * 0.06,
         pan: (Math.random() - 0.5) * 1.0,
-        reverbSend: 0.4,
+        reverbSend: 0.42,
       });
     });
   } catch (e) {
@@ -265,14 +275,14 @@ export const playOffer = (): void => {
 
     // やわらかな上昇のひと息(E4 → A4)
     voice(ctx, master, verb, {
-      freq: 329.63, glideTo: 440.0, glideTime: 0.22,
-      attack: 0.05, duration: 0.62, peak: 0.026, cutoff: 2400, reverbSend: 0.4, delay: 0,
+      freq: 329.63, glideTo: 440.0, glideTime: 0.24,
+      attack: 0.07, duration: 0.66, peak: 0.019, cutoff: 2200, reverbSend: 0.42, delay: 0,
     });
 
     // 遠くで一瞬きらめく高音(手放した問いが昇っていく余韻)
     voice(ctx, master, verb, {
-      freq: 1318.51, type: 'sine', delay: 0.06,
-      attack: 0.012, duration: 0.5, peak: 0.012, cutoff: 6000, reverbSend: 0.7,
+      freq: 1318.51, type: 'sine', delay: 0.07,
+      attack: 0.02, duration: 0.52, peak: 0.008, cutoff: 4200, reverbSend: 0.6,
     });
   } catch (e) {
     console.warn('[audio] playOffer failed', e);
