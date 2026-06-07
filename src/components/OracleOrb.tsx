@@ -163,6 +163,23 @@ export function OracleOrb({ size, variant, iconColor, strokeWidth }: OracleOrbPr
           pointerEvents: 'none',
         }} />
 
+        {!prefersReducedMotion && (
+          <div
+            aria-hidden
+            style={{
+              position: 'absolute',
+              top: '-40%',
+              left: '-30%',
+              width: '55%',
+              height: '180%',
+              background: 'linear-gradient(100deg, transparent, rgba(255,255,255,0.55), transparent)',
+              filter: 'blur(6px)',
+              pointerEvents: 'none',
+              animation: 'orbSheen 7.2s ease-in-out infinite',
+            }}
+          />
+        )}
+
         <div style={{
           position: 'absolute',
           inset: 0,

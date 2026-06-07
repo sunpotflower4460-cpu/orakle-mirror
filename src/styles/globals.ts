@@ -36,14 +36,49 @@ export const GLOBAL_STYLES: string = `
     --om-shadow-soft: 0 18px 48px rgba(90,60,70,0.06);
     --om-shadow-card: 0 18px 44px rgba(180,110,130,0.08);
     --om-shadow-navy: 0 16px 38px rgba(10,16,36,0.22);
-    --om-glow-rose: 0 0 52px rgba(217,111,140,0.18);
-    --om-glow-rose-wide: 0 0 86px rgba(217,111,140,0.12);
+    --om-glow-rose: 0 0 58px rgba(217,111,140,0.22);
+    --om-glow-rose-wide: 0 0 104px rgba(217,111,140,0.14);
   }
   * { box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color: transparent; }
-  body { 
-    overscroll-behavior: contain; 
-    -webkit-overflow-scrolling: touch; 
-    background: #fffdfd; 
+  body {
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+    background: #fffdfd;
+  }
+  /* 上から静かに降りそそぐ、聖なる光暈(光が天から差し込むような気配) */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 1;
+    background:
+      radial-gradient(140% 70% at 50% -22%, rgba(255,236,214,0.30), rgba(255,228,242,0.10) 34%, transparent 60%),
+      radial-gradient(120% 55% at 50% 122%, rgba(228,222,255,0.10), transparent 62%);
+    animation: haloBreathe 9.5s ease-in-out infinite;
+  }
+  /* 空間を漂う霊的な光の粒子(精霊のあかり・星屑のような微光) */
+  body::after {
+    content: '';
+    position: fixed;
+    inset: -25%;
+    pointer-events: none;
+    z-index: 2;
+    background-image:
+      radial-gradient(2px 2px at 12% 18%, rgba(255,255,255,0.92), transparent 66%),
+      radial-gradient(5px 5px at 28% 72%, rgba(255,224,182,0.46), transparent 72%),
+      radial-gradient(2px 2px at 47% 35%, rgba(255,255,255,0.85), transparent 66%),
+      radial-gradient(6px 6px at 63% 58%, rgba(212,216,255,0.42), transparent 74%),
+      radial-gradient(2px 2px at 78% 22%, rgba(255,255,255,0.9), transparent 66%),
+      radial-gradient(5px 5px at 88% 67%, rgba(255,210,228,0.42), transparent 74%),
+      radial-gradient(2px 2px at 38% 90%, rgba(255,255,255,0.82), transparent 66%),
+      radial-gradient(4px 4px at 7% 52%, rgba(226,224,255,0.46), transparent 74%),
+      radial-gradient(2px 2px at 56% 12%, rgba(255,255,255,0.8), transparent 66%);
+    background-size: 300px 300px;
+    background-repeat: repeat;
+    opacity: 0.55;
+    will-change: transform, opacity;
+    animation: motesFloat 46s ease-in-out infinite, twinkleField 7.5s ease-in-out infinite;
   }
   ::-webkit-scrollbar { width:4px; }
   ::-webkit-scrollbar-track { background:transparent; }
@@ -70,11 +105,12 @@ export const GLOBAL_STYLES: string = `
     inset: -15%;
     pointer-events: none;
     background:
-      radial-gradient(circle at 20% 28%, rgba(255,206,226,0.18), transparent 36%),
-      radial-gradient(circle at 78% 18%, rgba(176,205,255,0.16), transparent 34%),
-      radial-gradient(circle at 50% 72%, rgba(255,245,255,0.14), transparent 42%);
+      radial-gradient(circle at 20% 28%, rgba(255,206,226,0.22), transparent 36%),
+      radial-gradient(circle at 78% 18%, rgba(176,205,255,0.20), transparent 34%),
+      radial-gradient(circle at 62% 60%, rgba(255,240,210,0.15), transparent 40%),
+      radial-gradient(circle at 50% 80%, rgba(232,214,255,0.16), transparent 44%);
     mix-blend-mode: screen;
-    animation: auroraDrift 16s ease-in-out infinite;
+    animation: auroraDrift 19s ease-in-out infinite;
     z-index: 0;
   }
   
@@ -93,9 +129,26 @@ export const GLOBAL_STYLES: string = `
     50% { filter: saturate(1.16) brightness(1.07); }
   }
   @keyframes auroraDrift {
-    0% { transform: translate3d(-2%, -1%, 0) rotate(0deg); opacity: .58; }
-    50% { transform: translate3d(2%, 1%, 0) rotate(2deg); opacity: .78; }
-    100% { transform: translate3d(-2%, -1%, 0) rotate(0deg); opacity: .58; }
+    0% { transform: translate3d(-2%, -1%, 0) rotate(0deg); opacity: .60; }
+    50% { transform: translate3d(2%, 1%, 0) rotate(2deg); opacity: .84; }
+    100% { transform: translate3d(-2%, -1%, 0) rotate(0deg); opacity: .60; }
+  }
+  /* 天から差す光暈が、静かに呼吸する */
+  @keyframes haloBreathe { 0%,100% { opacity:.7; } 50% { opacity:1; } }
+  /* 霊的な光の粒子が、ゆっくりと宙を漂う */
+  @keyframes motesFloat {
+    0% { transform: translate3d(0, 0, 0); }
+    50% { transform: translate3d(2.4%, -3.2%, 0); }
+    100% { transform: translate3d(0, 0, 0); }
+  }
+  /* 粒子の明滅(またたき) */
+  @keyframes twinkleField { 0%,100% { opacity:.40; } 50% { opacity:.62; } }
+  /* 鏡面を、光の筋が静かに通り過ぎる(聖なるガラスの反射) */
+  @keyframes orbSheen {
+    0% { transform: translateX(-60%) rotate(8deg); opacity: 0; }
+    18% { opacity: .85; }
+    50% { transform: translateX(230%) rotate(8deg); opacity: 0; }
+    100% { transform: translateX(230%) rotate(8deg); opacity: 0; }
   }
   /* モーダルカードの上品なスケールイン */
   @keyframes modalReveal { from { opacity:0; transform:translateY(12px) scale(0.96); } to { opacity:1; transform:translateY(0) scale(1); } }
@@ -121,6 +174,24 @@ export const GLOBAL_STYLES: string = `
 
   /* 入力欄シェル:フォーカス時にやわらかく息づく */
   .input-shell { transition:box-shadow 0.45s ease, border-color 0.45s ease, transform 0.45s cubic-bezier(0.16,1,0.3,1); }
+
+  /* 空のhero:鏡そのものが淡く発光するような、放射状の聖なる光暈 */
+  .empty-state { position: relative; }
+  .empty-state::before {
+    content: '';
+    position: absolute;
+    top: 2%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: min(440px, 92%);
+    height: 440px;
+    pointer-events: none;
+    background: radial-gradient(circle, rgba(255,244,250,0.50) 0%, rgba(226,234,255,0.22) 38%, transparent 70%);
+    filter: blur(10px);
+    z-index: 0;
+    animation: haloBreathe 8.5s ease-in-out infinite;
+  }
+  .empty-state > * { position: relative; z-index: 1; }
 
   @media (max-width:600px) {
     .oracle-bubble .bubble-actions { opacity:1; }
