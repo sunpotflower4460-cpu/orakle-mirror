@@ -360,6 +360,20 @@ export function MainApp() {
     return storage.rooms[activeRoomId]?.messages || [];
   }, [activeRoomId, storage.rooms]);
 
+  // 外部案内バナーの判定は messages にのみ依存する純粋計算。
+  // 入力中の再レンダー等で毎回キーワード走査が走らないよう、メッセージ単位でメモ化する。
+  const guidanceByIndex = useMemo(
+    () => messages.map((msg, idx) =>
+      msg.role === 'model'
+        ? detectGuidance([
+            idx > 0 && messages[idx - 1].role === 'user' ? messages[idx - 1].text : '',
+            msg.text,
+          ])
+        : []
+    ),
+    [messages],
+  );
+
   useEffect(() => {
     if (!messagesEndRef.current) return;
     const timer = setTimeout(() => {
@@ -963,10 +977,7 @@ export function MainApp() {
                     ) : (
                       <div style={{ width: '100%' }}>
                         <OracleBubble msg={msg} idx={idx} copiedId={copiedId} regeneratingId={regenId} onCopy={handleCopy} onSwitch={handleSwitch} />
-                        <ExternalGuidanceBanner matches={detectGuidance([
-                          idx > 0 && messages[idx - 1].role === 'user' ? messages[idx - 1].text : '',
-                          msg.text,
-                        ])} />
+                        <ExternalGuidanceBanner matches={guidanceByIndex[idx]} />
                       </div>
                     )}
                   </div>
