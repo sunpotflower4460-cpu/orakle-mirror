@@ -3,20 +3,18 @@
 // 方針:
 // - 音色は FM 合成(キャリア + モジュレータ)。鈴/ガラスのような、倍音が時間で
 //   動く生っぽい質感を、音声アセットなしで作る。
-// - 残響は畳み込み(Convolver)。既定では高品質なアルゴリズム生成 IR を用い、
-//   本物の聖堂/ホールで録った IR ファイルがあれば loadReverbImpulse() で差し替え可能。
+// - 空間は「軽いステレオ・ディレイ + プリディレイ付き畳み込みリバーブ」で薄く付与。
+//   既定では高品質なアルゴリズム生成 IR、本物の IR があれば loadReverbImpulse() で差替。
+// - マスター段にリミッター(DynamicsCompressor)を置き、ピークを透明に抑えてまとめる。
 // - 音量は終始ごく控えめ。儀式の核となる要所(問いを手放す / 神託が降りる)だけに置く。
 // - AudioContext は iOS の制約上ユーザー操作の中で生成・resume する(呼び出し側で担保)。
 
 export let sharedAudioCtx: AudioContext | null = null;
 
-// 一度だけ構築する共有グラフ(マスター音量 + 細身化 + ヴェール + 残響バス)
-let masterGain: GainNode | null = null;
-let masterThin: BiquadFilterNode | null = null;
-let masterVeil: BiquadFilterNode | null = null;
+// 一度だけ構築する共有グラフ
+let masterGain: GainNode | null = null; // dry + 空間FX を集約する合算バス
+let fxInput: GainNode | null = null;    // 各声部の送り先(reverb / delay 共通)
 let reverb: ConvolverNode | null = null;
-let reverbGain: GainNode | null = null;
-// 本物の IR を読み込み済みなら保持(グラフ構築前に来た場合のため)
 let loadedIR: AudioBuffer | null = null;
 
 export const getAudioContext = (): AudioContext | null => {
@@ -94,35 +92,76 @@ export async function loadReverbImpulse(url: string): Promise<boolean> {
   }
 }
 
-/** マスター + 残響バスを一度だけ構築する。失敗時は null を返す。 */
-function ensureGraph(ctx: AudioContext): { master: GainNode; verb: ConvolverNode | null } | null {
+/** マスター段 + 空間FX(ディレイ/リバーブ)を一度だけ構築する。失敗時は null を返す。 */
+function ensureGraph(ctx: AudioContext): { master: GainNode; fx: GainNode | null } | null {
   try {
     if (!masterGain) {
       masterGain = ctx.createGain();
-      masterGain.gain.value = 0.34; // 実機ではごく控えめに(目立たない程度)
-      // 細身化(ハイパス): 低域の太さ・body を削いで、薄く細い質感にする
-      masterThin = ctx.createBiquadFilter();
-      masterThin.type = 'highpass';
-      masterThin.frequency.value = 500;
-      masterThin.Q.value = 0.5;
-      // 薄い膜(ヴェール): 高域をやわらかく丸め、ふわっと霞んだ質感にする
-      masterVeil = ctx.createBiquadFilter();
-      masterVeil.type = 'lowpass';
-      masterVeil.frequency.value = 3800;
-      masterVeil.Q.value = 0.5;
-      masterGain.connect(masterThin);
-      masterThin.connect(masterVeil);
-      masterVeil.connect(ctx.destination);
-    }
-    if (!reverb) {
+      masterGain.gain.value = 0.30; // 実機ではごく控えめに(目立たない程度)
+
+      // 細身化(ハイパス): 低域の太さ・body を削いで、薄く細い質感に
+      const thin = ctx.createBiquadFilter();
+      thin.type = 'highpass';
+      thin.frequency.value = 500;
+      thin.Q.value = 0.5;
+      // 薄い膜(ヴェール): 高域をやわらかく丸め、ふわっと霞んだ質感に
+      const veil = ctx.createBiquadFilter();
+      veil.type = 'lowpass';
+      veil.frequency.value = 3800;
+      veil.Q.value = 0.5;
+      // マスター・リミッター: ピークを透明に抑え、全体をまとめる(グルー)
+      const limiter = ctx.createDynamicsCompressor();
+      limiter.threshold.value = -14;
+      limiter.knee.value = 24;
+      limiter.ratio.value = 6;
+      limiter.attack.value = 0.003;
+      limiter.release.value = 0.25;
+
+      masterGain.connect(thin);
+      thin.connect(veil);
+      veil.connect(limiter);
+      limiter.connect(ctx.destination);
+
+      // ── 空間FX 送りバス ──
+      fxInput = ctx.createGain();
+      fxInput.gain.value = 1;
+
+      // リバーブ(プリディレイで dry と分離 → 自然な空間)。量は薄め。
       reverb = ctx.createConvolver();
       reverb.buffer = loadedIR ?? buildImpulse(ctx, 2.2, 2.6);
-      reverbGain = ctx.createGain();
-      reverbGain.gain.value = 0.34;
+      const preDelay = ctx.createDelay(0.2);
+      preDelay.delayTime.value = 0.014;
+      const reverbGain = ctx.createGain();
+      reverbGain.gain.value = 0.28;
+      fxInput.connect(preDelay);
+      preDelay.connect(reverb);
       reverb.connect(reverbGain);
       reverbGain.connect(masterGain);
+
+      // 軽いステレオ・ディレイ(左右で時間差・低フィードバック → 奥行き)
+      const delayL = ctx.createDelay(0.6);
+      const delayR = ctx.createDelay(0.6);
+      delayL.delayTime.value = 0.17;
+      delayR.delayTime.value = 0.23;
+      const fbL = ctx.createGain();
+      const fbR = ctx.createGain();
+      fbL.gain.value = 0.24;
+      fbR.gain.value = 0.24;
+      delayL.connect(fbL);
+      fbL.connect(delayL);
+      delayR.connect(fbR);
+      fbR.connect(delayR);
+      const merger = ctx.createChannelMerger(2);
+      delayL.connect(merger, 0, 0);
+      delayR.connect(merger, 0, 1);
+      const delayWet = ctx.createGain();
+      delayWet.gain.value = 0.16;
+      fxInput.connect(delayL);
+      fxInput.connect(delayR);
+      merger.connect(delayWet);
+      delayWet.connect(masterGain);
     }
-    return { master: masterGain, verb: reverb };
+    return { master: masterGain, fx: fxInput };
   } catch (e) {
     console.warn('[audio] graph init failed', e);
     return null;
@@ -152,7 +191,7 @@ interface VoiceOpts {
 function voice(
   ctx: AudioContext,
   master: GainNode,
-  verb: ConvolverNode | null,
+  fx: GainNode | null,
   o: VoiceOpts,
 ): void {
   const t0 = ctx.currentTime + o.delay;
@@ -178,11 +217,11 @@ function voice(
   lp.connect(g);
   g.connect(master);
 
-  if (verb && (o.reverbSend ?? 0) > 0) {
+  if (fx && (o.reverbSend ?? 0) > 0) {
     const send = ctx.createGain();
     send.gain.value = o.reverbSend ?? 0;
     g.connect(send);
-    send.connect(verb);
+    send.connect(fx);
   }
 
   osc.start(t0);
@@ -215,7 +254,7 @@ interface FmBellOpts {
 function fmBell(
   ctx: AudioContext,
   master: GainNode,
-  verb: ConvolverNode | null,
+  fx: GainNode | null,
   o: FmBellOpts,
 ): void {
   const t0 = ctx.currentTime + o.delay;
@@ -259,11 +298,11 @@ function fmBell(
   }
   node.connect(master);
 
-  if (verb && (o.reverbSend ?? 0) > 0) {
+  if (fx && (o.reverbSend ?? 0) > 0) {
     const send = ctx.createGain();
     send.gain.value = o.reverbSend ?? 0;
     node.connect(send);
-    send.connect(verb);
+    send.connect(fx);
   }
 
   carrier.start(t0);
@@ -283,13 +322,13 @@ export const playMagicSound = (): void => {
     if (!ctx) return;
     const graph = ensureGraph(ctx);
     if (!graph) return;
-    const { master, verb } = graph;
+    const { master, fx } = graph;
 
     // A メジャーペンタトニック(高音)。立ちのぼる速い run = シャララ
     const run = [880.0, 987.77, 1108.73, 1318.51, 1479.98, 1760.0, 1975.53, 2217.46, 2637.02];
     let t = 0;
     run.forEach((freq, i) => {
-      fmBell(ctx, master, verb, {
+      fmBell(ctx, master, fx, {
         freq,
         delay: t + (Math.random() - 0.5) * 0.012, // 自然な揺らぎ
         peak: 0.012 - i * 0.0007,
@@ -306,7 +345,7 @@ export const playMagicSound = (): void => {
     const sprinkle = [2637.02, 2217.46, 1975.53, 1760.0, 1479.98, 1318.51, 1108.73];
     sprinkle.forEach((freq, i) => {
       const starDust = Math.random() < 0.16 ? 2 : 1; // ごく時おり上のオクターブで星屑
-      fmBell(ctx, master, verb, {
+      fmBell(ctx, master, fx, {
         freq: freq * starDust,
         delay: t + i * 0.088 + (Math.random() - 0.5) * 0.03,
         peak: 0.0075 - i * 0.0005,
@@ -333,16 +372,16 @@ export const playOffer = (): void => {
     if (!ctx) return;
     const graph = ensureGraph(ctx);
     if (!graph) return;
-    const { master, verb } = graph;
+    const { master, fx } = graph;
 
     // やわらかな上昇のひと息(B4 → E5)。細く保つため高めの音域で。
-    voice(ctx, master, verb, {
+    voice(ctx, master, fx, {
       freq: 493.88, glideTo: 659.25, glideTime: 0.24,
       attack: 0.08, duration: 0.6, peak: 0.012, cutoff: 2600, reverbSend: 0.4, delay: 0,
     });
 
     // 遠くで一瞬きらめく高音(FM のガラスの粒)
-    fmBell(ctx, master, verb, {
+    fmBell(ctx, master, fx, {
       freq: 1318.51, delay: 0.07, peak: 0.006, decay: 0.5,
       ratio: 3.5, index: 1.2, attack: 0.015, reverbSend: 0.58,
     });
