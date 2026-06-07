@@ -8,8 +8,9 @@
 
 export let sharedAudioCtx: AudioContext | null = null;
 
-// 一度だけ構築する共有グラフ(マスター音量 + ヴェール + 残響バス)
+// 一度だけ構築する共有グラフ(マスター音量 + 細身化 + ヴェール + 残響バス)
 let masterGain: GainNode | null = null;
+let masterThin: BiquadFilterNode | null = null;
 let masterVeil: BiquadFilterNode | null = null;
 let reverb: ConvolverNode | null = null;
 let reverbGain: GainNode | null = null;
@@ -53,13 +54,19 @@ function ensureGraph(ctx: AudioContext): { master: GainNode; verb: ConvolverNode
   try {
     if (!masterGain) {
       masterGain = ctx.createGain();
-      masterGain.gain.value = 0.6; // 全体をさらに控えめに
+      masterGain.gain.value = 0.34; // 実機ではごく控えめに(目立たない程度)
+      // 細身化(ハイパス): 低域の太さ・body を削いで、薄く細い質感にする
+      masterThin = ctx.createBiquadFilter();
+      masterThin.type = 'highpass';
+      masterThin.frequency.value = 500;
+      masterThin.Q.value = 0.5;
       // 薄い膜(ヴェール): 高域をやわらかく丸め、ふわっと霞んだ質感にする
       masterVeil = ctx.createBiquadFilter();
       masterVeil.type = 'lowpass';
       masterVeil.frequency.value = 3400;
       masterVeil.Q.value = 0.5;
-      masterGain.connect(masterVeil);
+      masterGain.connect(masterThin);
+      masterThin.connect(masterVeil);
       masterVeil.connect(ctx.destination);
     }
     if (!reverb) {
@@ -166,13 +173,13 @@ function bell(
 
   const out = ctx.createGain();
   out.gain.value = Math.max(0.0002, o.peak);
-  const attack = o.attack ?? 0.022; // やわらかな打鍵(ふわっと滲む)
+  const attack = o.attack ?? 0.02; // やわらかな打鍵(ふわっと滲む)
 
-  // 倍音構成(高い倍音ほど弱く・速く減衰)。上倍音を控えめにして、丸く霞んだ音色に。
+  // ほぼ純音 + ごく薄い上倍音だけ。太さを出さず、細く繊細なきらめきに。
   const partials = [
     { mult: 1.0, amp: 1.0, dec: o.decay },
-    { mult: 2.0, amp: 0.26, dec: o.decay * 0.55 },
-    { mult: 3.01, amp: 0.06, dec: o.decay * 0.4 },
+    { mult: 2.0, amp: 0.12, dec: o.decay * 0.5 },
+    { mult: 3.01, amp: 0.03, dec: o.decay * 0.35 },
   ];
   for (const p of partials) {
     const osc = ctx.createOscillator();
@@ -219,25 +226,18 @@ export const playMagicSound = (): void => {
     if (!graph) return;
     const { master, verb } = graph;
 
-    // 土台:温かな光のにじみ(きらめきが薄くならないための、ごく淡いグロウ)
-    voice(ctx, master, verb, {
-      freq: 440.0, delay: 0, attack: 0.30, duration: 1.9, peak: 0.011, cutoff: 2600, reverbSend: 0.32,
-    });
-    voice(ctx, master, verb, {
-      freq: 659.25, delay: 0.05, attack: 0.34, duration: 2.1, peak: 0.009, cutoff: 2900, reverbSend: 0.32,
-    });
-
     // A メジャーペンタトニック(高音)。立ちのぼる速い run = シャララ
+    // 太い土台は置かず、細い鈴の粒だけで構成する。
     const run = [880.0, 987.77, 1108.73, 1318.51, 1479.98, 1760.0, 1975.53, 2217.46, 2637.02];
     let t = 0;
     run.forEach((freq, i) => {
       bell(ctx, master, verb, {
         freq,
         delay: t + (Math.random() - 0.5) * 0.012, // 自然な揺らぎ
-        peak: 0.017 - i * 0.0009,
-        decay: 1.15 - i * 0.05,
-        pan: (Math.random() - 0.5) * 0.9,
-        reverbSend: 0.36,
+        peak: 0.012 - i * 0.0007,
+        decay: 0.85 - i * 0.04,
+        pan: (Math.random() - 0.5) * 0.95,
+        reverbSend: 0.34,
       });
       t += 0.054;
     });
@@ -249,10 +249,10 @@ export const playMagicSound = (): void => {
       bell(ctx, master, verb, {
         freq: freq * starDust,
         delay: t + i * 0.088 + (Math.random() - 0.5) * 0.03,
-        peak: 0.011 - i * 0.0007,
-        decay: 0.75 + i * 0.06,
+        peak: 0.0075 - i * 0.0005,
+        decay: 0.6 + i * 0.05,
         pan: (Math.random() - 0.5) * 1.0,
-        reverbSend: 0.42,
+        reverbSend: 0.4,
       });
     });
   } catch (e) {
@@ -273,16 +273,16 @@ export const playOffer = (): void => {
     if (!graph) return;
     const { master, verb } = graph;
 
-    // やわらかな上昇のひと息(E4 → A4)
+    // やわらかな上昇のひと息(B4 → E5)。細く保つため高めの音域で。
     voice(ctx, master, verb, {
-      freq: 329.63, glideTo: 440.0, glideTime: 0.24,
-      attack: 0.07, duration: 0.66, peak: 0.019, cutoff: 2200, reverbSend: 0.42, delay: 0,
+      freq: 493.88, glideTo: 659.25, glideTime: 0.24,
+      attack: 0.08, duration: 0.6, peak: 0.012, cutoff: 2600, reverbSend: 0.4, delay: 0,
     });
 
     // 遠くで一瞬きらめく高音(手放した問いが昇っていく余韻)
     voice(ctx, master, verb, {
       freq: 1318.51, type: 'sine', delay: 0.07,
-      attack: 0.02, duration: 0.52, peak: 0.008, cutoff: 4200, reverbSend: 0.6,
+      attack: 0.02, duration: 0.5, peak: 0.006, cutoff: 4200, reverbSend: 0.58,
     });
   } catch (e) {
     console.warn('[audio] playOffer failed', e);
