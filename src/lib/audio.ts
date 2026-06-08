@@ -160,6 +160,25 @@ function ensureGraph(ctx: AudioContext): { master: GainNode; fx: GainNode | null
       fxInput.connect(delayR);
       merger.connect(delayWet);
       delayWet.connect(masterGain);
+
+      // 微速 LFO でディレイ時間をゆらし、残響テールをコーラス化(揺らめく高級感)
+      const lfoL = ctx.createOscillator();
+      lfoL.type = 'sine';
+      lfoL.frequency.value = 0.23;
+      const lfoLDepth = ctx.createGain();
+      lfoLDepth.gain.value = 0.0018; // ±1.8ms
+      lfoL.connect(lfoLDepth);
+      lfoLDepth.connect(delayL.delayTime);
+      lfoL.start();
+
+      const lfoR = ctx.createOscillator();
+      lfoR.type = 'sine';
+      lfoR.frequency.value = 0.19; // L とわずかに違う速さで左右をほどく
+      const lfoRDepth = ctx.createGain();
+      lfoRDepth.gain.value = 0.0021;
+      lfoR.connect(lfoRDepth);
+      lfoRDepth.connect(delayR.delayTime);
+      lfoR.start();
     }
     return { master: masterGain, fx: fxInput };
   } catch (e) {
@@ -243,12 +262,17 @@ interface FmBellOpts {
   /** 定位 -1(左)〜+1(右) */
   pan?: number;
   reverbSend?: number;
+  /** ユニゾン・シマー(デチューンした第2キャリア)の相対音量。0 で無効 */
+  shimmer?: number;
+  /** シマーのデチューン量(セント) */
+  shimmerCents?: number;
 }
 
 /**
  * FM 合成による鈴/ガラスの一音。
  * モジュレータでキャリアの周波数を揺らし、変調指数を速く減衰させることで
  * 「きらめく金属的アタック → 澄んだ純音の余韻」という鈴特有の表情を作る。
+ * わずかにデチューンした第2キャリア(シマー)を薄く重ね、ゆっくり揺らぐ生きた響きに。
  * StereoPanner で左右に散らし、光の粒が降り注ぐ広がりを出す(未対応環境は中央)。
  */
 function fmBell(
@@ -289,6 +313,22 @@ function fmBell(
 
   carrier.connect(amp);
 
+  // ユニゾン・シマー: わずかにデチューンした第2キャリア。
+  // 同じモジュレータで FM し、本体とゆっくり干渉(ビート)して生きた揺らぎを生む。
+  const shimmer = o.shimmer ?? 0.3;
+  let carrier2: OscillatorNode | null = null;
+  if (shimmer > 0) {
+    carrier2 = ctx.createOscillator();
+    carrier2.type = 'sine';
+    carrier2.frequency.setValueAtTime(o.freq, t0);
+    carrier2.detune.setValueAtTime(o.shimmerCents ?? 8, t0);
+    modGain.connect(carrier2.frequency);
+    const shimmerGain = ctx.createGain();
+    shimmerGain.gain.value = shimmer;
+    carrier2.connect(shimmerGain);
+    shimmerGain.connect(amp);
+  }
+
   let node: AudioNode = amp;
   const panner = ctx.createStereoPanner?.();
   if (panner) {
@@ -309,6 +349,10 @@ function fmBell(
   modulator.start(t0);
   carrier.stop(t0 + decay + 0.06);
   modulator.stop(t0 + decay + 0.06);
+  if (carrier2) {
+    carrier2.start(t0);
+    carrier2.stop(t0 + decay + 0.06);
+  }
 }
 
 /**
@@ -324,6 +368,9 @@ export const playMagicSound = (): void => {
     if (!graph) return;
     const { master, fx } = graph;
 
+    // 音単位の微ランダム(±割合)。打ち込み感を消し、毎回わずかに表情を変える。
+    const hum = (v: number, amount: number) => v * (1 + (Math.random() - 0.5) * amount);
+
     // A メジャーペンタトニック(高音)。立ちのぼる速い run = シャララ
     const run = [880.0, 987.77, 1108.73, 1318.51, 1479.98, 1760.0, 1975.53, 2217.46, 2637.02];
     let t = 0;
@@ -331,12 +378,14 @@ export const playMagicSound = (): void => {
       fmBell(ctx, master, fx, {
         freq,
         delay: t + (Math.random() - 0.5) * 0.012, // 自然な揺らぎ
-        peak: 0.012 - i * 0.0007,
-        decay: 0.9 - i * 0.04,
+        peak: hum(0.012 - i * 0.0007, 0.18),
+        decay: hum(0.9 - i * 0.04, 0.1),
         ratio: 3.5,
-        index: 2.0 - i * 0.12, // 高音ほど純音寄りにして繊細に
+        index: hum(2.0 - i * 0.12, 0.12), // 高音ほど純音寄りにして繊細に
         pan: (Math.random() - 0.5) * 0.95,
         reverbSend: 0.36,
+        shimmer: 0.3,
+        shimmerCents: 7 + Math.random() * 4,
       });
       t += 0.054;
     });
@@ -348,12 +397,14 @@ export const playMagicSound = (): void => {
       fmBell(ctx, master, fx, {
         freq: freq * starDust,
         delay: t + i * 0.088 + (Math.random() - 0.5) * 0.03,
-        peak: 0.0075 - i * 0.0005,
-        decay: 0.7 + i * 0.05,
+        peak: hum(0.0075 - i * 0.0005, 0.2),
+        decay: hum(0.7 + i * 0.05, 0.12),
         ratio: 3.5,
-        index: 1.3,
+        index: hum(1.3, 0.14),
         pan: (Math.random() - 0.5) * 1.0,
         reverbSend: 0.42,
+        shimmer: 0.22,
+        shimmerCents: 6 + Math.random() * 4,
       });
     });
   } catch (e) {
