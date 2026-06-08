@@ -47,6 +47,18 @@ function getNoise(ctx: AudioContext): AudioBuffer {
   return noiseBuffer;
 }
 
+/** テープ/真空管的なソフトサチュレーション曲線(奇数倍音の温かみ)。 */
+function buildSatCurve() {
+  const n = 2048;
+  // 具体的な ArrayBuffer 由来で生成し、WaveShaperNode.curve の型に適合させる
+  const c = new Float32Array(new ArrayBuffer(n * 4));
+  for (let i = 0; i < n; i++) {
+    const x = (i / (n - 1)) * 2 - 1;
+    c[i] = Math.tanh(1.7 * x);
+  }
+  return c;
+}
+
 /**
  * 高品質なアルゴリズム生成インパルス応答。
  * 初期反射(離散タップ)+ 周波数依存で減衰する拡散テール(HF/LF ダンピング)+
@@ -119,7 +131,7 @@ function ensureGraph(ctx: AudioContext): { master: GainNode; fx: GainNode | null
   try {
     if (!masterGain) {
       masterGain = ctx.createGain();
-      masterGain.gain.value = 0.30; // 実機ではごく控えめに(目立たない程度)
+      masterGain.gain.value = 0.26; // 全体をより控えめに
 
       // ① ディエッサー的カット: 耳に刺さる 3kHz 付近をピンポイントで抑える(やや深め)
       const deHarsh = ctx.createBiquadFilter();
@@ -142,14 +154,22 @@ function ensureGraph(ctx: AudioContext): { master: GainNode; fx: GainNode | null
       softLp.type = 'lowpass';
       softLp.frequency.value = 5600;
       softLp.Q.value = 0.4;
-      // ⑤ グルー・コンプ: ゆっくり噛んで全体をまとめる
+      // ⑤ アナログ・サチュレーション: テープ/真空管的な温かみ(ゲインステージング込み)
+      const satPre = ctx.createGain();
+      satPre.gain.value = 3.4;
+      const saturator = ctx.createWaveShaper();
+      saturator.curve = buildSatCurve();
+      saturator.oversample = '4x'; // エイリアスを避ける(プロ品質)
+      const satPost = ctx.createGain();
+      satPost.gain.value = 0.29;
+      // ⑥ グルー・コンプ: ゆっくり噛んで全体をまとめる
       const glue = ctx.createDynamicsCompressor();
       glue.threshold.value = -22;
       glue.knee.value = 28;
       glue.ratio.value = 2.2;
       glue.attack.value = 0.02;
       glue.release.value = 0.28;
-      // ⑥ リミッター: 速くピークを止める(クリップ防止 + 仕上げ)
+      // ⑦ リミッター: 速くピークを止める(クリップ防止 + 仕上げ)
       const limiter = ctx.createDynamicsCompressor();
       limiter.threshold.value = -9;
       limiter.knee.value = 6;
@@ -161,7 +181,10 @@ function ensureGraph(ctx: AudioContext): { master: GainNode; fx: GainNode | null
       deHarsh.connect(thin);
       thin.connect(veil);
       veil.connect(softLp);
-      softLp.connect(glue);
+      softLp.connect(satPre);
+      satPre.connect(saturator);
+      saturator.connect(satPost);
+      satPost.connect(glue);
       glue.connect(limiter);
       limiter.connect(ctx.destination);
 
@@ -198,8 +221,8 @@ function ensureGraph(ctx: AudioContext): { master: GainNode; fx: GainNode | null
       delayR.delayTime.value = 0.29;
       const fbL = ctx.createGain();
       const fbR = ctx.createGain();
-      fbL.gain.value = 0.34;
-      fbR.gain.value = 0.34;
+      fbL.gain.value = 0.22;
+      fbR.gain.value = 0.22;
       delayL.connect(fbL);
       fbL.connect(delayL);
       delayR.connect(fbR);
@@ -208,7 +231,7 @@ function ensureGraph(ctx: AudioContext): { master: GainNode; fx: GainNode | null
       delayL.connect(merger, 0, 0);
       delayR.connect(merger, 0, 1);
       const delayWet = ctx.createGain();
-      delayWet.gain.value = 0.22;
+      delayWet.gain.value = 0.12;
       fxInput.connect(delayL);
       fxInput.connect(delayR);
       merger.connect(delayWet);
@@ -368,6 +391,10 @@ interface FmBellOpts {
   pitchEnv?: number;
   /** ノイズ・トランジェント量(peak に対する比)。0 で無効 */
   transient?: number;
+  /** アナログ的な音程の揺らぎ幅(セント)。各音をわずかにずらして温かみを出す */
+  analogCents?: number;
+  /** 距離感 0(近い)〜1(遠い)。遠いほど 音量↓・残響↑・高域↓ */
+  distance?: number;
 }
 
 /**
@@ -389,15 +416,21 @@ function fmBell(
   const attack = o.attack ?? 0.02;
   const decay = o.decay;
   const pan = o.pan ?? 0;
-  const reverbSend = o.reverbSend ?? 0;
   const pitchEnv = o.pitchEnv ?? 12;
+  // 距離感: 遠いほど音量を下げ・残響を増やし・高域を丸める
+  const dist = Math.max(0, Math.min(1, o.distance ?? 0));
+  const distLevel = 1 - 0.5 * dist;
+  const reverbSend = Math.min(1, (o.reverbSend ?? 0) + dist * 0.3);
+  const toneCutoff = 6500 - dist * 4000;
+  // アナログ的な音程の揺らぎ(各音を僅かにずらす)。定常状態のデチューン。
+  const analog = (Math.random() - 0.5) * (o.analogCents ?? 0);
 
   const carrier = ctx.createOscillator();
   carrier.type = 'sine';
   carrier.frequency.setValueAtTime(o.freq, t0);
-  // アタック時の微小ピッチ低下(撥弦/打鐘の鳴り出し)
-  carrier.detune.setValueAtTime(pitchEnv, t0);
-  carrier.detune.linearRampToValueAtTime(0, t0 + 0.014);
+  // アタック時の微小ピッチ低下(撥弦/打鐘の鳴り出し)→ アナログのずれへ着地
+  carrier.detune.setValueAtTime(pitchEnv + analog, t0);
+  carrier.detune.linearRampToValueAtTime(analog, t0 + 0.014);
 
   const modulator = ctx.createOscillator();
   modulator.type = 'sine';
@@ -412,9 +445,9 @@ function fmBell(
   modulator.connect(modGain);
   modGain.connect(carrier.frequency);
 
-  // 振幅エンベロープ
+  // 振幅エンベロープ(距離で音量を調整)
   const amp = ctx.createGain();
-  const peak = Math.max(0.0002, o.peak);
+  const peak = Math.max(0.0002, o.peak * distLevel);
   amp.gain.setValueAtTime(0.0001, t0);
   amp.gain.exponentialRampToValueAtTime(peak, t0 + attack);
   amp.gain.exponentialRampToValueAtTime(0.0001, t0 + decay);
@@ -429,8 +462,8 @@ function fmBell(
     carrier2 = ctx.createOscillator();
     carrier2.type = 'sine';
     carrier2.frequency.setValueAtTime(o.freq, t0);
-    carrier2.detune.setValueAtTime(cents + pitchEnv, t0);
-    carrier2.detune.linearRampToValueAtTime(cents, t0 + 0.014);
+    carrier2.detune.setValueAtTime(cents + pitchEnv + analog, t0);
+    carrier2.detune.linearRampToValueAtTime(cents + analog, t0 + 0.014);
     modGain.connect(carrier2.frequency);
     const shimmerGain = ctx.createGain();
     shimmerGain.gain.value = shimmer;
@@ -438,7 +471,13 @@ function fmBell(
     shimmerGain.connect(amp);
   }
 
-  routeOut(ctx, amp, master, fx, pan, reverbSend);
+  // 距離による高域ダンピング(遠い音ほど丸く)
+  const tone = ctx.createBiquadFilter();
+  tone.type = 'lowpass';
+  tone.frequency.value = toneCutoff;
+  tone.Q.value = 0.5;
+  amp.connect(tone);
+  routeOut(ctx, tone, master, fx, pan, reverbSend);
 
   // ノイズ・トランジェント(鳴り出しの気配)。低めの帯域でやわらかい「ふっ」に。
   const transient = o.transient ?? 0;
@@ -477,6 +516,9 @@ export const playMagicSound = (): void => {
 
     // 音単位の微ランダム(±割合)。打ち込み感を消し、毎回わずかに表情を変える。
     const hum = (v: number, amount: number) => v * (1 + (Math.random() - 0.5) * amount);
+    // 距離感がゆるやかに前後する(近づいたり遠ざかったり)。位相は毎回ランダム。
+    const distPhase = Math.random() * Math.PI * 2;
+    const distAt = (n: number) => 0.45 + 0.4 * Math.sin(n * 0.8 + distPhase);
 
     // A メジャーペンタトニック(高音)。立ちのぼる速い run = シャララ
     const run = [880.0, 987.77, 1108.73, 1318.51, 1479.98, 1760.0, 1975.53, 2217.46, 2637.02];
@@ -484,42 +526,69 @@ export const playMagicSound = (): void => {
     run.forEach((freq, i) => {
       fmBell(ctx, master, fx, {
         freq,
-        delay: t + (Math.random() - 0.5) * 0.014, // 自然な揺らぎ
-        attack: 0.05 + Math.random() * 0.02, // ふわっと立ち上がる(耳障りを避ける)
-        peak: hum(0.011 - i * 0.0006, 0.18),
-        decay: hum(1.0 - i * 0.04, 0.1),
+        delay: t + (Math.random() - 0.5) * 0.016, // 自然な揺らぎ
+        attack: 0.06 + Math.random() * 0.03, // ふわっと立ち上がる(耳障りを避ける)
+        peak: hum(0.0092 - i * 0.0005, 0.18),
+        decay: hum(1.1 - i * 0.04, 0.1),
         ratio: 3.5,
-        index: hum(1.5 - i * 0.09, 0.12), // 金属感を弱め、やわらかく
+        index: hum(1.4 - i * 0.08, 0.12), // 金属感を弱め、やわらかく
         pan: (Math.random() - 0.5) * 0.95,
-        reverbSend: 0.48, // 残響を増やして浮遊感
+        reverbSend: 0.5, // 残響を増やして浮遊感
         shimmer: 0.3,
         shimmerCents: 7 + Math.random() * 4,
         pitchEnv: 3 + Math.random() * 3, // ピッチの立ち上がりは控えめに
-        transient: 0.12, // 打鍵ノイズはごく僅か
+        transient: 0.1, // 打鍵ノイズはごく僅か
+        analogCents: 6,
+        distance: distAt(i), // 近づいたり遠ざかったり
       });
-      t += 0.058;
+      t += 0.088; // ゆっくりめのテンポで降ろす
     });
 
-    // 降りそそぐ光の粒:高音から散らしながら、やわらかく舞い降りる = ラン…
+    // 降りそそぐ光の粒:高音から散らしながら、ゆっくり舞い降りる = ラン…
     const sprinkle = [2637.02, 2217.46, 1975.53, 1760.0, 1479.98, 1318.51, 1108.73];
     sprinkle.forEach((freq, i) => {
       const starDust = Math.random() < 0.16 ? 2 : 1; // ごく時おり上のオクターブで星屑
       fmBell(ctx, master, fx, {
         freq: freq * starDust,
-        delay: t + i * 0.092 + (Math.random() - 0.5) * 0.03,
-        attack: 0.045 + Math.random() * 0.02,
-        peak: hum(0.0068 - i * 0.0004, 0.2),
-        decay: hum(0.85 + i * 0.05, 0.12),
+        delay: t + i * 0.115 + (Math.random() - 0.5) * 0.035,
+        attack: 0.05 + Math.random() * 0.025,
+        peak: hum(0.0058 - i * 0.00035, 0.2),
+        decay: hum(0.95 + i * 0.05, 0.12),
         ratio: 3.5,
-        index: hum(1.0, 0.14),
+        index: hum(0.95, 0.14),
         pan: (Math.random() - 0.5) * 1.0,
-        reverbSend: 0.54,
+        reverbSend: 0.56,
         shimmer: 0.22,
         shimmerCents: 6 + Math.random() * 4,
         pitchEnv: 2 + Math.random() * 3,
-        transient: 0.08,
+        transient: 0.07,
+        analogCents: 6,
+        distance: distAt(run.length + i),
       });
     });
+
+    // 同時に、高音のキラキラが降り注ぐ(遠くで瞬く星屑のような微光)
+    // 全体に薄く散らし、上空からゆっくり光が舞い落ちる気配を添える。
+    const sparkleScale = [1760.0, 1975.53, 2217.46, 2637.02, 2959.96, 3520.0];
+    for (let k = 0; k < 13; k++) {
+      fmBell(ctx, master, fx, {
+        freq: sparkleScale[Math.floor(Math.random() * sparkleScale.length)],
+        delay: 0.1 + Math.random() * 2.6,
+        attack: 0.05 + Math.random() * 0.03,
+        peak: 0.0028 + Math.random() * 0.0014, // ごく微小
+        decay: 0.9 + Math.random() * 0.7,
+        ratio: 3.5,
+        index: 0.75, // ほぼ純音の、遠い瞬き
+        pan: (Math.random() - 0.5) * 2, // 広く散らす(±1 にクランプ)
+        reverbSend: 0.64,
+        shimmer: 0.18,
+        shimmerCents: 5 + Math.random() * 4,
+        pitchEnv: 0,
+        transient: 0,
+        analogCents: 8,
+        distance: 0.35 + Math.random() * 0.55, // 遠近をばらつかせて立体的に
+      });
+    }
   } catch (e) {
     console.warn('[audio] playMagicSound failed', e);
   }
@@ -544,11 +613,12 @@ export const playOffer = (): void => {
       attack: 0.08, duration: 0.6, peak: 0.012, cutoff: 2600, reverbSend: 0.4, delay: 0,
     });
 
-    // 遠くで一瞬きらめく高音(FM のガラスの粒)。ふわっと立ち上げる。
+    // 遠くで一瞬きらめく高音(FM のガラスの粒)。ふわっと立ち上げ、少し遠くに。
     fmBell(ctx, master, fx, {
       freq: 1318.51, delay: 0.07, peak: 0.0055, decay: 0.6,
       ratio: 3.5, index: 1.0, attack: 0.04, reverbSend: 0.6,
       shimmer: 0.22, shimmerCents: 7, pitchEnv: 2, transient: 0,
+      analogCents: 6, distance: 0.4,
     });
   } catch (e) {
     console.warn('[audio] playOffer failed', e);
