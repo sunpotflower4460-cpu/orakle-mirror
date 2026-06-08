@@ -121,26 +121,26 @@ function ensureGraph(ctx: AudioContext): { master: GainNode; fx: GainNode | null
       masterGain = ctx.createGain();
       masterGain.gain.value = 0.30; // 実機ではごく控えめに(目立たない程度)
 
-      // ① ディエッサー的カット: 耳に刺さる 3kHz 付近だけをピンポイントで抑える
+      // ① ディエッサー的カット: 耳に刺さる 3kHz 付近をピンポイントで抑える(やや深め)
       const deHarsh = ctx.createBiquadFilter();
       deHarsh.type = 'peaking';
       deHarsh.frequency.value = 3000;
-      deHarsh.Q.value = 1.2;
-      deHarsh.gain.value = -3;
+      deHarsh.Q.value = 1.1;
+      deHarsh.gain.value = -4.5;
       // ② 細身化: 低域の太さ・body を削いで、薄く細い質感に
       const thin = ctx.createBiquadFilter();
       thin.type = 'highpass';
-      thin.frequency.value = 500;
+      thin.frequency.value = 460;
       thin.Q.value = 0.5;
       // ③ ヴェール: ハイシェルフで高域をやわらかく落とす(蓋ではなく傾斜 = 空気感を残す)
       const veil = ctx.createBiquadFilter();
       veil.type = 'highshelf';
-      veil.frequency.value = 3500;
-      veil.gain.value = -6;
-      // ④ 最上部の僅かなフィズだけを抑える、ゆるいローパス
+      veil.frequency.value = 3200;
+      veil.gain.value = -8;
+      // ④ 最上部のフィズを抑える、ゆるいローパス(耳障りを除く)
       const softLp = ctx.createBiquadFilter();
       softLp.type = 'lowpass';
-      softLp.frequency.value = 7200;
+      softLp.frequency.value = 5600;
       softLp.Q.value = 0.4;
       // ⑤ グルー・コンプ: ゆっくり噛んで全体をまとめる
       const glue = ctx.createDynamicsCompressor();
@@ -169,27 +169,37 @@ function ensureGraph(ctx: AudioContext): { master: GainNode; fx: GainNode | null
       fxInput = ctx.createGain();
       fxInput.gain.value = 1;
 
-      // リバーブ(プリディレイで dry と分離 → 自然な空間)。量は薄め。
+      // リバーブ(プリディレイで dry と分離 → 自然な空間)。浮遊感のため長めに。
       reverb = ctx.createConvolver();
-      reverb.buffer = loadedIR ?? buildImpulse(ctx);
+      reverb.buffer = loadedIR ?? buildImpulse(ctx, 3.2, 2.1);
       const preDelay = ctx.createDelay(0.2);
-      preDelay.delayTime.value = 0.016;
+      preDelay.delayTime.value = 0.018;
       const reverbGain = ctx.createGain();
-      reverbGain.gain.value = 0.28;
+      reverbGain.gain.value = 0.36;
       fxInput.connect(preDelay);
       preDelay.connect(reverb);
       reverb.connect(reverbGain);
       reverbGain.connect(masterGain);
 
-      // 軽いステレオ・ディレイ(左右で時間差・低フィードバック → 奥行き)
-      const delayL = ctx.createDelay(0.6);
-      const delayR = ctx.createDelay(0.6);
-      delayL.delayTime.value = 0.17;
-      delayR.delayTime.value = 0.23;
+      // 残響量がごくゆっくり呼吸 → ふわふわ浮いている感じ
+      const breath = ctx.createOscillator();
+      breath.type = 'sine';
+      breath.frequency.value = 0.12;
+      const breathDepth = ctx.createGain();
+      breathDepth.gain.value = 0.05;
+      breath.connect(breathDepth);
+      breathDepth.connect(reverbGain.gain);
+      breath.start();
+
+      // ステレオ・ディレイ(左右で時間差・浮遊する反響)。やや多めに。
+      const delayL = ctx.createDelay(0.7);
+      const delayR = ctx.createDelay(0.7);
+      delayL.delayTime.value = 0.21;
+      delayR.delayTime.value = 0.29;
       const fbL = ctx.createGain();
       const fbR = ctx.createGain();
-      fbL.gain.value = 0.24;
-      fbR.gain.value = 0.24;
+      fbL.gain.value = 0.34;
+      fbR.gain.value = 0.34;
       delayL.connect(fbL);
       fbL.connect(delayL);
       delayR.connect(fbR);
@@ -198,7 +208,7 @@ function ensureGraph(ctx: AudioContext): { master: GainNode; fx: GainNode | null
       delayL.connect(merger, 0, 0);
       delayR.connect(merger, 0, 1);
       const delayWet = ctx.createGain();
-      delayWet.gain.value = 0.16;
+      delayWet.gain.value = 0.22;
       fxInput.connect(delayL);
       fxInput.connect(delayR);
       merger.connect(delayWet);
@@ -274,16 +284,17 @@ function strike(
   const bp = ctx.createBiquadFilter();
   bp.type = 'bandpass';
   bp.frequency.value = o.freq;
-  bp.Q.value = 0.7;
+  bp.Q.value = 0.5; // 広めにして笛のような共鳴を避ける
   const g = ctx.createGain();
+  // やわらかな「ふっ」という気配(鋭い「チッ」にならないよう、立ち上がり/減衰を緩める)
   g.gain.setValueAtTime(0.0001, t0);
-  g.gain.exponentialRampToValueAtTime(Math.max(0.0002, o.peak), t0 + 0.0015);
-  g.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.013);
+  g.gain.exponentialRampToValueAtTime(Math.max(0.0002, o.peak), t0 + 0.006);
+  g.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.028);
   src.connect(bp);
   bp.connect(g);
   routeOut(ctx, g, master, fx, o.pan, o.reverbSend);
   src.start(t0);
-  src.stop(t0 + 0.05);
+  src.stop(t0 + 0.06);
 }
 
 interface VoiceOpts {
@@ -429,15 +440,15 @@ function fmBell(
 
   routeOut(ctx, amp, master, fx, pan, reverbSend);
 
-  // ノイズ・トランジェント(鳴り出しの実体感)。帯域は音高にゆるく追従。
+  // ノイズ・トランジェント(鳴り出しの気配)。低めの帯域でやわらかい「ふっ」に。
   const transient = o.transient ?? 0;
   if (transient > 0) {
     strike(ctx, master, fx, {
       delay: o.delay,
       peak: peak * transient,
-      freq: Math.min(7000, Math.max(1800, o.freq * 1.6)),
+      freq: Math.min(2600, Math.max(900, o.freq * 0.7)),
       pan,
-      reverbSend: reverbSend * 0.6,
+      reverbSend: reverbSend * 0.9,
     });
   }
 
@@ -473,19 +484,20 @@ export const playMagicSound = (): void => {
     run.forEach((freq, i) => {
       fmBell(ctx, master, fx, {
         freq,
-        delay: t + (Math.random() - 0.5) * 0.012, // 自然な揺らぎ
-        peak: hum(0.012 - i * 0.0007, 0.18),
-        decay: hum(0.9 - i * 0.04, 0.1),
+        delay: t + (Math.random() - 0.5) * 0.014, // 自然な揺らぎ
+        attack: 0.05 + Math.random() * 0.02, // ふわっと立ち上がる(耳障りを避ける)
+        peak: hum(0.011 - i * 0.0006, 0.18),
+        decay: hum(1.0 - i * 0.04, 0.1),
         ratio: 3.5,
-        index: hum(2.0 - i * 0.12, 0.12), // 高音ほど純音寄りにして繊細に
+        index: hum(1.5 - i * 0.09, 0.12), // 金属感を弱め、やわらかく
         pan: (Math.random() - 0.5) * 0.95,
-        reverbSend: 0.36,
+        reverbSend: 0.48, // 残響を増やして浮遊感
         shimmer: 0.3,
         shimmerCents: 7 + Math.random() * 4,
-        pitchEnv: 12 + Math.random() * 6,
-        transient: 0.5,
+        pitchEnv: 3 + Math.random() * 3, // ピッチの立ち上がりは控えめに
+        transient: 0.12, // 打鍵ノイズはごく僅か
       });
-      t += 0.054;
+      t += 0.058;
     });
 
     // 降りそそぐ光の粒:高音から散らしながら、やわらかく舞い降りる = ラン…
@@ -494,17 +506,18 @@ export const playMagicSound = (): void => {
       const starDust = Math.random() < 0.16 ? 2 : 1; // ごく時おり上のオクターブで星屑
       fmBell(ctx, master, fx, {
         freq: freq * starDust,
-        delay: t + i * 0.088 + (Math.random() - 0.5) * 0.03,
-        peak: hum(0.0075 - i * 0.0005, 0.2),
-        decay: hum(0.7 + i * 0.05, 0.12),
+        delay: t + i * 0.092 + (Math.random() - 0.5) * 0.03,
+        attack: 0.045 + Math.random() * 0.02,
+        peak: hum(0.0068 - i * 0.0004, 0.2),
+        decay: hum(0.85 + i * 0.05, 0.12),
         ratio: 3.5,
-        index: hum(1.3, 0.14),
+        index: hum(1.0, 0.14),
         pan: (Math.random() - 0.5) * 1.0,
-        reverbSend: 0.42,
+        reverbSend: 0.54,
         shimmer: 0.22,
         shimmerCents: 6 + Math.random() * 4,
-        pitchEnv: 10 + Math.random() * 5,
-        transient: 0.35,
+        pitchEnv: 2 + Math.random() * 3,
+        transient: 0.08,
       });
     });
   } catch (e) {
@@ -531,11 +544,11 @@ export const playOffer = (): void => {
       attack: 0.08, duration: 0.6, peak: 0.012, cutoff: 2600, reverbSend: 0.4, delay: 0,
     });
 
-    // 遠くで一瞬きらめく高音(FM のガラスの粒)
+    // 遠くで一瞬きらめく高音(FM のガラスの粒)。ふわっと立ち上げる。
     fmBell(ctx, master, fx, {
-      freq: 1318.51, delay: 0.07, peak: 0.006, decay: 0.5,
-      ratio: 3.5, index: 1.2, attack: 0.015, reverbSend: 0.58,
-      shimmer: 0.22, shimmerCents: 7, pitchEnv: 10, transient: 0.3,
+      freq: 1318.51, delay: 0.07, peak: 0.0055, decay: 0.6,
+      ratio: 3.5, index: 1.0, attack: 0.04, reverbSend: 0.6,
+      shimmer: 0.22, shimmerCents: 7, pitchEnv: 2, transient: 0,
     });
   } catch (e) {
     console.warn('[audio] playOffer failed', e);
