@@ -378,6 +378,8 @@ interface FmBellOpts {
   ratio?: number;
   /** 変調指数(明るさ・金属感)。小さいほど純音寄りで繊細 */
   index?: number;
+  /** FM の明るさが減衰する速さ(decay に対する比)。小さいほど木琴的に素早く落ちる */
+  modDecayFrac?: number;
   /** 立ち上がり秒。長いほど打鍵が和らぎ、ふわっと滲む */
   attack?: number;
   /** 定位 -1(左)〜+1(右) */
@@ -441,7 +443,7 @@ function fmBell(
   const modGain = ctx.createGain();
   const depth = index * modFreq;
   modGain.gain.setValueAtTime(depth, t0);
-  modGain.gain.exponentialRampToValueAtTime(Math.max(0.0001, depth * 0.02), t0 + decay * 0.45);
+  modGain.gain.exponentialRampToValueAtTime(Math.max(0.0001, depth * 0.02), t0 + decay * (o.modDecayFrac ?? 0.45));
   modulator.connect(modGain);
   modGain.connect(carrier.frequency);
 
@@ -516,77 +518,56 @@ export const playMagicSound = (): void => {
 
     // 音単位の微ランダム(±割合)。打ち込み感を消し、毎回わずかに表情を変える。
     const hum = (v: number, amount: number) => v * (1 + (Math.random() - 0.5) * amount);
-    // 距離感がゆるやかに前後する(近づいたり遠ざかったり)。位相は毎回ランダム。
-    const distPhase = Math.random() * Math.PI * 2;
-    const distAt = (n: number) => 0.45 + 0.4 * Math.sin(n * 0.8 + distPhase);
 
-    // A メジャーペンタトニック(高音)。立ちのぼる速い run = シャララ
-    const run = [880.0, 987.77, 1108.73, 1318.51, 1479.98, 1760.0, 1975.53, 2217.46, 2637.02];
+    // ── 主旋律:木琴(マリンバ)のように一音一音はっきりと。手前・ドライめ・シンプル ──
+    // A メジャーペンタトニックを、ゆっくり立ちのぼり、短く明瞭に鳴らす。
+    const melody = [880.0, 1108.73, 1318.51, 1760.0, 2217.46, 1975.53, 1479.98, 1108.73];
     let t = 0;
-    run.forEach((freq, i) => {
+    melody.forEach((freq, i) => {
       fmBell(ctx, master, fx, {
         freq,
-        delay: t + (Math.random() - 0.5) * 0.016, // 自然な揺らぎ
-        attack: 0.06 + Math.random() * 0.03, // ふわっと立ち上がる(耳障りを避ける)
-        peak: hum(0.0092 - i * 0.0005, 0.18),
-        decay: hum(1.1 - i * 0.04, 0.1),
-        ratio: 3.5,
-        index: hum(1.4 - i * 0.08, 0.12), // 金属感を弱め、やわらかく
-        pan: (Math.random() - 0.5) * 0.95,
-        reverbSend: 0.5, // 残響を増やして浮遊感
-        shimmer: 0.3,
-        shimmerCents: 7 + Math.random() * 4,
-        pitchEnv: 3 + Math.random() * 3, // ピッチの立ち上がりは控えめに
-        transient: 0.1, // 打鍵ノイズはごく僅か
-        analogCents: 6,
-        distance: distAt(i), // 近づいたり遠ざかったり
+        delay: t + (Math.random() - 0.5) * 0.008,
+        attack: 0.008, // クリアな木琴の打鍵(柔らかいが明瞭)
+        peak: hum(0.011 - i * 0.0004, 0.1),
+        decay: hum(0.5 - i * 0.012, 0.08), // 短めで一音ずつくっきり
+        ratio: 3.0, // 木質寄り
+        index: hum(2.6, 0.1),
+        modDecayFrac: 0.18, // 明るさが素早く落ちる = 木琴の「コーン」
+        pan: (Math.random() - 0.5) * 0.5, // 中央寄りで旋律を明瞭に
+        reverbSend: 0.2, // 近く・ドライめで前に出す
+        shimmer: 0.08, // シンプルに
+        shimmerCents: 5,
+        pitchEnv: 5,
+        transient: 0.18, // 木のノック感(低帯域)
+        analogCents: 4,
+        distance: 0.12, // 手前・明瞭
       });
-      t += 0.088; // ゆっくりめのテンポで降ろす
+      t += 0.11; // ゆっくり、一音一音を聴かせる
     });
 
-    // 降りそそぐ光の粒:高音から散らしながら、ゆっくり舞い降りる = ラン…
-    const sprinkle = [2637.02, 2217.46, 1975.53, 1760.0, 1479.98, 1318.51, 1108.73];
-    sprinkle.forEach((freq, i) => {
-      const starDust = Math.random() < 0.16 ? 2 : 1; // ごく時おり上のオクターブで星屑
-      fmBell(ctx, master, fx, {
-        freq: freq * starDust,
-        delay: t + i * 0.115 + (Math.random() - 0.5) * 0.035,
-        attack: 0.05 + Math.random() * 0.025,
-        peak: hum(0.0058 - i * 0.00035, 0.2),
-        decay: hum(0.95 + i * 0.05, 0.12),
-        ratio: 3.5,
-        index: hum(0.95, 0.14),
-        pan: (Math.random() - 0.5) * 1.0,
-        reverbSend: 0.56,
-        shimmer: 0.22,
-        shimmerCents: 6 + Math.random() * 4,
-        pitchEnv: 2 + Math.random() * 3,
-        transient: 0.07,
-        analogCents: 6,
-        distance: distAt(run.length + i),
-      });
-    });
-
-    // 同時に、高音のキラキラが降り注ぐ(遠くで瞬く星屑のような微光)
-    // 全体に薄く散らし、上空からゆっくり光が舞い落ちる気配を添える。
-    const sparkleScale = [1760.0, 1975.53, 2217.46, 2637.02, 2959.96, 3520.0];
-    for (let k = 0; k < 13; k++) {
+    // ── キラキラ層:高音が瞬きながら、だんだん遠くへ消えていく光 ──
+    // 主旋律の裏で、より高く・小さく・短く散り、後になるほど遠ざかって消える。
+    const sparkleScale = [2217.46, 2637.02, 2959.96, 3520.0, 3951.07, 4434.92];
+    const sparkleCount = 11;
+    for (let k = 0; k < sparkleCount; k++) {
+      const prog = k / (sparkleCount - 1); // 0→1。後になるほど遠く・小さく
       fmBell(ctx, master, fx, {
         freq: sparkleScale[Math.floor(Math.random() * sparkleScale.length)],
-        delay: 0.1 + Math.random() * 2.6,
-        attack: 0.05 + Math.random() * 0.03,
-        peak: 0.0028 + Math.random() * 0.0014, // ごく微小
-        decay: 0.9 + Math.random() * 0.7,
+        delay: 0.15 + prog * 2.7 + Math.random() * 0.25,
+        attack: 0.015 + Math.random() * 0.02,
+        peak: (0.0022 - prog * 0.0013) * (0.7 + Math.random() * 0.3), // 小さく・徐々に減衰
+        decay: 0.45 + Math.random() * 0.35, // 短くしてしつこさを消す
         ratio: 3.5,
-        index: 0.75, // ほぼ純音の、遠い瞬き
+        index: 0.7, // ほぼ純音の、澄んだ瞬き
+        modDecayFrac: 0.3,
         pan: (Math.random() - 0.5) * 2, // 広く散らす(±1 にクランプ)
-        reverbSend: 0.64,
-        shimmer: 0.18,
+        reverbSend: 0.5,
+        shimmer: 0.2,
         shimmerCents: 5 + Math.random() * 4,
         pitchEnv: 0,
         transient: 0,
         analogCents: 8,
-        distance: 0.35 + Math.random() * 0.55, // 遠近をばらつかせて立体的に
+        distance: 0.3 + prog * 0.35, // 後半ほど遠くへ消えていく
       });
     }
   } catch (e) {
