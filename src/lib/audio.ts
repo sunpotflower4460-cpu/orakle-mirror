@@ -20,6 +20,12 @@ let reverb: ConvolverNode | null = null;
 let loadedIR: AudioBuffer | null = null;
 let noiseBuffer: AudioBuffer | null = null;
 
+// 黄金比 φ と 黄金角(らせん=渦巻きの配置に用いる)。
+const PHI = (1 + Math.sqrt(5)) / 2;            // ≈ 1.6180339887
+const GOLDEN_ANGLE = Math.PI * (3 - Math.sqrt(5)); // ≈ 137.5°(向日葵の螺旋)
+// 澄んだ純正律ペンタトニック(整数比 = 美しい響き)。
+const JUST_PENTA = [1, 9 / 8, 5 / 4, 3 / 2, 5 / 3];
+
 export const getAudioContext = (): AudioContext | null => {
   if (!sharedAudioCtx || sharedAudioCtx.state === 'closed') {
     const AudioContextClass: typeof AudioContext | undefined =
@@ -320,54 +326,6 @@ function strike(
   src.stop(t0 + 0.06);
 }
 
-interface VoiceOpts {
-  freq: number;
-  glideTo?: number;
-  glideTime?: number;
-  type?: OscillatorType;
-  delay: number;
-  attack: number;
-  duration: number;
-  peak: number;
-  detune?: number;
-  cutoff?: number;
-  reverbSend?: number;
-}
-
-/** 単一のやわらかな正弦の声部(グライド/吐息用)。指数エンベロープでクリックを回避。 */
-function voice(
-  ctx: AudioContext,
-  master: GainNode,
-  fx: GainNode | null,
-  o: VoiceOpts,
-): void {
-  const t0 = ctx.currentTime + o.delay;
-  const osc = ctx.createOscillator();
-  osc.type = o.type ?? 'sine';
-  osc.frequency.setValueAtTime(o.freq, t0);
-  if (o.glideTo && o.glideTime) {
-    osc.frequency.exponentialRampToValueAtTime(Math.max(1, o.glideTo), t0 + o.glideTime);
-  }
-  if (o.detune) osc.detune.setValueAtTime(o.detune, t0);
-
-  const lp = ctx.createBiquadFilter();
-  lp.type = 'lowpass';
-  lp.frequency.setValueAtTime(o.cutoff ?? 5000, t0);
-
-  const g = ctx.createGain();
-  const peak = Math.max(0.0002, o.peak);
-  g.gain.setValueAtTime(0.0001, t0);
-  g.gain.exponentialRampToValueAtTime(peak, t0 + o.attack);
-  g.gain.exponentialRampToValueAtTime(0.0001, t0 + o.duration);
-
-  osc.connect(lp);
-  lp.connect(g);
-  routeOut(ctx, g, master, fx, 0, o.reverbSend ?? 0);
-
-  osc.start(t0);
-  osc.stop(t0 + o.duration + 0.08);
-}
-
 interface FmBellOpts {
   freq: number;
   delay: number;
@@ -516,59 +474,41 @@ export const playMagicSound = (): void => {
     if (!graph) return;
     const { master, fx } = graph;
 
-    // 音単位の微ランダム(±割合)。打ち込み感を消し、毎回わずかに表情を変える。
-    const hum = (v: number, amount: number) => v * (1 + (Math.random() - 0.5) * amount);
-
-    // ── 主旋律:木琴(マリンバ)のように一音一音はっきりと。手前・ドライめ・シンプル ──
-    // A メジャーペンタトニックを、ゆっくり立ちのぼり、短く明瞭に鳴らす。
-    const melody = [880.0, 1108.73, 1318.51, 1760.0, 2217.46, 1975.53, 1479.98, 1108.73];
+    // ── 光のキラキラを、黄金比のらせん(渦巻き)として配列する。 ──
+    // 音階: 純正律ペンタトニックを黄金比ステップで上昇 → 螺旋状に音が昇る。
+    // リズム: 音間隔を黄金比で少しずつ広げ、らせんが外へ開いて消えていく。
+    // 定位: 黄金角(137.5°)で左右に配置 → 向日葵の種のような渦の空間配列。
+    const baseFreq = 1108.73; // C#6 付近を螺旋の中心に
+    const N = 13;             // フィボナッチ数
     let t = 0;
-    melody.forEach((freq, i) => {
+    let gap = 0.17;
+    for (let k = 0; k < N; k++) {
+      const prog = k / (N - 1); // 0→1
+      const step = Math.round(k * PHI); // 黄金比ステップ(最も均等で非反復な配列)
+      const deg = step % JUST_PENTA.length;
+      const oct = Math.floor(step / JUST_PENTA.length);
+      let freq = baseFreq * JUST_PENTA[deg] * Math.pow(2, oct * 0.34); // 緩やかに螺旋上昇
+      while (freq > 4700) freq *= 0.5; // 高すぎる分は折り返す
       fmBell(ctx, master, fx, {
         freq,
-        delay: t + (Math.random() - 0.5) * 0.008,
-        attack: 0.008, // クリアな木琴の打鍵(柔らかいが明瞭)
-        peak: hum(0.011 - i * 0.0004, 0.1),
-        decay: hum(0.5 - i * 0.012, 0.08), // 短めで一音ずつくっきり
-        ratio: 3.0, // 木質寄り
-        index: hum(2.6, 0.1),
-        modDecayFrac: 0.18, // 明るさが素早く落ちる = 木琴の「コーン」
-        pan: (Math.random() - 0.5) * 0.5, // 中央寄りで旋律を明瞭に
-        reverbSend: 0.2, // 近く・ドライめで前に出す
-        shimmer: 0.08, // シンプルに
-        shimmerCents: 5,
-        pitchEnv: 5,
-        transient: 0.18, // 木のノック感(低帯域)
-        analogCents: 4,
-        distance: 0.12, // 手前・明瞭
-      });
-      t += 0.11; // ゆっくり、一音一音を聴かせる
-    });
-
-    // ── キラキラ層:高音が瞬きながら、だんだん遠くへ消えていく光 ──
-    // 主旋律の裏で、より高く・小さく・短く散り、後になるほど遠ざかって消える。
-    const sparkleScale = [2217.46, 2637.02, 2959.96, 3520.0, 3951.07, 4434.92];
-    const sparkleCount = 11;
-    for (let k = 0; k < sparkleCount; k++) {
-      const prog = k / (sparkleCount - 1); // 0→1。後になるほど遠く・小さく
-      fmBell(ctx, master, fx, {
-        freq: sparkleScale[Math.floor(Math.random() * sparkleScale.length)],
-        delay: 0.15 + prog * 2.7 + Math.random() * 0.25,
-        attack: 0.015 + Math.random() * 0.02,
-        peak: (0.0022 - prog * 0.0013) * (0.7 + Math.random() * 0.3), // 小さく・徐々に減衰
-        decay: 0.45 + Math.random() * 0.35, // 短くしてしつこさを消す
+        delay: t,
+        attack: 0.02 + Math.random() * 0.02,
+        peak: (0.0028 - prog * 0.0013) * (0.85 + Math.random() * 0.15),
+        decay: 0.6 + prog * 0.5, // 後ほど長い余韻で消えていく
         ratio: 3.5,
         index: 0.7, // ほぼ純音の、澄んだ瞬き
         modDecayFrac: 0.3,
-        pan: (Math.random() - 0.5) * 2, // 広く散らす(±1 にクランプ)
+        pan: Math.sin(k * GOLDEN_ANGLE) * 0.95, // 黄金角の空間螺旋
         reverbSend: 0.5,
         shimmer: 0.2,
-        shimmerCents: 5 + Math.random() * 4,
+        shimmerCents: 5 + Math.random() * 3,
         pitchEnv: 0,
         transient: 0,
-        analogCents: 8,
-        distance: 0.3 + prog * 0.35, // 後半ほど遠くへ消えていく
+        analogCents: 6,
+        distance: 0.3 + prog * 0.45, // らせんが遠ざかり消える
       });
+      t += gap;
+      gap *= Math.pow(PHI, 1 / N); // 間隔が全体で約 φ 倍に広がる
     }
   } catch (e) {
     console.warn('[audio] playMagicSound failed', e);
@@ -588,18 +528,21 @@ export const playOffer = (): void => {
     if (!graph) return;
     const { master, fx } = graph;
 
-    // やわらかな上昇のひと息(B4 → E5)。細く保つため高めの音域で。
-    voice(ctx, master, fx, {
-      freq: 493.88, glideTo: 659.25, glideTime: 0.24,
-      attack: 0.08, duration: 0.6, peak: 0.012, cutoff: 2600, reverbSend: 0.4, delay: 0,
+    // 受信音と同じ「光」の質感・黄金比の音程で、ごく小さな一粒だけ。主張させない。
+    const seed = 1108.73 * JUST_PENTA[2]; // 純正律の長三度(1385.9Hz)
+    fmBell(ctx, master, fx, {
+      freq: seed, delay: 0, peak: 0.0038, decay: 0.55,
+      ratio: 3.5, index: 0.7, attack: 0.025, modDecayFrac: 0.3, reverbSend: 0.5,
+      shimmer: 0.2, shimmerCents: 6, pitchEnv: 0, transient: 0,
+      analogCents: 8, distance: 0.35, pan: (Math.random() - 0.5) * 0.6,
     });
 
-    // 遠くで一瞬きらめく高音(FM のガラスの粒)。ふわっと立ち上げ、少し遠くに。
+    // 余韻に、黄金比だけ上の光をひとつ(より高く遠い瞬き)
     fmBell(ctx, master, fx, {
-      freq: 1318.51, delay: 0.07, peak: 0.0055, decay: 0.6,
-      ratio: 3.5, index: 1.0, attack: 0.04, reverbSend: 0.6,
-      shimmer: 0.22, shimmerCents: 7, pitchEnv: 2, transient: 0,
-      analogCents: 6, distance: 0.4,
+      freq: seed * PHI, delay: 0.08 * PHI, peak: 0.0024, decay: 0.6,
+      ratio: 3.5, index: 0.7, attack: 0.03, modDecayFrac: 0.3, reverbSend: 0.55,
+      shimmer: 0.2, shimmerCents: 6, pitchEnv: 0, transient: 0,
+      analogCents: 8, distance: 0.5, pan: (Math.random() - 0.5) * 1.2,
     });
   } catch (e) {
     console.warn('[audio] playOffer failed', e);
