@@ -20,14 +20,13 @@ let reverb: ConvolverNode | null = null;
 let loadedIR: AudioBuffer | null = null;
 let noiseBuffer: AudioBuffer | null = null;
 
-// 黄金比 φ と 黄金角(らせん=渦巻きの配置に用いる)。
+// 黄金比 φ(らせん=渦巻きの音程・リズム配列に用いる)。
 const PHI = (1 + Math.sqrt(5)) / 2;            // ≈ 1.6180339887
-const GOLDEN_ANGLE = Math.PI * (3 - Math.sqrt(5)); // ≈ 137.5°(向日葵の螺旋)
-// 神聖・天上的な音階:純正律のリディアン旋法。
-// 浮遊する♯4(自然倍音の第11倍音 11/8)と長七度(15/8)が、鐘や宇宙の倍音に
-// 通じる澄んだ神聖さを生む。整数比なのでうなりが少なく清らか。
-// [1/1(根), 9/8(長2), 5/4(長3), 11/8(♯4=リディアン), 3/2(完全5), 5/3(長6), 15/8(長7)]
-const SACRED_SCALE = [1, 9 / 8, 5 / 4, 11 / 8, 3 / 2, 5 / 3, 15 / 8];
+// 神聖さと「楽しさ・明るさ」を両立する音階:純正律の明るい長調(長六度まで)+ 長七度。
+// 三全音(♯4)を避けて曖昧さ・マイナー感を消し、根音/長三度/完全五度の明るい
+// 和声を主体に、長七度(15/8)の煌めきで天上的な神聖さを添える。
+// [1/1(根), 9/8(長2), 5/4(長3), 3/2(完全5), 5/3(長6), 15/8(長7)]
+const SACRED_SCALE = [1, 9 / 8, 5 / 4, 3 / 2, 5 / 3, 15 / 8];
 
 export const getAudioContext = (): AudioContext | null => {
   if (!sharedAudioCtx || sharedAudioCtx.state === 'closed') {
@@ -329,6 +328,32 @@ function strike(
   src.stop(t0 + 0.06);
 }
 
+/**
+ * 水滴の音(ポタ)。水滴特有の「上昇するピッチ・チャープ」を正弦で再現し、
+ * 速い減衰で短く鳴らす。残響に送ると洞窟のしずくのように響く。控えめに点描する。
+ */
+function drip(
+  ctx: AudioContext,
+  master: GainNode,
+  fx: GainNode | null,
+  o: { delay: number; freq: number; peak: number; pan: number; reverbSend: number },
+): void {
+  const t0 = ctx.currentTime + o.delay;
+  const osc = ctx.createOscillator();
+  osc.type = 'sine';
+  // 水滴は空洞の共鳴でピッチが素早く上がる(これが「ポタ」の鍵)
+  osc.frequency.setValueAtTime(o.freq * 0.5, t0);
+  osc.frequency.exponentialRampToValueAtTime(o.freq, t0 + 0.028);
+  const g = ctx.createGain();
+  g.gain.setValueAtTime(0.0001, t0);
+  g.gain.exponentialRampToValueAtTime(Math.max(0.0002, o.peak), t0 + 0.004);
+  g.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.18);
+  osc.connect(g);
+  routeOut(ctx, g, master, fx, o.pan, o.reverbSend);
+  osc.start(t0);
+  osc.stop(t0 + 0.22);
+}
+
 interface FmBellOpts {
   freq: number;
   delay: number;
@@ -477,41 +502,57 @@ export const playMagicSound = (): void => {
     if (!graph) return;
     const { master, fx } = graph;
 
-    // ── 光のキラキラを、黄金比のらせん(渦巻き)として配列する。 ──
-    // 音階: 純正律ペンタトニックを黄金比ステップで上昇 → 螺旋状に音が昇る。
-    // リズム: 音間隔を黄金比で少しずつ広げ、らせんが外へ開いて消えていく。
-    // 定位: 黄金角(137.5°)で左右に配置 → 向日葵の種のような渦の空間配列。
-    const baseFreq = 1108.73; // C#6 付近を螺旋の中心に
-    const N = 13;             // フィボナッチ数
+    // ── 光のキラキラを、上へ巻き上がる渦巻き(螺旋)として配列する。 ──
+    // 音階: 明るい長調を黄金比ステップで上昇 → 楽しく昇っていく螺旋。
+    // リズム: 間隔が少しずつ締まり(加速)、渦が巻き締まる高揚感。
+    // 定位: 回転が徐々に速くなるパン → 光が渦を巻いて昇る感覚。
+    const baseFreq = 1046.5; // C6 付近を螺旋の中心に
+    const N = 16;
     let t = 0;
-    let gap = 0.17;
+    let gap = 0.16;
+    let panAngle = Math.random() * Math.PI * 2; // 回転の初期位相
+    let endT = 0;
     for (let k = 0; k < N; k++) {
       const prog = k / (N - 1); // 0→1
-      const step = Math.round(k * PHI); // 黄金比ステップ(最も均等で非反復な配列)
+      const step = Math.round(k * PHI); // 黄金比ステップ(均等で非反復な配列)
       const deg = step % SACRED_SCALE.length;
       const oct = Math.floor(step / SACRED_SCALE.length);
-      let freq = baseFreq * SACRED_SCALE[deg] * Math.pow(2, oct * 0.34); // 緩やかに螺旋上昇
-      while (freq > 4700) freq *= 0.5; // 高すぎる分は折り返す
+      let freq = baseFreq * SACRED_SCALE[deg] * Math.pow(2, oct * 0.38); // 螺旋状に上昇
+      while (freq > 4800) freq *= 0.5; // 高すぎる分は折り返す
       fmBell(ctx, master, fx, {
         freq,
         delay: t,
-        attack: 0.02 + Math.random() * 0.02,
-        peak: (0.0028 - prog * 0.0013) * (0.85 + Math.random() * 0.15),
-        decay: 0.6 + prog * 0.5, // 後ほど長い余韻で消えていく
+        attack: 0.014 + Math.random() * 0.014,
+        peak: (0.0028 - prog * 0.0010) * (0.85 + Math.random() * 0.15),
+        decay: 0.55 + prog * 0.6, // 後ほど長い余韻で消えていく
         ratio: 3.5,
         index: 0.7, // ほぼ純音の、澄んだ瞬き
         modDecayFrac: 0.3,
-        pan: Math.sin(k * GOLDEN_ANGLE) * 0.95, // 黄金角の空間螺旋
-        reverbSend: 0.5,
+        pan: Math.sin(panAngle) * 0.95, // 加速して回転する渦の定位
+        reverbSend: 0.48,
         shimmer: 0.2,
         shimmerCents: 5 + Math.random() * 3,
         pitchEnv: 0,
         transient: 0,
         analogCents: 6,
-        distance: 0.3 + prog * 0.45, // らせんが遠ざかり消える
+        distance: 0.26 + prog * 0.44, // 巻き上がりながら遠ざかり消える
       });
+      endT = t;
       t += gap;
-      gap *= Math.pow(PHI, 1 / N); // 間隔が全体で約 φ 倍に広がる
+      gap = Math.max(0.052, gap * 0.93); // 間隔が締まっていく(渦の加速)
+      panAngle += 0.9 + k * 0.12;        // 回転が徐々に速くなる
+    }
+
+    // ── 控えめな水滴(ポタ…ポタ)。静けさに点を打つように、まばらに。 ──
+    const dripCount = 3;
+    for (let d = 0; d < dripCount; d++) {
+      drip(ctx, master, fx, {
+        delay: 0.5 + Math.random() * (endT + 0.4),
+        freq: 820 + Math.random() * 520,
+        peak: 0.0042,
+        pan: (Math.random() - 0.5) * 1.4,
+        reverbSend: 0.5,
+      });
     }
   } catch (e) {
     console.warn('[audio] playMagicSound failed', e);
