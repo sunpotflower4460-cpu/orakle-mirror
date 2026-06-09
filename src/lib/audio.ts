@@ -23,8 +23,11 @@ let noiseBuffer: AudioBuffer | null = null;
 // 黄金比 φ と 黄金角(らせん=渦巻きの配置に用いる)。
 const PHI = (1 + Math.sqrt(5)) / 2;            // ≈ 1.6180339887
 const GOLDEN_ANGLE = Math.PI * (3 - Math.sqrt(5)); // ≈ 137.5°(向日葵の螺旋)
-// 澄んだ純正律ペンタトニック(整数比 = 美しい響き)。
-const JUST_PENTA = [1, 9 / 8, 5 / 4, 3 / 2, 5 / 3];
+// 神聖・天上的な音階:純正律のリディアン旋法。
+// 浮遊する♯4(自然倍音の第11倍音 11/8)と長七度(15/8)が、鐘や宇宙の倍音に
+// 通じる澄んだ神聖さを生む。整数比なのでうなりが少なく清らか。
+// [1/1(根), 9/8(長2), 5/4(長3), 11/8(♯4=リディアン), 3/2(完全5), 5/3(長6), 15/8(長7)]
+const SACRED_SCALE = [1, 9 / 8, 5 / 4, 11 / 8, 3 / 2, 5 / 3, 15 / 8];
 
 export const getAudioContext = (): AudioContext | null => {
   if (!sharedAudioCtx || sharedAudioCtx.state === 'closed') {
@@ -485,9 +488,9 @@ export const playMagicSound = (): void => {
     for (let k = 0; k < N; k++) {
       const prog = k / (N - 1); // 0→1
       const step = Math.round(k * PHI); // 黄金比ステップ(最も均等で非反復な配列)
-      const deg = step % JUST_PENTA.length;
-      const oct = Math.floor(step / JUST_PENTA.length);
-      let freq = baseFreq * JUST_PENTA[deg] * Math.pow(2, oct * 0.34); // 緩やかに螺旋上昇
+      const deg = step % SACRED_SCALE.length;
+      const oct = Math.floor(step / SACRED_SCALE.length);
+      let freq = baseFreq * SACRED_SCALE[deg] * Math.pow(2, oct * 0.34); // 緩やかに螺旋上昇
       while (freq > 4700) freq *= 0.5; // 高すぎる分は折り返す
       fmBell(ctx, master, fx, {
         freq,
@@ -529,7 +532,7 @@ export const playOffer = (): void => {
     const { master, fx } = graph;
 
     // 受信音と同じ「光」の質感・黄金比の音程で、ごく小さな一粒だけ。主張させない。
-    const seed = 1108.73 * JUST_PENTA[2]; // 純正律の長三度(1385.9Hz)
+    const seed = 1108.73 * SACRED_SCALE[2]; // 純正律の長三度(1385.9Hz)
     fmBell(ctx, master, fx, {
       freq: seed, delay: 0, peak: 0.0038, decay: 0.55,
       ratio: 3.5, index: 0.7, attack: 0.025, modDecayFrac: 0.3, reverbSend: 0.5,
