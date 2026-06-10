@@ -20,8 +20,9 @@ let reverb: ConvolverNode | null = null;
 let loadedIR: AudioBuffer | null = null;
 let noiseBuffer: AudioBuffer | null = null;
 
-// 黄金比 φ(らせん=渦巻きの音程・リズム配列に用いる)。
-const PHI = (1 + Math.sqrt(5)) / 2;            // ≈ 1.6180339887
+// 黄金比 φ と 黄金角(らせん=渦巻きの音程・リズム・定位配列に用いる)。
+const PHI = (1 + Math.sqrt(5)) / 2;                 // ≈ 1.6180339887
+const GOLDEN_ANGLE = Math.PI * (3 - Math.sqrt(5));  // ≈ 137.5°(向日葵の螺旋)
 // 宇宙倍音:ひとつの根音の自然倍音列(整数倍音)。
 // すべて同じ根の倍音なので澄んで濁らず、明るく上昇するほど宇宙的な煌めきになる。
 // 長三度(4:5)主体で明るく、7・14・21倍音がわずかに宇宙的な色を添える。
@@ -151,6 +152,12 @@ function ensureGraph(ctx: AudioContext): { master: GainNode; fx: GainNode | null
       thin.type = 'highpass';
       thin.frequency.value = 460;
       thin.Q.value = 0.5;
+      // ②' ボディ共鳴: 実楽器の胴鳴りのような、ごく軽い中域の山(生っぽさ)
+      const body = ctx.createBiquadFilter();
+      body.type = 'peaking';
+      body.frequency.value = 1000;
+      body.Q.value = 0.8;
+      body.gain.value = 2;
       // ③ ヴェール: ハイシェルフで高域をやわらかく落とす(蓋ではなく傾斜 = 空気感を残す)
       //    宇宙倍音の明るさを活かすため、控えめのカットに。
       const veil = ctx.createBiquadFilter();
@@ -187,7 +194,8 @@ function ensureGraph(ctx: AudioContext): { master: GainNode; fx: GainNode | null
 
       masterGain.connect(deHarsh);
       deHarsh.connect(thin);
-      thin.connect(veil);
+      thin.connect(body);
+      body.connect(veil);
       veil.connect(softLp);
       softLp.connect(satPre);
       satPre.connect(saturator);
@@ -328,86 +336,6 @@ function strike(
   src.stop(t0 + 0.06);
 }
 
-/**
- * 精霊が飛び立つ音。
- * やわらかな音が上昇しながら羽ばたき(微小ビブラート)、左右へ流れて遠ざかり消える。
- * 後ろにきらめく航跡(上昇する小さな粒)を曳く。控えめに点描する。
- */
-function flit(
-  ctx: AudioContext,
-  master: GainNode,
-  fx: GainNode | null,
-  o: { delay: number; fromFreq: number; toFreq: number; peak: number; pan: number; panTo: number; reverbSend: number },
-): void {
-  const t0 = ctx.currentTime + o.delay;
-  const dur = 0.55;
-  const peak = Math.max(0.0002, o.peak);
-
-  // 本体:上昇するやわらかな音
-  const osc = ctx.createOscillator();
-  osc.type = 'triangle';
-  osc.frequency.setValueAtTime(o.fromFreq, t0);
-  osc.frequency.exponentialRampToValueAtTime(Math.max(1, o.toFreq), t0 + 0.45);
-
-  // 羽ばたき:速くなる微小ビブラート
-  const flutter = ctx.createOscillator();
-  flutter.type = 'sine';
-  flutter.frequency.setValueAtTime(20, t0);
-  flutter.frequency.linearRampToValueAtTime(34, t0 + dur);
-  const flutterDepth = ctx.createGain();
-  flutterDepth.gain.value = 28; // セント単位の揺れ
-  flutter.connect(flutterDepth);
-  flutterDepth.connect(osc.detune);
-
-  const lp = ctx.createBiquadFilter();
-  lp.type = 'lowpass';
-  lp.frequency.value = 5200;
-  const g = ctx.createGain();
-  g.gain.setValueAtTime(0.0001, t0);
-  g.gain.exponentialRampToValueAtTime(peak, t0 + 0.05);
-  g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur); // 飛び去って消える
-  osc.connect(lp);
-  lp.connect(g);
-
-  // 左右へ流れる(飛んでいく)
-  const panner = ctx.createStereoPanner?.();
-  let tail: AudioNode = g;
-  if (panner) {
-    panner.pan.setValueAtTime(Math.max(-1, Math.min(1, o.pan)), t0);
-    panner.pan.linearRampToValueAtTime(Math.max(-1, Math.min(1, o.panTo)), t0 + dur);
-    g.connect(panner);
-    tail = panner;
-  }
-  tail.connect(master);
-  if (fx && o.reverbSend > 0) {
-    const send = ctx.createGain();
-    send.gain.value = o.reverbSend;
-    tail.connect(send);
-    send.connect(fx);
-  }
-
-  osc.start(t0);
-  flutter.start(t0);
-  osc.stop(t0 + dur + 0.05);
-  flutter.stop(t0 + dur + 0.05);
-
-  // きらめく航跡:上昇する小さな粒を数個
-  for (let i = 0; i < 3; i++) {
-    const ft0 = t0 + 0.06 + i * 0.07;
-    const so = ctx.createOscillator();
-    so.type = 'sine';
-    so.frequency.setValueAtTime(o.toFreq * (1 + i * 0.22), ft0);
-    const sg = ctx.createGain();
-    sg.gain.setValueAtTime(0.0001, ft0);
-    sg.gain.exponentialRampToValueAtTime(peak * 0.32, ft0 + 0.01);
-    sg.gain.exponentialRampToValueAtTime(0.0001, ft0 + 0.3);
-    so.connect(sg);
-    routeOut(ctx, sg, master, fx, o.panTo + (Math.random() - 0.5) * 0.3, o.reverbSend + 0.12);
-    so.start(ft0);
-    so.stop(ft0 + 0.34);
-  }
-}
-
 interface FmBellOpts {
   freq: number;
   delay: number;
@@ -437,6 +365,8 @@ interface FmBellOpts {
   analogCents?: number;
   /** 距離感 0(近い)〜1(遠い)。遠いほど 音量↓・残響↑・高域↓ */
   distance?: number;
+  /** 金属系楽器の非調和倍音(グロッケン/クリスタル)の量。実楽器的な「鳴り」を加える */
+  metallic?: number;
 }
 
 /**
@@ -519,6 +449,33 @@ function fmBell(
   tone.frequency.value = toneCutoff;
   tone.Q.value = 0.5;
   amp.connect(tone);
+
+  // 金属系楽器の非調和倍音(実際に鳴っている金属棒/クリスタルの「鳴り」)。
+  // 打鍵直後に金属的な上部倍音が立ち、純音より速く減衰して消える。
+  // 比率 2.76 / 5.40 は撥弦/打棒(グロッケン/チェレスタ)の実測に近い非調和倍音。
+  const metallic = o.metallic ?? 0;
+  if (metallic > 0) {
+    const bars = [
+      { mult: 2.76, amp: 0.5, decFrac: 0.42 },
+      { mult: 5.40, amp: 0.2, decFrac: 0.24 },
+    ];
+    for (const b of bars) {
+      const mo = ctx.createOscillator();
+      mo.type = 'sine';
+      mo.frequency.setValueAtTime(o.freq * b.mult, t0);
+      mo.detune.setValueAtTime(analog, t0); // アナログ的な僅かなずれ
+      const mg = ctx.createGain();
+      const mpeak = Math.max(0.0002, peak * metallic * b.amp);
+      mg.gain.setValueAtTime(0.0001, t0);
+      mg.gain.exponentialRampToValueAtTime(mpeak, t0 + Math.max(0.004, attack * 0.5));
+      mg.gain.exponentialRampToValueAtTime(0.0001, t0 + decay * b.decFrac);
+      mo.connect(mg);
+      mg.connect(tone);
+      mo.start(t0);
+      mo.stop(t0 + decay * b.decFrac + 0.05);
+    }
+  }
+
   routeOut(ctx, tone, master, fx, pan, reverbSend);
 
   // ノイズ・トランジェント(鳴り出しの気配)。低めの帯域でやわらかい「ふっ」に。
@@ -556,59 +513,50 @@ export const playMagicSound = (): void => {
     if (!graph) return;
     const { master, fx } = graph;
 
-    // ── 光のキラキラを、上へ巻き上がる渦巻き(螺旋)として配列する。 ──
-    // 音階: 宇宙倍音(自然倍音列)を昇っていく → 明るく澄んだ宇宙的な螺旋。
-    // リズム: 間隔が少しずつ締まり(加速)、渦が巻き締まる高揚感。
-    // 定位: 回転が徐々に速くなるパン → 光が渦を巻いて昇る感覚。
+    // ── 光を、黄金比のらせん(渦巻き)として上へ巻き上げる。 ──
+    // 音程: 黄金螺旋 root·φ^(0.27k) を、最も近い宇宙倍音にスナップして上昇。
+    //       黄金比の対数螺旋を、濁らない自然倍音の上に乗せる。
+    // リズム: 音間隔が φ で締まる(8音ごとに間隔が 1/φ)= 渦が巻き締まる高揚感。
+    // 定位: 黄金角(137.5°)で左右に配置 = 向日葵の種のような渦の空間配列。
     const rootFreq = 155.56; // D#3。倍音が sparkle 帯(約600〜4700Hz)に来る低い根
     const N = 16;
-    const lastIdx = COSMIC_OVERTONES.length - 1;
     let t = 0;
-    let gap = 0.16;
-    let panAngle = Math.random() * Math.PI * 2; // 回転の初期位相
-    let endT = 0;
+    let gap = 0.17;
+    let lastFreq = 0;
     for (let k = 0; k < N; k++) {
       const prog = k / (N - 1); // 0→1
-      // 倍音列を昇る(黄金比の端数で非反復に揺らしつつ、上昇)
-      const idx = Math.max(0, Math.min(lastIdx, Math.round(k + (((k * PHI) % 1) - 0.5) * 1.8)));
-      const freq = rootFreq * COSMIC_OVERTONES[idx];
+      // 黄金螺旋の理想ピッチ(対数螺旋)を、最も近い宇宙倍音へスナップ(常に上昇)
+      const ideal = rootFreq * 4 * Math.pow(PHI, k * 0.27);
+      let best = rootFreq * COSMIC_OVERTONES[0];
+      let bestErr = Infinity;
+      for (const h of COSMIC_OVERTONES) {
+        const f = rootFreq * h;
+        if (f <= lastFreq * 1.001) continue; // 単調上昇を保つ
+        const err = Math.abs(Math.log(f / ideal));
+        if (err < bestErr) { bestErr = err; best = f; }
+      }
+      lastFreq = best;
       fmBell(ctx, master, fx, {
-        freq,
+        freq: best,
         delay: t,
-        attack: 0.014 + Math.random() * 0.014,
-        peak: (0.0028 - prog * 0.0010) * (0.85 + Math.random() * 0.15),
-        decay: 0.55 + prog * 0.6, // 後ほど長い余韻で消えていく
+        attack: 0.014 + Math.random() * 0.012,
+        peak: (0.0027 - prog * 0.0009) * (0.85 + Math.random() * 0.15),
+        decay: 0.7 + prog * 0.7, // 実楽器のように長めに鳴り、後ほどさらに長い余韻
         ratio: 3.5,
-        index: 0.7, // ほぼ純音の、澄んだ瞬き
+        index: 0.65, // ほぼ純音の澄んだ芯
         modDecayFrac: 0.3,
-        pan: Math.sin(panAngle) * 0.95, // 加速して回転する渦の定位
+        metallic: 0.28, // 金属棒の非調和倍音(実楽器的な鳴り)
+        pan: Math.sin(k * GOLDEN_ANGLE) * 0.95, // 黄金角の渦の空間配列
         reverbSend: 0.48,
-        shimmer: 0.2,
+        shimmer: 0.22,
         shimmerCents: 5 + Math.random() * 3,
         pitchEnv: 0,
         transient: 0,
-        analogCents: 6,
-        distance: 0.26 + prog * 0.44, // 巻き上がりながら遠ざかり消える
+        analogCents: 7, // アナログ的な音程の揺らぎ
+        distance: 0.24 + prog * 0.46, // 巻き上がりながら遠ざかり消える
       });
-      endT = t;
       t += gap;
-      gap = Math.max(0.052, gap * 0.93); // 間隔が締まっていく(渦の加速)
-      panAngle += 0.9 + k * 0.12;        // 回転が徐々に速くなる
-    }
-
-    // ── 精霊が飛び立つ:渦の中から、光がふわりと舞い上がって消える ──
-    const flitCount = 2;
-    for (let f = 0; f < flitCount; f++) {
-      const side = Math.random() < 0.5 ? -1 : 1;
-      flit(ctx, master, fx, {
-        delay: 0.35 + f * endT * 0.5 + Math.random() * 0.25,
-        fromFreq: 760 + Math.random() * 180,
-        toFreq: 2300 + Math.random() * 900,
-        peak: 0.0046,
-        pan: side * 0.5,
-        panTo: -side * 0.85,
-        reverbSend: 0.5,
-      });
+      gap = Math.max(0.05, gap * Math.pow(PHI, -1 / 8)); // 8音ごとに間隔が 1/φ(黄金加速)
     }
   } catch (e) {
     console.warn('[audio] playMagicSound failed', e);
@@ -631,18 +579,18 @@ export const playOffer = (): void => {
     // 受信音と同じ「光」の質感・宇宙倍音で、ごく小さな一粒だけ。主張させない。
     const seed = 155.56 * 8; // 第8倍音(1244.5Hz)
     fmBell(ctx, master, fx, {
-      freq: seed, delay: 0, peak: 0.0038, decay: 0.55,
-      ratio: 3.5, index: 0.7, attack: 0.025, modDecayFrac: 0.3, reverbSend: 0.5,
-      shimmer: 0.2, shimmerCents: 6, pitchEnv: 0, transient: 0,
-      analogCents: 8, distance: 0.35, pan: (Math.random() - 0.5) * 0.6,
+      freq: seed, delay: 0, peak: 0.0038, decay: 0.6,
+      ratio: 3.5, index: 0.65, attack: 0.025, modDecayFrac: 0.3, reverbSend: 0.5,
+      shimmer: 0.22, shimmerCents: 6, pitchEnv: 0, transient: 0,
+      analogCents: 8, distance: 0.35, metallic: 0.28, pan: (Math.random() - 0.5) * 0.6,
     });
 
     // 余韻に、完全五度上の倍音(第12倍音)をひとつ
     fmBell(ctx, master, fx, {
-      freq: 155.56 * 12, delay: 0.1, peak: 0.0024, decay: 0.6,
-      ratio: 3.5, index: 0.7, attack: 0.03, modDecayFrac: 0.3, reverbSend: 0.55,
-      shimmer: 0.2, shimmerCents: 6, pitchEnv: 0, transient: 0,
-      analogCents: 8, distance: 0.5, pan: (Math.random() - 0.5) * 1.2,
+      freq: 155.56 * 12, delay: 0.1, peak: 0.0024, decay: 0.65,
+      ratio: 3.5, index: 0.65, attack: 0.03, modDecayFrac: 0.3, reverbSend: 0.55,
+      shimmer: 0.22, shimmerCents: 6, pitchEnv: 0, transient: 0,
+      analogCents: 8, distance: 0.5, metallic: 0.24, pan: (Math.random() - 0.5) * 1.2,
     });
   } catch (e) {
     console.warn('[audio] playOffer failed', e);
