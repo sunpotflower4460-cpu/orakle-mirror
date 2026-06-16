@@ -121,6 +121,23 @@ export const ja = {
   'mode.card.guidance': '象徴（カード）からインスピレーションを受け、その響きを感性で言葉にします。',
   'cards.drawnTitle': '現れたカード',
 
+  // Self Reading（自分で引く）
+  'selfReading.deck.classic48.name': 'クラシック48',
+  'selfReading.deck.classic48.description': 'Oracle Mirror の48枚の象徴カード',
+  'selfReading.deck.deck24.name': 'デッキ24',
+  'selfReading.deck.deck24.description': '準備中',
+  'selfReading.deck.deck36.name': 'デッキ36',
+  'selfReading.deck.deck36.description': '準備中',
+  'selfReading.spread.one.name': '1枚引き',
+  'selfReading.spread.two.name': '2枚引き',
+  'selfReading.spread.three.name': '3枚引き',
+  'selfReading.position.one.present': '今ここ',
+  'selfReading.position.two.light': '光',
+  'selfReading.position.two.shadow': '影',
+  'selfReading.position.three.past': '過去',
+  'selfReading.position.three.present': '現在',
+  'selfReading.position.three.future': '未来',
+
   // 言語名
   'language.ja': '日本語',
   'language.en': 'English',
