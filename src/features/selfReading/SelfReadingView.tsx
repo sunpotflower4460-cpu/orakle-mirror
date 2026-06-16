@@ -28,11 +28,12 @@ export function SelfReadingView({ onBack }: SelfReadingViewProps) {
 
   const selectedDeck = DECKS.find(deck => deck.id === selectedDeckId) ?? DECKS[0];
   const selectedSpread = SPREADS.find(spread => spread.id === selectedSpreadId) ?? SPREADS[0];
-  const canDraw = selectedDeck.ready;
+  const spreadCardCount = selectedSpread.positionKeys.length;
+  const canDraw = selectedDeck.ready && selectedDeck.cards.length >= spreadCardCount;
 
   const handleDraw = () => {
     if (!canDraw) return;
-    setDrawnCards(drawCards(selectedDeck, selectedSpread.positionKeys.length));
+    setDrawnCards(drawCards(selectedDeck, spreadCardCount));
     setStep('drawing');
   };
 
@@ -42,7 +43,7 @@ export function SelfReadingView({ onBack }: SelfReadingViewProps) {
 
   const handleDrawAgain = () => {
     if (!canDraw) return;
-    setDrawnCards(drawCards(selectedDeck, selectedSpread.positionKeys.length));
+    setDrawnCards(drawCards(selectedDeck, spreadCardCount));
     setStep('drawing');
   };
 

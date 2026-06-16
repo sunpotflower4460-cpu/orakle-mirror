@@ -15,13 +15,25 @@ const emptyStore = (): SelfReadingStore => ({
   userCards: [],
 });
 
+const isUserCard = (value: unknown): value is UserCard => {
+  if (!value || typeof value !== 'object') return false;
+
+  const source = value as Partial<UserCard>;
+  return (
+    typeof source.id === 'string' &&
+    typeof source.name === 'string' &&
+    typeof source.meaning === 'string' &&
+    typeof source.createdAt === 'number'
+  );
+};
+
 const normalizeStore = (value: unknown): SelfReadingStore => {
   if (!value || typeof value !== 'object') return emptyStore();
 
   const source = value as Partial<SelfReadingStore>;
   return {
     readings: Array.isArray(source.readings) ? source.readings : [],
-    userCards: Array.isArray(source.userCards) ? source.userCards.slice(0, USER_CARD_LIMIT) : [],
+    userCards: Array.isArray(source.userCards) ? source.userCards.filter(isUserCard).slice(0, USER_CARD_LIMIT) : [],
   };
 };
 

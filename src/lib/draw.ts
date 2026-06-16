@@ -1,7 +1,7 @@
 import type { OracleCard, SelfReadingDeck } from '../types';
 
 export const drawCards = (deck: SelfReadingDeck, num: number): OracleCard[] => {
-  if (deck.cards.length === 0) return [];
+  if (!deck.ready || deck.cards.length === 0) return [];
 
   const clampedNum = Math.min(Math.max(0, num), deck.cards.length);
   const cards = [...deck.cards];
