@@ -34,6 +34,37 @@ A support contact link is also available in the Help screen.
 The app connects to the production BFF endpoint configured by VITE_BACKEND_URL.
 The BFF does not expose the Gemini API key to the client.
 
+
+## Self Reading
+
+Self Reading is a local, AI-independent reading mode that lets users draw cards themselves.
+It complements AI Mirror by providing a quiet, user-led path for reflection when the user does not want an AI-generated response.
+
+Current Self Reading behavior:
+
+- It uses deck and spread data bundled in the app.
+- Deck 1 uses the existing 48-card Oracle Mirror card set.
+- Deck 2 and Deck 3 are visible as preparation-state placeholder decks and cannot be drawn until their content is implemented.
+- Users can choose 1 / 2 / 3 card spreads and may enter an optional local question.
+- The shuffle, deal, flip animation, and result view run locally on the device.
+- The result view shows the spread position, card name, and card meaning only; it does not add AI interpretation.
+- Self Reading does not call the BFF or any LLM provider.
+- Self Reading does not consume the free daily AI oracle limit (`FREE_LIMIT`).
+- Self Reading does not contain subscription or purchase links.
+
+The custom card creator inside Self Reading is also local-only.
+Custom cards can be saved and deleted locally, but they are not included in Self Reading draw results yet.
+
+Implementation-reference checklist:
+
+- No AI call from Self Reading.
+- No BFF call from Self Reading.
+- No `FREE_LIMIT` consumption in Self Reading.
+- No IAP or subscription link inside Self Reading.
+- Custom cards are local-only.
+- Self Reading custom-card storage uses a separate key: `oracle_self_reading_v1`.
+- Deck 2 / Deck 3 remain in preparation state.
+
 ## Language
 
 The UI supports Japanese and English. AI oracle responses are currently generated in Japanese.
