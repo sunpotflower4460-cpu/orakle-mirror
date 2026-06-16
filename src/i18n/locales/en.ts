@@ -121,6 +121,23 @@ export const en: Record<keyof typeof ja, string> = {
   'mode.card.guidance': 'Draw inspiration from symbols (cards) and let their resonance become words.',
   'cards.drawnTitle': 'Revealed Cards',
 
+  // Self Reading
+  'selfReading.deck.classic48.name': 'Classic 48',
+  'selfReading.deck.classic48.description': 'The 48 symbolic cards of Oracle Mirror',
+  'selfReading.deck.deck24.name': 'Deck 24',
+  'selfReading.deck.deck24.description': 'In preparation',
+  'selfReading.deck.deck36.name': 'Deck 36',
+  'selfReading.deck.deck36.description': 'In preparation',
+  'selfReading.spread.one.name': 'One card',
+  'selfReading.spread.two.name': 'Two cards',
+  'selfReading.spread.three.name': 'Three cards',
+  'selfReading.position.one.present': 'Here and now',
+  'selfReading.position.two.light': 'Light',
+  'selfReading.position.two.shadow': 'Shadow',
+  'selfReading.position.three.past': 'Past',
+  'selfReading.position.three.present': 'Present',
+  'selfReading.position.three.future': 'Future',
+
   // Language names
   'language.ja': '日本語',
   'language.en': 'English',

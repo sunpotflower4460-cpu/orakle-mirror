@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import type { MessageKey } from '../i18n';
 
 // ─── Persona ───────────────────────────────────────────
 export type PersonaId = 'lumina' | 'zenith' | 'archivist';
@@ -43,6 +44,25 @@ export interface OracleCard {
   image?: string;
   /** 画像の代替テキスト。未指定の場合はカード名を利用する */
   imageAlt?: string;
+}
+
+// ─── Self Reading ─────────────────────────────────────
+export type SelfReadingDeckId = 'classic48' | 'deck24' | 'deck36';
+
+export interface SelfReadingDeck {
+  id: SelfReadingDeckId;
+  nameKey: MessageKey;
+  descriptionKey: MessageKey;
+  ready: boolean;
+  cards: readonly OracleCard[];
+}
+
+export type SelfReadingSpreadId = 'one' | 'two' | 'three';
+
+export interface SelfReadingSpread {
+  id: SelfReadingSpreadId;
+  nameKey: MessageKey;
+  positionKeys: readonly MessageKey[];
 }
 
 // ─── Message / Room / Storage ──────────────────────────
