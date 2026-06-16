@@ -23,7 +23,7 @@ Self Reading is separate from AI Mirror chat. AI Mirror conversation data uses `
 | Data category | Storage / processing | Leaves device? | Sent to BFF / LLM? | Account association | Retention / deletion |
 |---|---|---|---|---|---|
 | Optional Self Reading question text | Held in the Self Reading view state for the current reading flow. It is displayed on the local result view when present. | No | No | No account is required. | No reading-history persistence is currently implemented for questions. |
-| Drawn card result | Generated locally from the selected ready deck and held in view state for the current result view. | No | No | No account is required. | No reading-history persistence is currently implemented for drawn results. |
+| Drawn card result | Generated locally from the selected ready deck, including the dedicated custom-card deck when selected, and held in view state for the current result view. | No | No | No account is required. | No reading-history persistence is currently implemented for drawn results. |
 | Selected deck / spread metadata | Held in Self Reading view state during setup and result display. | No | No | No account is required. | Not persisted as reading history in the current implementation. |
 | Custom card name | Stored locally through Capacitor Preferences under `oracle_self_reading_v1`. | No | No | No account is required. | Remains until the user deletes the custom card or app/local data is removed. |
 | Custom card meaning | Stored locally through Capacitor Preferences under `oracle_self_reading_v1`. | No | No | No account is required. | Remains until the user deletes the custom card or app/local data is removed. |
@@ -36,7 +36,8 @@ Required implementation notes for review:
 - Self Reading does not send drawn cards to the BFF.
 - Self Reading does not call LLM APIs.
 - Self Reading custom cards are stored locally.
-- Custom cards are not included in draw results yet.
+- Custom cards can be drawn only through the dedicated custom-card deck, are not mixed into the built-in 48-card deck, and do not consume `FREE_LIMIT`.
+- Custom card names and meanings are not sent to the BFF or LLM.
 - Deck 2 / Deck 3 remain preparation-state placeholders until their bundled content is implemented.
 
 ## Third Parties

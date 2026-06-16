@@ -52,7 +52,7 @@ export interface UserCard extends OracleCard {
 }
 
 // ─── Self Reading ─────────────────────────────────────
-export type SelfReadingDeckId = 'classic48' | 'deck24' | 'deck36';
+export type SelfReadingDeckId = 'classic48' | 'deck24' | 'deck36' | 'userCards';
 
 export interface SelfReadingDeck {
   id: SelfReadingDeckId;
