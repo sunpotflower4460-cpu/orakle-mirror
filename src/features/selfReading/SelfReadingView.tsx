@@ -9,12 +9,13 @@ import { DeckPicker } from './DeckPicker';
 import { QuestionInput } from './QuestionInput';
 import { SpreadPicker } from './SpreadPicker';
 import { DrawStage } from './DrawStage';
+import { ReadingResult } from './ReadingResult';
 
 interface SelfReadingViewProps {
   onBack: () => void;
 }
 
-type SelfReadingStep = 'setup' | 'drawing';
+type SelfReadingStep = 'setup' | 'drawing' | 'result';
 
 export function SelfReadingView({ onBack }: SelfReadingViewProps) {
   const t = useT();
@@ -34,7 +35,17 @@ export function SelfReadingView({ onBack }: SelfReadingViewProps) {
     setStep('drawing');
   };
 
-  const handleReset = () => {
+  const handleDrawComplete = () => {
+    setStep('result');
+  };
+
+  const handleDrawAgain = () => {
+    if (!canDraw) return;
+    setDrawnCards(drawCards(selectedDeck, selectedSpread.positionKeys.length));
+    setStep('drawing');
+  };
+
+  const handleChangeSetup = () => {
     setDrawnCards([]);
     setStep('setup');
   };
@@ -123,8 +134,16 @@ export function SelfReadingView({ onBack }: SelfReadingViewProps) {
               )}
             </div>
           </>
+        ) : step === 'drawing' ? (
+          <DrawStage cards={drawnCards} spread={selectedSpread} onComplete={handleDrawComplete} />
         ) : (
-          <DrawStage cards={drawnCards} spread={selectedSpread} onReset={handleReset} />
+          <ReadingResult
+            cards={drawnCards}
+            spread={selectedSpread}
+            question={question}
+            onDrawAgain={handleDrawAgain}
+            onChangeSetup={handleChangeSetup}
+          />
         )}
       </div>
     </div>
