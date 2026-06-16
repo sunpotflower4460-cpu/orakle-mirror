@@ -20,6 +20,8 @@ export const en: Record<keyof typeof ja, string> = {
   'a11y.copyText': 'Copy text',
   'a11y.regenerateWith': 'Regenerate with {name}',
   'a11y.regenerateWithTitle': 'Regenerate from {name}’s view (uses 1)',
+  'a11y.sr.open': 'Draw cards yourself',
+  'a11y.sr.back': 'Return to AI Mirror',
 
   // Sidebar / subscription
   'sidebar.title': 'Archive',
@@ -30,6 +32,7 @@ export const en: Record<keyof typeof ja, string> = {
   'subscription.remainingToday': 'Remaining today',
   'subscription.remainingCount': '{count} left',
   'subscription.unlockPremium': 'Unlock Premium',
+  'nav.selfReading': 'Self Reading',
 
   // Status
   'status.receiving': 'Receiving the flow…',
@@ -122,6 +125,16 @@ export const en: Record<keyof typeof ja, string> = {
   'cards.drawnTitle': 'Revealed Cards',
 
   // Self Reading
+  'sr.home.title': 'Self Reading',
+  'sr.home.body': 'A quiet room to hold your question and choose a deck and spread. The reveal ritual opens in the next phase.',
+  'sr.back': 'Return to AI Mirror',
+  'sr.deck.pick': 'Choose a deck',
+  'sr.deck.comingSoon': 'In preparation',
+  'sr.spread.pick': 'Choose a spread',
+  'sr.question.title': 'Question (optional)',
+  'sr.question.placeholder': 'Gently write what you want to ask now (you may leave this empty)',
+  'sr.draw': 'Draw',
+  'sr.drawPreparing': 'The card reveal and result view will be added in the next phase.',
   'selfReading.deck.classic48.name': 'Classic 48',
   'selfReading.deck.classic48.description': 'The 48 symbolic cards of Oracle Mirror',
   'selfReading.deck.deck24.name': 'Deck 24',

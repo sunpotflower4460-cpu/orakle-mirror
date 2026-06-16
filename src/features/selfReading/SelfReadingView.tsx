@@ -1,0 +1,97 @@
+import { useState } from 'react';
+import { ChevronLeft } from 'lucide-react';
+import { useT } from '../../i18n';
+import type { SelfReadingDeckId, SelfReadingSpreadId } from '../../types';
+import { DeckPicker } from './DeckPicker';
+import { QuestionInput } from './QuestionInput';
+import { SpreadPicker } from './SpreadPicker';
+
+interface SelfReadingViewProps {
+  onBack: () => void;
+}
+
+export function SelfReadingView({ onBack }: SelfReadingViewProps) {
+  const t = useT();
+  const [selectedDeckId, setSelectedDeckId] = useState<SelfReadingDeckId>('classic48');
+  const [selectedSpreadId, setSelectedSpreadId] = useState<SelfReadingSpreadId>('one');
+  const [question, setQuestion] = useState<string>('');
+
+  return (
+    <div style={{ flex: 1, overflowY: 'auto', padding: 'calc(18px + var(--sat)) calc(18px + var(--sar)) calc(28px + var(--sab)) calc(18px + var(--sal))' }}>
+      <div style={{ maxWidth: 660, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 22 }}>
+        <button
+          type="button"
+          aria-label={t('a11y.sr.back')}
+          onClick={onBack}
+          style={{
+            alignSelf: 'flex-start',
+            minHeight: 44,
+            padding: '0 16px 0 12px',
+            borderRadius: 999,
+            border: '1px solid rgba(210,219,236,0.42)',
+            background: 'rgba(255,255,255,0.76)',
+            color: '#7f8998',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 6,
+            cursor: 'pointer',
+            boxShadow: 'var(--om-shadow-soft)',
+            fontSize: 12,
+            letterSpacing: '0.08em',
+          }}
+        >
+          <ChevronLeft size={16} strokeWidth={1.6} />
+          {t('sr.back')}
+        </button>
+
+        <div style={{
+          borderRadius: 32,
+          border: '1px solid rgba(210,219,236,0.42)',
+          background: 'linear-gradient(150deg, rgba(255,255,255,0.86), rgba(255,247,251,0.76), rgba(244,249,255,0.68))',
+          boxShadow: 'var(--om-shadow-card)',
+          padding: '30px 22px',
+          textAlign: 'center',
+        }}>
+          <div style={{ color: '#d77894', fontSize: 12, marginBottom: 12 }}>✦</div>
+          <h1 style={{ margin: 0, fontSize: 22, letterSpacing: '0.18em', color: '#263044', fontWeight: 500 }}>{t('sr.home.title')}</h1>
+          <p style={{ margin: '14px auto 0', maxWidth: 430, color: '#7f8998', fontSize: 13, lineHeight: 1.9, letterSpacing: '0.04em' }}>{t('sr.home.body')}</p>
+        </div>
+
+        <DeckPicker selectedDeckId={selectedDeckId} onSelectDeck={setSelectedDeckId} />
+        <SpreadPicker selectedSpreadId={selectedSpreadId} onSelectSpread={setSelectedSpreadId} />
+        <QuestionInput value={question} onChange={setQuestion} />
+
+        <div style={{
+          borderRadius: 24,
+          border: '1px solid rgba(210,219,236,0.42)',
+          background: 'rgba(255,250,252,0.76)',
+          boxShadow: 'var(--om-shadow-soft)',
+          padding: 16,
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 10,
+        }}>
+          <button
+            type="button"
+            disabled
+            style={{
+              width: '100%',
+              minHeight: 52,
+              borderRadius: 18,
+              border: 'none',
+              background: 'linear-gradient(135deg, rgba(13,19,40,0.42), rgba(20,28,56,0.34))',
+              color: 'rgba(255,255,255,0.86)',
+              fontSize: 12,
+              fontWeight: 700,
+              letterSpacing: '0.16em',
+              cursor: 'not-allowed',
+            }}
+          >
+            {t('sr.draw')}
+          </button>
+          <p style={{ color: '#8b95a5', fontSize: 12, lineHeight: 1.8, letterSpacing: '0.04em', textAlign: 'center' }}>{t('sr.drawPreparing')}</p>
+        </div>
+      </div>
+    </div>
+  );
+}

@@ -20,6 +20,8 @@ export const ja = {
   'a11y.copyText': 'テキストをコピー',
   'a11y.regenerateWith': '{name}で再生成',
   'a11y.regenerateWithTitle': '{name}の視点で再生成 (1回消費)',
+  'a11y.sr.open': '自分でカードを引く',
+  'a11y.sr.back': 'AIミラーへ戻る',
 
   // サイドバー / サブスクリプション
   'sidebar.title': 'アーカイブ',
@@ -30,6 +32,7 @@ export const ja = {
   'subscription.remainingToday': '本日の残り',
   'subscription.remainingCount': '{count} 回',
   'subscription.unlockPremium': 'プレミアムを解放',
+  'nav.selfReading': '自分で引く',
 
   // ステータス
   'status.receiving': '天の流れを受信中…',
@@ -122,6 +125,16 @@ export const ja = {
   'cards.drawnTitle': '現れたカード',
 
   // Self Reading（自分で引く）
+  'sr.home.title': '自分で引く',
+  'sr.home.body': '問いを胸に置き、デッキと展開を選ぶための静かな部屋です。めくる儀式は次のフェーズで開きます。',
+  'sr.back': 'AIミラーへ戻る',
+  'sr.deck.pick': 'デッキを選ぶ',
+  'sr.deck.comingSoon': '準備中',
+  'sr.spread.pick': '展開を選ぶ',
+  'sr.question.title': '問い（任意）',
+  'sr.question.placeholder': '今、確かめたいことをそっと書く（空欄でも大丈夫です）',
+  'sr.draw': '引く',
+  'sr.drawPreparing': 'カードをめくる演出と結果表示は次フェーズで追加します。',
   'selfReading.deck.classic48.name': 'クラシック48',
   'selfReading.deck.classic48.description': 'Oracle Mirror の48枚の象徴カード',
   'selfReading.deck.deck24.name': 'デッキ24',
