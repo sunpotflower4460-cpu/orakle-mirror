@@ -22,6 +22,7 @@ export const en: Record<keyof typeof ja, string> = {
   'a11y.regenerateWithTitle': 'Regenerate from {name}’s view (uses 1)',
   'a11y.sr.open': 'Draw cards yourself',
   'a11y.sr.back': 'Return to AI Mirror',
+  'a11y.sr.drawStage': 'Card draw ritual',
 
   // Sidebar / subscription
   'sidebar.title': 'Archive',
@@ -134,7 +135,9 @@ export const en: Record<keyof typeof ja, string> = {
   'sr.question.title': 'Question (optional)',
   'sr.question.placeholder': 'Gently write what you want to ask now (you may leave this empty)',
   'sr.draw': 'Draw',
-  'sr.drawPreparing': 'The card reveal and result view will be added in the next phase.',
+  'sr.drawPreparing': 'This deck is still in preparation.',
+  'sr.draw.reset': 'Return to setup',
+  'sr.draw.complete': 'The cards are open. A detailed reading will be shaped in the next phase.',
   'selfReading.deck.classic48.name': 'Classic 48',
   'selfReading.deck.classic48.description': 'The 48 symbolic cards of Oracle Mirror',
   'selfReading.deck.deck24.name': 'Deck 24',

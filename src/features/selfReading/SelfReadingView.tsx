@@ -1,20 +1,43 @@
 import { useState } from 'react';
 import { ChevronLeft } from 'lucide-react';
+import { DECKS } from '../../constants/decks';
+import { SPREADS } from '../../constants/spreads';
 import { useT } from '../../i18n';
-import type { SelfReadingDeckId, SelfReadingSpreadId } from '../../types';
+import { drawCards } from '../../lib/draw';
+import type { OracleCard, SelfReadingDeckId, SelfReadingSpreadId } from '../../types';
 import { DeckPicker } from './DeckPicker';
 import { QuestionInput } from './QuestionInput';
 import { SpreadPicker } from './SpreadPicker';
+import { DrawStage } from './DrawStage';
 
 interface SelfReadingViewProps {
   onBack: () => void;
 }
+
+type SelfReadingStep = 'setup' | 'drawing';
 
 export function SelfReadingView({ onBack }: SelfReadingViewProps) {
   const t = useT();
   const [selectedDeckId, setSelectedDeckId] = useState<SelfReadingDeckId>('classic48');
   const [selectedSpreadId, setSelectedSpreadId] = useState<SelfReadingSpreadId>('one');
   const [question, setQuestion] = useState<string>('');
+  const [step, setStep] = useState<SelfReadingStep>('setup');
+  const [drawnCards, setDrawnCards] = useState<OracleCard[]>([]);
+
+  const selectedDeck = DECKS.find(deck => deck.id === selectedDeckId) ?? DECKS[0];
+  const selectedSpread = SPREADS.find(spread => spread.id === selectedSpreadId) ?? SPREADS[0];
+  const canDraw = selectedDeck.ready;
+
+  const handleDraw = () => {
+    if (!canDraw) return;
+    setDrawnCards(drawCards(selectedDeck, selectedSpread.positionKeys.length));
+    setStep('drawing');
+  };
+
+  const handleReset = () => {
+    setDrawnCards([]);
+    setStep('setup');
+  };
 
   return (
     <div style={{ flex: 1, overflowY: 'auto', padding: 'calc(18px + var(--sat)) calc(18px + var(--sar)) calc(28px + var(--sab)) calc(18px + var(--sal))' }}>
@@ -57,40 +80,52 @@ export function SelfReadingView({ onBack }: SelfReadingViewProps) {
           <p style={{ margin: '14px auto 0', maxWidth: 430, color: '#7f8998', fontSize: 13, lineHeight: 1.9, letterSpacing: '0.04em' }}>{t('sr.home.body')}</p>
         </div>
 
-        <DeckPicker selectedDeckId={selectedDeckId} onSelectDeck={setSelectedDeckId} />
-        <SpreadPicker selectedSpreadId={selectedSpreadId} onSelectSpread={setSelectedSpreadId} />
-        <QuestionInput value={question} onChange={setQuestion} />
+        {step === 'setup' ? (
+          <>
+            <DeckPicker selectedDeckId={selectedDeckId} onSelectDeck={setSelectedDeckId} />
+            <SpreadPicker selectedSpreadId={selectedSpreadId} onSelectSpread={setSelectedSpreadId} />
+            <QuestionInput value={question} onChange={setQuestion} />
 
-        <div style={{
-          borderRadius: 24,
-          border: '1px solid rgba(210,219,236,0.42)',
-          background: 'rgba(255,250,252,0.76)',
-          boxShadow: 'var(--om-shadow-soft)',
-          padding: 16,
-          display: 'flex',
-          flexDirection: 'column',
-          gap: 10,
-        }}>
-          <button
-            type="button"
-            disabled
-            style={{
-              width: '100%',
-              minHeight: 52,
-              borderRadius: 18,
-              border: 'none',
-              background: 'linear-gradient(135deg, rgba(13,19,40,0.42), rgba(20,28,56,0.34))',
-              color: 'rgba(255,255,255,0.86)',
-              fontSize: 12,
-              fontWeight: 700,
-              letterSpacing: '0.16em',
-              cursor: 'not-allowed',
-            }}
-          >
-            {t('sr.draw')}
-          </button>
-          <p style={{ color: '#8b95a5', fontSize: 12, lineHeight: 1.8, letterSpacing: '0.04em', textAlign: 'center' }}>{t('sr.drawPreparing')}</p>
-        </div>
+            <div style={{
+              borderRadius: 24,
+              border: '1px solid rgba(210,219,236,0.42)',
+              background: 'rgba(255,250,252,0.76)',
+              boxShadow: 'var(--om-shadow-soft)',
+              padding: 16,
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 10,
+            }}>
+              <button
+                type="button"
+                disabled={!canDraw}
+                onClick={handleDraw}
+                style={{
+                  width: '100%',
+                  minHeight: 52,
+                  borderRadius: 18,
+                  border: 'none',
+                  background: canDraw
+                    ? 'linear-gradient(135deg, #263044, #465a8a)'
+                    : 'linear-gradient(135deg, rgba(13,19,40,0.42), rgba(20,28,56,0.34))',
+                  color: 'rgba(255,255,255,0.9)',
+                  fontSize: 12,
+                  fontWeight: 700,
+                  letterSpacing: '0.16em',
+                  cursor: canDraw ? 'pointer' : 'not-allowed',
+                  boxShadow: canDraw ? '0 14px 28px rgba(38,48,68,0.16)' : 'none',
+                }}
+              >
+                {t('sr.draw')}
+              </button>
+              {!canDraw && (
+                <p style={{ color: '#8b95a5', fontSize: 12, lineHeight: 1.8, letterSpacing: '0.04em', textAlign: 'center' }}>{t('sr.drawPreparing')}</p>
+              )}
+            </div>
+          </>
+        ) : (
+          <DrawStage cards={drawnCards} spread={selectedSpread} onReset={handleReset} />
+        )}
       </div>
     </div>
   );
