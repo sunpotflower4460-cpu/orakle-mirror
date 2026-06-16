@@ -131,7 +131,7 @@ export const ja = {
 
   // Self Reading（自分で引く）
   'sr.home.title': '自分で引く',
-  'sr.home.body': '問いを胸に置き、デッキと展開を選ぶための静かな部屋です。めくる儀式は次のフェーズで開きます。',
+  'sr.home.body': '問いを胸に置き、デッキと展開を選び、端末内だけでカードを開く静かな部屋です。',
   'sr.back': 'AIミラーへ戻る',
   'sr.deck.pick': 'デッキを選ぶ',
   'sr.deck.comingSoon': '準備中',

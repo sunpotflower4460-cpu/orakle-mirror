@@ -131,7 +131,7 @@ export const en: Record<keyof typeof ja, string> = {
 
   // Self Reading
   'sr.home.title': 'Self Reading',
-  'sr.home.body': 'A quiet room to hold your question and choose a deck and spread. The reveal ritual opens in the next phase.',
+  'sr.home.body': 'A quiet room to hold your question, choose a deck and spread, and reveal cards only on this device.',
   'sr.back': 'Return to AI Mirror',
   'sr.deck.pick': 'Choose a deck',
   'sr.deck.comingSoon': 'In preparation',
