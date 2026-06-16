@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ChevronLeft } from 'lucide-react';
 import { DECKS } from '../../constants/decks';
 import { SPREADS } from '../../constants/spreads';
 import { useT } from '../../i18n';
 import { drawCards } from '../../lib/draw';
-import type { OracleCard, SelfReadingDeckId, SelfReadingSpreadId } from '../../types';
+import { loadSelfReadingStore } from '../../lib/selfReadingStorage';
+import type { OracleCard, SelfReadingDeck, SelfReadingDeckId, SelfReadingSpreadId, UserCard } from '../../types';
 import { DeckPicker } from './DeckPicker';
 import { QuestionInput } from './QuestionInput';
 import { SpreadPicker } from './SpreadPicker';
@@ -25,11 +26,40 @@ export function SelfReadingView({ onBack }: SelfReadingViewProps) {
   const [question, setQuestion] = useState<string>('');
   const [step, setStep] = useState<SelfReadingStep>('setup');
   const [drawnCards, setDrawnCards] = useState<OracleCard[]>([]);
+  const [userCards, setUserCards] = useState<UserCard[]>([]);
+  const [deckMessage, setDeckMessage] = useState('');
 
-  const selectedDeck = DECKS.find(deck => deck.id === selectedDeckId) ?? DECKS[0];
+  const refreshUserCards = useCallback(async () => {
+    try {
+      const store = await loadSelfReadingStore();
+      setUserCards(store.userCards);
+      setDeckMessage('');
+    } catch {
+      setUserCards([]);
+      setDeckMessage(t('sr.deck.loadFailed'));
+    }
+  }, [t]);
+
+  useEffect(() => {
+    void refreshUserCards();
+  }, [refreshUserCards]);
+
+  const deckOptions = useMemo<readonly SelfReadingDeck[]>(() => [
+    ...DECKS,
+    {
+      id: 'userCards',
+      nameKey: 'selfReading.deck.userCards.name',
+      descriptionKey: 'selfReading.deck.userCards.description',
+      ready: userCards.length > 0,
+      cards: userCards,
+    },
+  ], [userCards]);
+
+  const selectedDeck = deckOptions.find(deck => deck.id === selectedDeckId) ?? deckOptions[0];
   const selectedSpread = SPREADS.find(spread => spread.id === selectedSpreadId) ?? SPREADS[0];
   const spreadCardCount = selectedSpread.positionKeys.length;
-  const canDraw = selectedDeck.ready && selectedDeck.cards.length >= spreadCardCount;
+  const hasEnoughCards = selectedDeck.cards.length >= spreadCardCount;
+  const canDraw = Boolean(selectedDeck && selectedSpread && selectedDeck.ready && hasEnoughCards);
 
   const handleDraw = () => {
     if (!canDraw) return;
@@ -95,7 +125,7 @@ export function SelfReadingView({ onBack }: SelfReadingViewProps) {
 
         {step === 'setup' ? (
           <>
-            <DeckPicker selectedDeckId={selectedDeckId} onSelectDeck={setSelectedDeckId} />
+            <DeckPicker decks={deckOptions} selectedDeckId={selectedDeckId} selectedSpreadCount={spreadCardCount} onSelectDeck={setSelectedDeckId} />
             <SpreadPicker selectedSpreadId={selectedSpreadId} onSelectSpread={setSelectedSpreadId} />
             <QuestionInput value={question} onChange={setQuestion} />
 
@@ -152,12 +182,20 @@ export function SelfReadingView({ onBack }: SelfReadingViewProps) {
                 {t('sr.draw')}
               </button>
               {!canDraw && (
-                <p style={{ color: '#8b95a5', fontSize: 12, lineHeight: 1.8, letterSpacing: '0.04em', textAlign: 'center' }}>{t('sr.drawPreparing')}</p>
+                <p style={{ color: '#8b95a5', fontSize: 12, lineHeight: 1.8, letterSpacing: '0.04em', textAlign: 'center' }}>
+                  {deckMessage || (selectedDeck.ready && !hasEnoughCards ? t('sr.deck.notEnoughForSpread') : t('sr.drawPreparing'))}
+                </p>
               )}
             </div>
           </>
         ) : step === 'creator' ? (
-          <CardCreator onBack={() => setStep('setup')} />
+          <CardCreator
+            onBack={() => {
+              void refreshUserCards();
+              setStep('setup');
+            }}
+            onUserCardsChange={setUserCards}
+          />
         ) : step === 'drawing' ? (
           <DrawStage cards={drawnCards} spread={selectedSpread} onComplete={handleDrawComplete} />
         ) : (

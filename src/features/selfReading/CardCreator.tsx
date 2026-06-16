@@ -6,11 +6,12 @@ import type { UserCard } from '../../types';
 
 interface CardCreatorProps {
   onBack: () => void;
+  onUserCardsChange?: (userCards: UserCard[]) => void;
 }
 
 const createUserCardId = (): string => `user-card-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 
-export function CardCreator({ onBack }: CardCreatorProps) {
+export function CardCreator({ onBack, onUserCardsChange }: CardCreatorProps) {
   const t = useT();
   const [name, setName] = useState('');
   const [meaning, setMeaning] = useState('');
@@ -22,7 +23,10 @@ export function CardCreator({ onBack }: CardCreatorProps) {
     let mounted = true;
     loadSelfReadingStore()
       .then(store => {
-        if (mounted) setUserCards(store.userCards);
+        if (mounted) {
+          setUserCards(store.userCards);
+          onUserCardsChange?.(store.userCards);
+        }
       })
       .catch(() => {
         if (mounted) setMessage(t('sr.create.saveFailed'));
@@ -30,7 +34,7 @@ export function CardCreator({ onBack }: CardCreatorProps) {
     return () => {
       mounted = false;
     };
-  }, [t]);
+  }, [onUserCardsChange, t]);
 
   const handleSave = async () => {
     const trimmedName = name.trim();
@@ -50,6 +54,7 @@ export function CardCreator({ onBack }: CardCreatorProps) {
         createdAt: Date.now(),
       });
       setUserCards(store.userCards);
+      onUserCardsChange?.(store.userCards);
       setName('');
       setMeaning('');
       setMessage(t('sr.create.saved'));
@@ -64,6 +69,7 @@ export function CardCreator({ onBack }: CardCreatorProps) {
     try {
       const store = await deleteUserCard(cardId);
       setUserCards(store.userCards);
+      onUserCardsChange?.(store.userCards);
     } catch {
       setMessage(t('sr.create.saveFailed'));
     }
@@ -100,7 +106,7 @@ export function CardCreator({ onBack }: CardCreatorProps) {
         <div>
           <h2 id="self-reading-create-title" style={{ margin: 0, color: '#263044', fontSize: 18, letterSpacing: '0.14em', fontWeight: 600 }}>{t('sr.create.title')}</h2>
           <p style={{ margin: '10px 0 0', color: '#7f8998', fontSize: 12, lineHeight: 1.8, letterSpacing: '0.04em' }}>{t('sr.create.localOnlyNote')}</p>
-          <p style={{ margin: '6px 0 0', color: '#d77894', fontSize: 12, lineHeight: 1.8, letterSpacing: '0.04em' }}>{t('sr.create.notInDeckYet')}</p>
+          <p style={{ margin: '6px 0 0', color: '#d77894', fontSize: 12, lineHeight: 1.8, letterSpacing: '0.04em' }}>{t('sr.create.deckAvailable')}</p>
         </div>
 
         <label style={{ display: 'flex', flexDirection: 'column', gap: 8, color: '#64748b', fontSize: 12, letterSpacing: '0.08em', fontWeight: 700 }}>

@@ -45,6 +45,7 @@ Current Self Reading behavior:
 - It uses deck and spread data bundled in the app.
 - Deck 1 uses the existing 48-card Oracle Mirror card set.
 - Deck 2 and Deck 3 are visible as preparation-state placeholder decks and cannot be drawn until their content is implemented.
+- A dedicated custom-card deck uses only cards saved locally by the user; it is disabled until enough custom cards exist for the selected spread.
 - Users can choose 1 / 2 / 3 card spreads and may enter an optional local question.
 - The shuffle, deal, flip animation, and result view run locally on the device.
 - The result view shows the spread position, card name, and card meaning only; it does not add AI interpretation.
@@ -53,7 +54,7 @@ Current Self Reading behavior:
 - Self Reading does not contain subscription or purchase links.
 
 The custom card creator inside Self Reading is also local-only.
-Custom cards can be saved and deleted locally, but they are not included in Self Reading draw results yet.
+Custom cards can be saved, deleted, and used as a dedicated local Self Reading deck. They are not mixed into the built-in 48-card deck and are never sent to the BFF or an LLM provider.
 
 Implementation-reference checklist:
 
@@ -62,6 +63,8 @@ Implementation-reference checklist:
 - No `FREE_LIMIT` consumption in Self Reading.
 - No IAP or subscription link inside Self Reading.
 - Custom cards are local-only.
+- Custom card names and meanings are not sent to the BFF or LLM.
+- Custom-card draws do not consume `FREE_LIMIT`.
 - Self Reading custom-card storage uses a separate key: `oracle_self_reading_v1`.
 - Deck 2 / Deck 3 remain in preparation state.
 

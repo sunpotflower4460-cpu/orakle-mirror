@@ -66,12 +66,13 @@ Oracle Mirror は、ユーザーが自身のハイヤーセルフの声を聴く
 | Phase S-4 | Self Reading result display | 完了 |
 | Phase S-5 | Self Reading custom card creator | 完了 |
 | Phase S-6 | Self Reading 申請ドキュメント・プライバシー記述反映 | 完了 |
+| Phase S-8 | Self Reading 自作カード専用デッキ連携 | 完了 |
 
 ---
 
 ## Phase S follow-ups
 
-- Custom cards as a selectable deck (future; not currently used in draw results).
+- Custom cards are available as a dedicated local deck and are not mixed into Classic 48.
 - Deck 2 / Deck 3 bundled content (currently preparation-state placeholders).
 - Optional Self Reading history UI if persistence is implemented later.
 - Optional “AI Mirror に送る” handoff (future; currently disabled / not implemented).
