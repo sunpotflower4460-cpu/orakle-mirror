@@ -10,12 +10,13 @@ import { QuestionInput } from './QuestionInput';
 import { SpreadPicker } from './SpreadPicker';
 import { DrawStage } from './DrawStage';
 import { ReadingResult } from './ReadingResult';
+import { CardCreator } from './CardCreator';
 
 interface SelfReadingViewProps {
   onBack: () => void;
 }
 
-type SelfReadingStep = 'setup' | 'drawing' | 'result';
+type SelfReadingStep = 'setup' | 'drawing' | 'result' | 'creator';
 
 export function SelfReadingView({ onBack }: SelfReadingViewProps) {
   const t = useT();
@@ -97,6 +98,26 @@ export function SelfReadingView({ onBack }: SelfReadingViewProps) {
             <SpreadPicker selectedSpreadId={selectedSpreadId} onSelectSpread={setSelectedSpreadId} />
             <QuestionInput value={question} onChange={setQuestion} />
 
+            <button
+              type="button"
+              aria-label={t('a11y.sr.createOpen')}
+              onClick={() => setStep('creator')}
+              style={{
+                minHeight: 46,
+                borderRadius: 18,
+                border: '1px solid rgba(210,219,236,0.46)',
+                background: 'rgba(255,255,255,0.70)',
+                color: '#7f8998',
+                fontSize: 12,
+                fontWeight: 700,
+                letterSpacing: '0.10em',
+                cursor: 'pointer',
+                boxShadow: 'var(--om-shadow-soft)',
+              }}
+            >
+              {t('sr.create.open')}
+            </button>
+
             <div style={{
               borderRadius: 24,
               border: '1px solid rgba(210,219,236,0.42)',
@@ -134,6 +155,8 @@ export function SelfReadingView({ onBack }: SelfReadingViewProps) {
               )}
             </div>
           </>
+        ) : step === 'creator' ? (
+          <CardCreator onBack={() => setStep('setup')} />
         ) : step === 'drawing' ? (
           <DrawStage cards={drawnCards} spread={selectedSpread} onComplete={handleDrawComplete} />
         ) : (
