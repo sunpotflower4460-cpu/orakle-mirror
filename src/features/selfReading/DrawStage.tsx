@@ -1,5 +1,5 @@
 import React from 'react';
-import { RotateCcw, Sparkles } from 'lucide-react';
+import { Sparkles } from 'lucide-react';
 import { useT } from '../../i18n';
 import type { OracleCard, SelfReadingSpread } from '../../types';
 import { SELF_READING_STYLES } from './selfReadingStyles';
@@ -7,7 +7,7 @@ import { SELF_READING_STYLES } from './selfReadingStyles';
 interface DrawStageProps {
   cards: OracleCard[];
   spread: SelfReadingSpread;
-  onReset: () => void;
+  onComplete?: () => void;
 }
 
 const shuffleCards = [
@@ -61,7 +61,7 @@ function SelfReadingCardFace({ card }: { card: OracleCard }) {
   );
 }
 
-export function DrawStage({ cards, spread, onReset }: DrawStageProps) {
+export function DrawStage({ cards, spread, onComplete }: DrawStageProps) {
   const t = useT();
   const spreadClass = `sr-spread-${spread.id}`;
 
@@ -104,31 +104,14 @@ export function DrawStage({ cards, spread, onReset }: DrawStageProps) {
           ))}
         </div>
 
-        <div className="sr-complete" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
+        <div
+          className="sr-complete"
+          onAnimationEnd={event => {
+            if (event.currentTarget === event.target) onComplete?.();
+          }}
+          style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}
+        >
           <p style={{ margin: 0, color: '#7f8998', fontSize: 12, lineHeight: 1.8, letterSpacing: '0.06em', textAlign: 'center' }}>{t('sr.draw.complete')}</p>
-          <button
-            type="button"
-            onClick={onReset}
-            style={{
-              minHeight: 44,
-              borderRadius: 999,
-              border: '1px solid rgba(210,219,236,0.48)',
-              background: 'rgba(255,255,255,0.82)',
-              color: '#263044',
-              padding: '0 16px',
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 8,
-              cursor: 'pointer',
-              boxShadow: 'var(--om-shadow-soft)',
-              fontSize: 12,
-              letterSpacing: '0.08em',
-              fontWeight: 700,
-            }}
-          >
-            <RotateCcw size={15} strokeWidth={1.7} />
-            {t('sr.draw.reset')}
-          </button>
         </div>
       </div>
     </section>
