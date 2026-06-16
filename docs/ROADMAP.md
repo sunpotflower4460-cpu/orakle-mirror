@@ -60,6 +60,22 @@ Oracle Mirror は、ユーザーが自身のハイヤーセルフの声を聴く
 | Phase 5.1 | BFF: Cloudflare Workers + OpenAI Responses API | 完了 |
 | Phase 5.5 | プロバイダー抽象化 / `buildAmbiencePriming` 等の物理削除 | 予定 |
 | Phase 6 | Capacitor iOS 実プラグイン差し替え | 予定 |
+| Phase S-1 | Self Reading data foundation | 完了 |
+| Phase S-2 | Self Reading view shell and sidebar entry | 完了 |
+| Phase S-3 | Self Reading shuffle / deal / flip animation | 完了 |
+| Phase S-4 | Self Reading result display | 完了 |
+| Phase S-5 | Self Reading custom card creator | 完了 |
+| Phase S-6 | Self Reading 申請ドキュメント・プライバシー記述反映 | 完了 |
+
+---
+
+## Phase S follow-ups
+
+- Custom cards as a selectable deck (future; not currently used in draw results).
+- Deck 2 / Deck 3 bundled content (currently preparation-state placeholders).
+- Optional Self Reading history UI if persistence is implemented later.
+- Optional “AI Mirror に送る” handoff (future; currently disabled / not implemented).
+- App Store screenshots/checklist and iOS device QA.
 
 ---
 
