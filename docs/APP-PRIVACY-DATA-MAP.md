@@ -38,7 +38,8 @@ Required implementation notes for review:
 - Self Reading custom cards are stored locally.
 - Custom cards can be drawn only through the dedicated custom-card deck, are not mixed into the built-in 48-card deck, and do not consume `FREE_LIMIT`.
 - Custom card names and meanings are not sent to the BFF or LLM.
-- Deck 2 / Deck 3 remain preparation-state placeholders until their bundled content is implemented.
+- Deck 2 is a bundled local 24-card deck and is drawn only on device.
+- Deck 3 remains a preparation-state placeholder until its bundled content is implemented.
 
 ## Third Parties
 

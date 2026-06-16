@@ -8,7 +8,10 @@ Use this checklist for Self Reading beta stabilization before App Review readine
 - [ ] Draw Deck 1 with 1 / 2 / 3 card spreads.
 - [ ] Confirm the optional question appears only on the local result view.
 - [ ] Confirm Draw again and Change deck/spread both work.
-- [ ] Confirm Deck 2 / Deck 3 show preparation state and cannot draw.
+- [ ] Confirm Deck 2 appears ready as Inner Weather 24 / 内なる天気 24.
+- [ ] Draw Deck 2 with 1 / 2 / 3 card spreads.
+- [ ] Confirm Deck 2 result text shows position labels, card names, and meanings correctly.
+- [ ] Confirm Deck 3 shows preparation state and cannot draw.
 - [ ] Create a custom card with empty fields and confirm validation.
 - [ ] Create a valid custom card, reload, and confirm it persists locally.
 - [ ] Confirm the custom-card deck is disabled with zero cards or fewer cards than the selected spread requires.
