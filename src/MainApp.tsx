@@ -25,6 +25,7 @@ import { OracleBubble } from './components/OracleBubble';
 import { OracleOrb } from './components/OracleOrb';
 import { Onboarding } from './components/Onboarding';
 import { ExternalGuidanceBanner } from './components/ExternalGuidanceBanner';
+import { SelfReadingView } from './features/selfReading/SelfReadingView';
 import { detectGuidance } from './lib/guidanceDetector';
 import { useT } from './i18n';
 import type { Storage, OracleCard, Message, PersonaId, Mode } from './types';
@@ -63,6 +64,7 @@ export function MainApp() {
   useLayoutEffect(() => { isLoadingRef.current = isLoading; }, [isLoading]);
 
   const [sidebarOpen,  setSidebarOpen]  = useState<boolean>(false);
+  const [appView,      setAppView]      = useState<'oracle' | 'reading'>('oracle');
   const [showHelp,     setShowHelp]     = useState<boolean>(false);
   const [showOnboarding, setShowOnboarding] = useState<boolean>(false);
   const [inputFocused, setInputFocused] = useState<boolean>(false);
@@ -648,7 +650,7 @@ export function MainApp() {
   }, [activeRoomId]);
 
   const handleNewRoom = useCallback(() => {
-    setActiveRoomId(null); setSidebarOpen(false); setError(null); setInput('');
+    setActiveRoomId(null); setSidebarOpen(false); setAppView('oracle'); setError(null); setInput('');
   }, []);
 
   const handleOnboardingComplete = useCallback((selectedPersona?: PersonaId) => {
@@ -740,6 +742,16 @@ export function MainApp() {
         </div>
         
         <div style={{ flex: 1, overflowY: 'auto', padding: '0 12px 16px', paddingLeft: 'calc(12px + var(--sal))', opacity: sidebarOpen ? 1 : 0, transition: 'opacity 0.3s ease 0.12s' }}>
+          <button aria-label={t('a11y.sr.open')} onClick={() => { setAppView('reading'); setSidebarOpen(false); }} style={{
+            width: '100%', textAlign: 'left', padding: '14px 12px', borderRadius: 18, minHeight: 52,
+            cursor: 'pointer', border: '1px solid rgba(210,219,236,0.42)', marginBottom: 12,
+            background: appView === 'reading' ? 'rgba(255,255,255,0.92)' : 'rgba(255,255,255,0.58)',
+            boxShadow: appView === 'reading' ? 'var(--om-shadow-soft), inset 0 0 0 1px #eadde2' : 'var(--om-shadow-soft)',
+            display: 'flex', alignItems: 'center', gap: 10, color: appView === 'reading' ? '#263044' : '#64748b'
+          }}>
+            <Wind size={16} strokeWidth={1.5} style={{ color: '#d77894', flexShrink: 0 }} />
+            <span style={{ fontSize: 13, fontWeight: 600, letterSpacing: '0.06em' }}>{t('nav.selfReading')}</span>
+          </button>
           {rooms.length === 0 && (
             <div style={{
               borderRadius: 28, margin: '4px 0 16px',
@@ -767,8 +779,8 @@ export function MainApp() {
             return (
               <div key={room.id} className="room-row" aria-current={isActive ? 'true' : undefined}
                 role="button" tabIndex={0}
-                onClick={() => { setActiveRoomId(room.id); setSidebarOpen(false); setError(null); }}
-                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { setActiveRoomId(room.id); setSidebarOpen(false); setError(null); } }}
+                onClick={() => { setActiveRoomId(room.id); setSidebarOpen(false); setAppView('oracle'); setError(null); }}
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { setActiveRoomId(room.id); setSidebarOpen(false); setAppView('oracle'); setError(null); } }}
                 style={{
                   width: '100%', textAlign: 'left', padding: '12px', borderRadius: 14, minHeight: 48,
                   cursor: 'pointer', border: 'none', marginBottom: 4, transition: 'all 0.2s',
@@ -826,6 +838,10 @@ export function MainApp() {
 
       {/* Main */}
       <main ref={mainRef} style={{ flex: 1, display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
+        {appView === 'reading' ? (
+          <SelfReadingView onBack={() => setAppView('oracle')} />
+        ) : (
+          <>
         <header className="app-header" style={{
           padding: 'calc(10px + var(--sat)) calc(16px + var(--sar)) 10px calc(16px + var(--sal))', flexShrink: 0,
           borderBottom: `1px solid rgba(217,164,181,0.22)`, background: 'rgba(255,253,253,0.72)', backdropFilter: 'blur(14px)', WebkitBackdropFilter: 'blur(14px)', boxShadow: 'var(--om-shadow-soft)'
@@ -1079,6 +1095,8 @@ export function MainApp() {
             </button>
           </div>
         </div>
+          </>
+        )}
       </main>
     </div>
   );
