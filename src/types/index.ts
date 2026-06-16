@@ -46,6 +46,11 @@ export interface OracleCard {
   imageAlt?: string;
 }
 
+export interface UserCard extends OracleCard {
+  id: string;
+  createdAt: number;
+}
+
 // ─── Self Reading ─────────────────────────────────────
 export type SelfReadingDeckId = 'classic48' | 'deck24' | 'deck36';
 
