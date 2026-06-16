@@ -22,6 +22,7 @@ export const ja = {
   'a11y.regenerateWithTitle': '{name}の視点で再生成 (1回消費)',
   'a11y.sr.open': '自分でカードを引く',
   'a11y.sr.back': 'AIミラーへ戻る',
+  'a11y.sr.drawStage': 'カードを引く儀式',
 
   // サイドバー / サブスクリプション
   'sidebar.title': 'アーカイブ',
@@ -134,7 +135,9 @@ export const ja = {
   'sr.question.title': '問い（任意）',
   'sr.question.placeholder': '今、確かめたいことをそっと書く（空欄でも大丈夫です）',
   'sr.draw': '引く',
-  'sr.drawPreparing': 'カードをめくる演出と結果表示は次フェーズで追加します。',
+  'sr.drawPreparing': 'このデッキはまだ準備中です。',
+  'sr.draw.reset': '設定に戻る',
+  'sr.draw.complete': 'カードが開きました。詳しい読み解きは次フェーズで整えます。',
   'selfReading.deck.classic48.name': 'クラシック48',
   'selfReading.deck.classic48.description': 'Oracle Mirror の48枚の象徴カード',
   'selfReading.deck.deck24.name': 'デッキ24',
