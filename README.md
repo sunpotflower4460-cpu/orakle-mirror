@@ -18,14 +18,17 @@ Oracle Mirror
 - Phase 4.8 (本番安全ガードと旧コード整理) 完了
 - Phase 5 (Cloudflare Workers BFF 構築) 完了
 - Phase 5.5 (プロバイダ抽象化・旧コード削除) 完了
-- 次は Phase 6 (IAP 実装)
+- Phase S-1〜S-10 (Self Reading Beta 実装) 完了
+- Phase S-11 (Self Reading Beta 最終監査) 完了
+- 次は Phase 7/8 の審査前クリーンアップ・リリース準備
 
 プロジェクト構成(計画)
 
 - React + Vite + TypeScript
 - Capacitor(iOS 優先、Android 対応予定)
-- Gemini API(BFF 経由、Phase 5 以降)
-- RevenueCat(IAP、Phase 6 以降)
+- LLM API(BFF 経由、Phase 5 以降)
+- RevenueCat(IAP)
+- Self Reading(端末内のみのカードドロー / 自作カード / 明示保存履歴)
 
 開発フロー
 
