@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { RotateCcw, Save, Settings2, Sparkles } from 'lucide-react';
 import { useT } from '../../i18n';
 import type { OracleCard, SelfReadingSpread } from '../../types';
@@ -83,6 +83,10 @@ export function ReadingResult({ cards, spread, question, onSaveReading, onDrawAg
   const t = useT();
   const trimmedQuestion = question.trim();
   const [saveState, setSaveState] = useState<'idle' | 'saving' | 'saved' | 'failed'>('idle');
+
+  useEffect(() => {
+    setSaveState('idle');
+  }, [cards, spread.id, trimmedQuestion]);
 
   const handleSave = async () => {
     if (!onSaveReading || saveState === 'saving' || saveState === 'saved') return;
