@@ -67,15 +67,15 @@ Oracle Mirror は、ユーザーが自身のハイヤーセルフの声を聴く
 | Phase S-5 | Self Reading custom card creator | 完了 |
 | Phase S-6 | Self Reading 申請ドキュメント・プライバシー記述反映 | 完了 |
 | Phase S-8 | Self Reading 自作カード専用デッキ連携 | 完了 |
-| Phase S-9 | Self Reading Deck 2「内なる天気 24」実装 | 完了 |
+| Phase S-9 | Self Reading Deck 2 / Deck 3 追加枠・投入手順の整備 | 完了 |
 
 ---
 
 ## Phase S follow-ups
 
 - Custom cards are available as a dedicated local deck and are not mixed into Classic 48.
-- Deck 2 is available as the bundled local Inner Weather 24 deck.
-- Deck 3 bundled content remains a preparation-state placeholder.
+- Deck 2 and Deck 3 are intentionally prepared slots and remain unavailable until card content is manually added.
+- Future Deck 2 / Deck 3 content should be added as local bundled arrays following `SELF-READING-DECK-AUTHORING-GUIDE.md`; these slots currently do not call AI/BFF/LLM and do not consume `FREE_LIMIT`.
 - Optional Self Reading history UI if persistence is implemented later.
 - Optional “AI Mirror に送る” handoff (future; currently disabled / not implemented).
 - App Store screenshots/checklist and iOS device QA.
