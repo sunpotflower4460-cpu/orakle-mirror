@@ -66,11 +66,12 @@ Implementation-reference checklist:
 - Custom cards are local-only.
 - Custom card names and meanings are not sent to the BFF or LLM.
 - Custom-card draws do not consume `FREE_LIMIT`.
-- Self Reading custom-card storage uses a separate key: `oracle_self_reading_v1`.
+- Self Reading custom-card and explicit saved-reading history storage uses a separate key: `oracle_self_reading_v1`.
 - Deck 2 / Deck 3 currently do not call AI, BFF, or LLM services.
 - Deck 2 / Deck 3 currently do not consume `FREE_LIMIT`.
 - Adding Deck 2 / Deck 3 content later will remain local-only if implemented as bundled card arrays.
 - Deck 2 / Deck 3 remain preparation slots and are not complete decks yet.
+- Self Reading history is saved only when the user taps the save action; saved readings stay local, can be deleted, do not call AI/BFF/LLM, and do not consume `FREE_LIMIT`.
 
 ## Language
 

@@ -1,5 +1,5 @@
-import React from 'react';
-import { RotateCcw, Settings2, Sparkles } from 'lucide-react';
+import React, { useState } from 'react';
+import { RotateCcw, Save, Settings2, Sparkles } from 'lucide-react';
 import { useT } from '../../i18n';
 import type { OracleCard, SelfReadingSpread } from '../../types';
 
@@ -7,6 +7,7 @@ interface ReadingResultProps {
   cards: OracleCard[];
   spread: SelfReadingSpread;
   question: string;
+  onSaveReading?: () => Promise<void>;
   onDrawAgain: () => void;
   onChangeSetup: () => void;
 }
@@ -78,9 +79,28 @@ function ResultCard({ card, positionLabel }: { card: OracleCard; positionLabel: 
   );
 }
 
-export function ReadingResult({ cards, spread, question, onDrawAgain, onChangeSetup }: ReadingResultProps) {
+export function ReadingResult({ cards, spread, question, onSaveReading, onDrawAgain, onChangeSetup }: ReadingResultProps) {
   const t = useT();
   const trimmedQuestion = question.trim();
+  const [saveState, setSaveState] = useState<'idle' | 'saving' | 'saved' | 'failed'>('idle');
+
+  const handleSave = async () => {
+    if (!onSaveReading || saveState === 'saving' || saveState === 'saved') return;
+
+    setSaveState('saving');
+    try {
+      await onSaveReading();
+      setSaveState('saved');
+    } catch {
+      setSaveState('failed');
+    }
+  };
+
+  const saveMessage = saveState === 'saved'
+    ? t('sr.history.saveSuccess')
+    : saveState === 'failed'
+      ? t('sr.history.saveFailed')
+      : '';
 
   return (
     <section aria-label={t('a11y.sr.result')} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -101,6 +121,16 @@ export function ReadingResult({ cards, spread, question, onDrawAgain, onChangeSe
           <ResultCard key={`${card.name}-${index}`} card={card} positionLabel={t(spread.positionKeys[index] ?? spread.positionKeys[0])} />
         ))}
       </div>
+
+      {onSaveReading && (
+        <div style={{ borderRadius: 24, border: '1px solid rgba(210,219,236,0.42)', background: 'rgba(255,250,252,0.76)', boxShadow: 'var(--om-shadow-soft)', padding: 14, display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <button type="button" disabled={saveState === 'saving' || saveState === 'saved'} onClick={handleSave} style={{ minHeight: 48, borderRadius: 18, border: 'none', background: saveState === 'saved' ? 'rgba(215,120,148,0.18)' : 'linear-gradient(135deg, #d77894, #e7a7b9)', color: saveState === 'saved' ? '#d77894' : 'rgba(255,255,255,0.94)', fontSize: 12, fontWeight: 700, letterSpacing: '0.12em', cursor: saveState === 'saving' || saveState === 'saved' ? 'default' : 'pointer', boxShadow: saveState === 'saved' ? 'none' : '0 14px 28px rgba(215,120,148,0.16)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+            <Save size={15} strokeWidth={1.7} />
+            {saveState === 'saved' ? t('sr.history.saved') : t('sr.history.save')}
+          </button>
+          {saveMessage && <p style={{ margin: 0, color: saveState === 'failed' ? '#b45353' : '#7f8998', fontSize: 12, lineHeight: 1.8, letterSpacing: '0.04em', textAlign: 'center' }}>{saveMessage}</p>}
+        </div>
+      )}
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 10 }}>
         <button type="button" onClick={onDrawAgain} style={{ minHeight: 48, borderRadius: 18, border: 'none', background: 'linear-gradient(135deg, #263044, #465a8a)', color: 'rgba(255,255,255,0.92)', fontSize: 12, fontWeight: 700, letterSpacing: '0.12em', cursor: 'pointer', boxShadow: '0 14px 28px rgba(38,48,68,0.16)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
