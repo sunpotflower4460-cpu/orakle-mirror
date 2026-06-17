@@ -70,6 +70,20 @@ export interface SelfReadingSpread {
   positionKeys: readonly MessageKey[];
 }
 
+export interface SelfReadingResultCard {
+  card: OracleCard;
+  positionId: string;
+}
+
+export interface SelfReading {
+  id: string;
+  createdAt: number;
+  deckId: SelfReadingDeckId;
+  spreadId: SelfReadingSpreadId;
+  question?: string;
+  cards: SelfReadingResultCard[];
+}
+
 // ─── Message / Room / Storage ──────────────────────────
 export type Role = 'user' | 'model';
 

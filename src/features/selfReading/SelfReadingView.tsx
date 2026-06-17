@@ -4,20 +4,21 @@ import { DECKS } from '../../constants/decks';
 import { SPREADS } from '../../constants/spreads';
 import { useT } from '../../i18n';
 import { drawCards } from '../../lib/draw';
-import { loadSelfReadingStore } from '../../lib/selfReadingStorage';
-import type { OracleCard, SelfReadingDeck, SelfReadingDeckId, SelfReadingSpreadId, UserCard } from '../../types';
+import { loadSelfReadingStore, saveSelfReading } from '../../lib/selfReadingStorage';
+import type { OracleCard, SelfReading, SelfReadingDeck, SelfReadingDeckId, SelfReadingSpreadId, UserCard } from '../../types';
 import { DeckPicker } from './DeckPicker';
 import { QuestionInput } from './QuestionInput';
 import { SpreadPicker } from './SpreadPicker';
 import { DrawStage } from './DrawStage';
 import { ReadingResult } from './ReadingResult';
 import { CardCreator } from './CardCreator';
+import { ReadingHistory } from './ReadingHistory';
 
 interface SelfReadingViewProps {
   onBack: () => void;
 }
 
-type SelfReadingStep = 'setup' | 'drawing' | 'result' | 'creator';
+type SelfReadingStep = 'setup' | 'drawing' | 'result' | 'creator' | 'history';
 
 export function SelfReadingView({ onBack }: SelfReadingViewProps) {
   const t = useT();
@@ -82,6 +83,23 @@ export function SelfReadingView({ onBack }: SelfReadingViewProps) {
     setStep('setup');
   };
 
+  const handleSaveReading = async () => {
+    const trimmedQuestion = question.trim();
+    const reading: SelfReading = {
+      id: `self-reading-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      createdAt: Date.now(),
+      deckId: selectedDeck.id,
+      spreadId: selectedSpread.id,
+      ...(trimmedQuestion ? { question: trimmedQuestion } : {}),
+      cards: drawnCards.map((card, index) => ({
+        card,
+        positionId: selectedSpread.positionKeys[index] ?? selectedSpread.positionKeys[0],
+      })),
+    };
+
+    await saveSelfReading(reading);
+  };
+
   return (
     <div style={{ flex: 1, overflowY: 'auto', padding: 'calc(18px + var(--sat)) calc(18px + var(--sar)) calc(28px + var(--sab)) calc(18px + var(--sal))' }}>
       <div style={{ maxWidth: 660, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 22 }}>
@@ -129,25 +147,46 @@ export function SelfReadingView({ onBack }: SelfReadingViewProps) {
             <SpreadPicker selectedSpreadId={selectedSpreadId} onSelectSpread={setSelectedSpreadId} />
             <QuestionInput value={question} onChange={setQuestion} />
 
-            <button
-              type="button"
-              aria-label={t('a11y.sr.createOpen')}
-              onClick={() => setStep('creator')}
-              style={{
-                minHeight: 46,
-                borderRadius: 18,
-                border: '1px solid rgba(210,219,236,0.46)',
-                background: 'rgba(255,255,255,0.70)',
-                color: '#7f8998',
-                fontSize: 12,
-                fontWeight: 700,
-                letterSpacing: '0.10em',
-                cursor: 'pointer',
-                boxShadow: 'var(--om-shadow-soft)',
-              }}
-            >
-              {t('sr.create.open')}
-            </button>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 10 }}>
+              <button
+                type="button"
+                aria-label={t('a11y.sr.createOpen')}
+                onClick={() => setStep('creator')}
+                style={{
+                  minHeight: 46,
+                  borderRadius: 18,
+                  border: '1px solid rgba(210,219,236,0.46)',
+                  background: 'rgba(255,255,255,0.70)',
+                  color: '#7f8998',
+                  fontSize: 12,
+                  fontWeight: 700,
+                  letterSpacing: '0.10em',
+                  cursor: 'pointer',
+                  boxShadow: 'var(--om-shadow-soft)',
+                }}
+              >
+                {t('sr.create.open')}
+              </button>
+              <button
+                type="button"
+                aria-label={t('a11y.sr.historyOpen')}
+                onClick={() => setStep('history')}
+                style={{
+                  minHeight: 46,
+                  borderRadius: 18,
+                  border: '1px solid rgba(210,219,236,0.46)',
+                  background: 'rgba(255,255,255,0.70)',
+                  color: '#7f8998',
+                  fontSize: 12,
+                  fontWeight: 700,
+                  letterSpacing: '0.10em',
+                  cursor: 'pointer',
+                  boxShadow: 'var(--om-shadow-soft)',
+                }}
+              >
+                {t('sr.history.open')}
+              </button>
+            </div>
 
             <div style={{
               borderRadius: 24,
@@ -188,6 +227,8 @@ export function SelfReadingView({ onBack }: SelfReadingViewProps) {
               )}
             </div>
           </>
+        ) : step === 'history' ? (
+          <ReadingHistory onBack={() => setStep('setup')} />
         ) : step === 'creator' ? (
           <CardCreator
             onBack={() => {
@@ -203,6 +244,7 @@ export function SelfReadingView({ onBack }: SelfReadingViewProps) {
             cards={drawnCards}
             spread={selectedSpread}
             question={question}
+            onSaveReading={handleSaveReading}
             onDrawAgain={handleDrawAgain}
             onChangeSetup={handleChangeSetup}
           />

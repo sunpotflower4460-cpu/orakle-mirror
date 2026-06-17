@@ -68,6 +68,7 @@ Oracle Mirror は、ユーザーが自身のハイヤーセルフの声を聴く
 | Phase S-6 | Self Reading 申請ドキュメント・プライバシー記述反映 | 完了 |
 | Phase S-8 | Self Reading 自作カード専用デッキ連携 | 完了 |
 | Phase S-9 | Self Reading Deck 2 / Deck 3 追加枠・投入手順の整備 | 完了 |
+| Phase S-10 | Self Reading ローカル履歴UI | 完了 |
 
 ---
 
@@ -76,7 +77,7 @@ Oracle Mirror は、ユーザーが自身のハイヤーセルフの声を聴く
 - Custom cards are available as a dedicated local deck and are not mixed into Classic 48.
 - Deck 2 and Deck 3 are intentionally prepared slots and remain unavailable until card content is manually added.
 - Future Deck 2 / Deck 3 content should be added as local bundled arrays following `SELF-READING-DECK-AUTHORING-GUIDE.md`; these slots currently do not call AI/BFF/LLM and do not consume `FREE_LIMIT`.
-- Optional Self Reading history UI if persistence is implemented later.
+- Self Reading history is now an explicit, local-only save flow under `oracle_self_reading_v1`, capped at 30 readings with per-reading deletion.
 - Optional “AI Mirror に送る” handoff (future; currently disabled / not implemented).
 - App Store screenshots/checklist and iOS device QA.
 
