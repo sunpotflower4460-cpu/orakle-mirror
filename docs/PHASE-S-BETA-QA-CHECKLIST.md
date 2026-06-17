@@ -8,17 +8,17 @@ Use this checklist for Self Reading beta stabilization before App Review readine
 - [ ] Draw Deck 1 with 1 / 2 / 3 card spreads.
 - [ ] Confirm the optional question appears only on the local result view.
 - [ ] Confirm Draw again and Change deck/spread both work.
-- [ ] Confirm Deck 2 appears ready as Inner Weather 24 / 内なる天気 24.
-- [ ] Draw Deck 2 with 1 / 2 / 3 card spreads.
-- [ ] Confirm Deck 2 result text shows position labels, card names, and meanings correctly.
-- [ ] Confirm Deck 3 shows preparation state and cannot draw.
+- [ ] Confirm Deck 2 appears as an intentional future 24-card slot and cannot draw while empty.
+- [ ] Confirm Deck 3 appears as an intentional future 36-card slot and cannot draw while empty.
+- [ ] Confirm Deck 2 / Deck 3 status text explains they are awaiting cards, not broken.
 - [ ] Create a custom card with empty fields and confirm validation.
 - [ ] Create a valid custom card, reload, and confirm it persists locally.
 - [ ] Confirm the custom-card deck is disabled with zero cards or fewer cards than the selected spread requires.
 - [ ] Confirm the custom-card deck draws 1 / 2 / 3 card spreads when enough custom cards exist.
 - [ ] Confirm custom cards are not mixed into the Classic 48 draw results.
 - [ ] Confirm no Self Reading request is sent to the BFF or any LLM endpoint.
-- [ ] Confirm Self Reading does not consume `FREE_LIMIT`.
+- [ ] Confirm Deck 2 / Deck 3 do not call AI/BFF/LLM while unavailable.
+- [ ] Confirm Self Reading does not consume `FREE_LIMIT`, including Deck 2 / Deck 3 placeholder selection attempts.
 
 ## iOS / Capacitor
 
@@ -32,3 +32,8 @@ Use this checklist for Self Reading beta stabilization before App Review readine
 - [ ] Use Self Reading while offline and confirm setup, draw, result, and custom card list still work.
 - [ ] Confirm AI Mirror remains the only flow that calls the BFF for oracle responses.
 - [ ] Confirm `oracle_self_reading_v1` is separate from `oracle_mirror_v16`.
+
+## Future Deck Insertion
+
+- [ ] Follow `docs/SELF-READING-DECK-AUTHORING-GUIDE.md` before manually adding Deck 2 / Deck 3 content.
+- [ ] Keep future bundled Deck 2 / Deck 3 content local-only unless a separate phase explicitly changes that behavior.
