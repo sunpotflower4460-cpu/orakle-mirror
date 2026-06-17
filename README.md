@@ -60,7 +60,7 @@ npm install
 cp .env.example .env.local
 ```
 
-.env.local に開発用の Gemini API キーを設定(本番ビルドでは使用されない)。
+.env.local に App Store readiness 用の公開 Vite 環境変数を設定します。必要な値は [App Store Environment Setup](./docs/APP-STORE-ENV-SETUP.md) を参照してください。
 
 開発サーバー起動
 
