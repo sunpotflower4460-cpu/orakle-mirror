@@ -15,9 +15,12 @@ export interface SamplingParams {
   topK?: number;
 }
 
+export type Stage = 'reception' | 'discernment';
+
 export interface OracleRequest {
   messages: ChatMessage[];
   sampling: SamplingParams;
+  stage: Stage;
 }
 
 export interface OracleResponseSuccess {

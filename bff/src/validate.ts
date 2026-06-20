@@ -1,4 +1,4 @@
-import type { ChatMessage, OracleRequest, SamplingParams } from './types';
+import type { ChatMessage, OracleRequest, SamplingParams, Stage } from './types';
 
 export interface ValidationError {
   code: string;
@@ -8,6 +8,7 @@ export interface ValidationError {
 export const MAX_BODY_BYTES = 32 * 1024;
 const MAX_TOTAL_CONTENT_CHARS = 16000;
 const ALLOWED_ROLES = new Set(['system', 'developer', 'user', 'assistant']);
+const ALLOWED_STAGES = new Set(['reception', 'discernment']);
 
 export function validateBodySize(bodyText: string): ValidationError | null {
   const enc = new TextEncoder();
@@ -24,6 +25,10 @@ function isChatMessage(v: unknown): v is ChatMessage {
   return typeof m.role === 'string'
     && ALLOWED_ROLES.has(m.role)
     && typeof m.content === 'string';
+}
+
+function isStage(v: unknown): v is Stage {
+  return typeof v === 'string' && ALLOWED_STAGES.has(v);
 }
 
 function isSamplingParams(v: unknown): v is SamplingParams {
@@ -62,5 +67,9 @@ export function validateRequest(parsed: unknown): { ok: true; data: OracleReques
     return { ok: false, error: { code: 'INVALID_SAMPLING', message: 'Invalid sampling params.' } };
   }
 
-  return { ok: true, data: { messages: req.messages as ChatMessage[], sampling: req.sampling } };
+  if (!isStage(req.stage)) {
+    return { ok: false, error: { code: 'INVALID_STAGE', message: 'stage must be reception or discernment.' } };
+  }
+
+  return { ok: true, data: { messages: req.messages as ChatMessage[], sampling: req.sampling, stage: req.stage } };
 }

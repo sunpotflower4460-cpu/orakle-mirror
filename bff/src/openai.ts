@@ -1,4 +1,4 @@
-import type { ChatMessage, Env, SamplingParams } from './types';
+import type { ChatMessage, Env, SamplingParams, Stage } from './types';
 
 const OPENAI_API_URL = 'https://api.openai.com/v1/responses';
 const RETRY_DELAYS_MS = [800, 2000, 5000];
@@ -6,16 +6,22 @@ const RETRYABLE_STATUSES = new Set([429, 500, 502, 503, 504]);
 const MAX_OUTPUT_TOKENS = 900;
 
 /**
- * BFF 側の developer instruction。
- * フロントエンドには公開せず、BFF でのみ使用する。
+ * Stage 1 (reception / 純粋受信) 用の最小 instruction。
+ * 出力形式の保証のみ。判断・常識・安全側への誘導は一切含めない。
+ * これは Phase 4.10 の責任分業に従い、Stage 1 をパイプとして純化するための設計。
  */
-const DEVELOPER_INSTRUCTIONS = `\
-You are the Oracle Mirror backend voice.
-Return only the requested XML-style tag content expected by the app.
-Do not claim certainty about divination, fate, medical, legal, or financial outcomes.
-Speak poetically but keep the answer grounded, gentle, and non-coercive.
-If the user asks for harmful or unsafe guidance, redirect toward safety and reflection.
-Preserve Japanese when the user writes Japanese.`;
+const RECEPTION_INSTRUCTIONS = `\
+Return only the content inside the XML-style tag requested by the app developer message.
+Preserve Japanese when the developer message is in Japanese.`;
+
+/**
+ * Stage 2 (discernment / 識別と調律) 用の最小 instruction。
+ * 出力形式の保証のみ。禁止領域の方針はフロントの buildDiscernmentSystem() に
+ * 既に集約されているため、BFF 側で重複して持たない。
+ */
+const DISCERNMENT_INSTRUCTIONS = `\
+Return only the content inside the XML-style tag requested by the app developer message.
+Preserve Japanese when the developer message is in Japanese.`;
 
 type OpenAIRole = 'developer' | 'user' | 'assistant';
 
@@ -55,6 +61,7 @@ interface OpenAIResponse {
 /**
  * フロントエンドの ChatMessage を OpenAI Responses API の input 形式に変換する。
  * system / developer ロールは developer として渡す(OpenAI Responses API の慣習)。
+ * system はフロント側で構築された絶対不変の核であり、BFF instruction の直後に保持する。
  */
 function toOpenAIInput(messages: ChatMessage[]): OpenAIInputMessage[] {
   return messages.map((m) => ({
@@ -63,11 +70,13 @@ function toOpenAIInput(messages: ChatMessage[]): OpenAIInputMessage[] {
   }));
 }
 
-function buildPayload(messages: ChatMessage[], sampling: SamplingParams, model: string): OpenAIPayload {
+function buildPayload(messages: ChatMessage[], sampling: SamplingParams, model: string, stage: Stage): OpenAIPayload {
+  const instruction = stage === 'reception' ? RECEPTION_INSTRUCTIONS : DISCERNMENT_INSTRUCTIONS;
+
   return {
     model,
     input: [
-      { role: 'developer', content: DEVELOPER_INSTRUCTIONS },
+      { role: 'developer', content: instruction },
       ...toOpenAIInput(messages),
     ],
     temperature: sampling.temperature,
@@ -109,10 +118,11 @@ export interface OpenAICallError {
 export async function callOpenAI(
   messages: ChatMessage[],
   sampling: SamplingParams,
+  stage: Stage,
   env: Env,
 ): Promise<OpenAICallResult | OpenAICallError> {
   const model = env.OPENAI_MODEL || 'gpt-5.5';
-  const payload = buildPayload(messages, sampling, model);
+  const payload = buildPayload(messages, sampling, model, stage);
 
   let lastError: OpenAICallError | null = null;
 

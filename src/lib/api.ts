@@ -7,6 +7,8 @@ import type {
 } from '../types';
 import { BACKEND_URL, IS_PROD, isBackendUrlPlaceholder } from './env';
 
+type Stage = 'reception' | 'discernment';
+
 /**
  * BFF 経由で LLM を呼び出す。
  *
@@ -16,12 +18,14 @@ import { BACKEND_URL, IS_PROD, isBackendUrlPlaceholder } from './env';
  *
  * @param messages 4 層プロンプトの ChatMessage 配列
  * @param sampling temperature / topP / topK
+ * @param stage BFF が Stage 別 instruction を選ぶための識別子
  * @returns LLM の生テキスト
  * @throws FatalError BFF 経由でエラーが返った場合 or 通信失敗
  */
 export async function callLLMWithSampling(
   messages: ChatMessage[],
   sampling: SamplingParams,
+  stage: Stage,
 ): Promise<string> {
   if (!BACKEND_URL || isBackendUrlPlaceholder()) {
     const msg = IS_PROD
@@ -44,7 +48,7 @@ export async function callLLMWithSampling(
       const res = await fetch(BACKEND_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messages, sampling }),
+        body: JSON.stringify({ messages, sampling, stage }),
       });
 
       if (res.ok) {
@@ -113,6 +117,7 @@ function buildUserFacingError(code: string, _message: string): string {
     case 'INVALID_MESSAGES':
     case 'INVALID_MESSAGE_SHAPE':
     case 'INVALID_SAMPLING':
+    case 'INVALID_STAGE':
       return '神託の経路が乱れています。アプリを再起動して再び試してください。';
     case 'SERVER_MISCONFIGURED':
     case 'UPSTREAM_ERROR':
@@ -164,7 +169,7 @@ export const fetchOracleTwoStage = async (
   discernmentBuilder: (raw: string) => ChatMessage[],
 ): Promise<TwoStageResult> => {
   const t1Start = Date.now();
-  const rawResponse = await callLLMWithSampling(receptionMsgs, RECEPTION_SAMPLING);
+  const rawResponse = await callLLMWithSampling(receptionMsgs, RECEPTION_SAMPLING, 'reception');
   const raw = extractTag(rawResponse, 'reception');
   const receptionMs = Date.now() - t1Start;
 
@@ -174,7 +179,7 @@ export const fetchOracleTwoStage = async (
 
   const t2Start = Date.now();
   const discernmentMsgs = discernmentBuilder(raw);
-  const finalResponse = await callLLMWithSampling(discernmentMsgs, DISCERNMENT_SAMPLING);
+  const finalResponse = await callLLMWithSampling(discernmentMsgs, DISCERNMENT_SAMPLING, 'discernment');
   const final = extractTag(finalResponse, 'final');
   const discernmentMs = Date.now() - t2Start;
 
