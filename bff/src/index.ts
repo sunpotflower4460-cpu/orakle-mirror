@@ -117,7 +117,7 @@ export default {
     }
 
     // OpenAI 呼び出し
-    const result = await callOpenAI(validated.data.messages, validated.data.sampling, env);
+    const result = await callOpenAI(validated.data.messages, validated.data.sampling, validated.data.stage, env);
 
     if (!result.ok) {
       console.error('OpenAI call failed', { status: result.status, code: result.code, message: result.message });
