@@ -65,7 +65,7 @@ Oracle Mirror は、ユーザーが自身のハイヤーセルフの声を聴く
 | Phase 4.15 | 量子乱数導入の設計メモ作成 | 完了 |
 | Phase 5.1 | BFF: Cloudflare Workers + OpenAI Responses API | 完了 |
 | Phase 5.5a | フロント側の型整理とプロバイダ非依存化 | 完了 |
-| Phase 5.5b | BFF 側のプロバイダディレクトリ化 | 予定 |
+| Phase 5.5b | BFF 側のプロバイダディレクトリ化 | 完了 |
 | Phase 5.5c | BFF エラー正規化の拡張 | 予定 |
 | Phase 5.5d | developer ロール非対応プロバイダ対応 | 予定 |
 | Phase 6 | RevenueCat IAP 実装、Capacitor 実プラグイン差し替え | 予定 |

@@ -1,4 +1,5 @@
-import type { ChatMessage, Env, SamplingParams, Stage } from './types';
+import type { ChatMessage, Env, SamplingParams, Stage } from '../types';
+import type { LLMProvider, ProviderCallError, ProviderResult } from './types';
 
 const OPENAI_API_URL = 'https://api.openai.com/v1/responses';
 const RETRY_DELAYS_MS = [800, 2000, 5000];
@@ -103,28 +104,16 @@ function extractText(data: OpenAIResponse): string | null {
   return null;
 }
 
-export interface OpenAICallResult {
-  ok: true;
-  text: string;
-}
-
-export interface OpenAICallError {
-  ok: false;
-  status: number;
-  code: string;
-  message: string;
-}
-
-export async function callOpenAI(
+async function callOpenAI(
   messages: ChatMessage[],
   sampling: SamplingParams,
   stage: Stage,
   env: Env,
-): Promise<OpenAICallResult | OpenAICallError> {
+): Promise<ProviderResult> {
   const model = env.OPENAI_MODEL || 'gpt-5.5';
   const payload = buildPayload(messages, sampling, model, stage);
 
-  let lastError: OpenAICallError | null = null;
+  let lastError: ProviderCallError | null = null;
 
   for (let attempt = 0; attempt < RETRY_DELAYS_MS.length + 1; attempt++) {
     try {
@@ -184,3 +173,9 @@ export async function callOpenAI(
     message: 'Unknown error after retries',
   };
 }
+
+export const openaiProvider: LLMProvider = {
+  name: 'openai',
+  supportsDeveloperRole: true,
+  call: callOpenAI,
+};

@@ -2,7 +2,7 @@ import type { Env, OracleResponseError, OracleResponseSuccess } from './types';
 import { buildCorsHeaders, handlePreflight, isOriginAllowed } from './cors';
 import { checkRateLimit, getClientIp } from './rateLimit';
 import { MAX_BODY_BYTES, validateBodySize, validateRequest } from './validate';
-import { callOpenAI } from './openai';
+import { selectProvider } from './providers';
 
 function jsonResponse(status: number, body: OracleResponseSuccess | OracleResponseError, corsHeaders: Record<string, string>): Response {
   return new Response(JSON.stringify(body), {
@@ -116,17 +116,20 @@ export default {
       );
     }
 
-    // OpenAI 呼び出し
-    const result = await callOpenAI(validated.data.messages, validated.data.sampling, validated.data.stage, env);
+    // Provider 呼び出し（現在は OpenAI 固定）
+    const provider = selectProvider(env);
+    const result = await provider.call(validated.data.messages, validated.data.sampling, validated.data.stage, env);
 
     if (!result.ok) {
-      console.error('OpenAI call failed', { status: result.status, code: result.code, message: result.message });
+      console.error('Provider call failed', { provider: provider.name, status: result.status, code: result.code, message: result.message });
       // クライアントには詳細を返さない(セキュリティ)
       return jsonResponse(
         result.status >= 500 ? 502 : result.status,
         {
           error: {
-            code: result.code.startsWith('OPENAI_') || result.code === 'NO_OUTPUT_TEXT' ? 'UPSTREAM_ERROR' : result.code,
+            // プロバイダ固有のエラーコード（OPENAI_*, GEMINI_*, NO_OUTPUT_TEXT 等）はすべて UPSTREAM_ERROR に正規化する。
+            // フロントが期待する BackendErrorCode 集合に含まれない値は外部に出さない。
+            code: 'UPSTREAM_ERROR',
             message: '天との接続が途切れました。少し時間をおいてから再び問いかけてください。',
           },
         },
