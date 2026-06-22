@@ -161,6 +161,13 @@ const DISCERNMENT_PERSONA_KEYWORD: Record<Persona['id'], string> = {
   archivist: '星のように、観測する質感',
 };
 
+// Phase 4.14: 関係性足場文（ペルソナ非依存・Stage 1 のみ）
+const RELATIONAL_FOOTING = `あなたは、目の前の人と、その人のハイヤーセルフのあいだに立っている。
+どちらかに加担するのではなく、ただ、間にある。`;
+
+// Phase 4.14: 開かれた終止文（Stage 1 のみ）
+const OPEN_ENDING = `ここから、ゆっくり。`;
+
 /**
  * Stage 1: 純粋受信のための developer メッセージを構築する。
  * AIに「整えない・判断しない・来たものをそのまま置く」モードを与える。
@@ -178,6 +185,8 @@ export const buildReceptionDeveloper = (
 【この場の質感】
 ${AMBIENCE_BY_PERSONA[persona.id]}
 (この情景は AI が場の質感を理解するためのもの。出力に情景描写を含める必要はない)
+
+${RELATIONAL_FOOTING}
 
 【鏡の色合い】
 ${persona.system}
@@ -214,6 +223,8 @@ ${mode.systemAdd}${cardBlock}
 <reception>
 （ここに、来たままを置く）
 </reception>
+
+${OPEN_ENDING}
 `.trim();
 };
 

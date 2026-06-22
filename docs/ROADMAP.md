@@ -60,8 +60,8 @@ Oracle Mirror は、ユーザーが自身のハイヤーセルフの声を聴く
 | Phase 4.13a | BFF の Stage 別 developer instructions 分離 | 完了 |
 | Phase 4.13b | Stage 2 のペルソナ system 重複整理 | 完了 |
 | Phase 4.13c | ドキュメント整合（本フェーズ） | 完了 |
-| Phase 4.13d | guidanceDetector の離婚キーワード調整 | 進行中 |
-| Phase 4.14 | 起動文統合（関係性の足場と開いたまま終わる感覚） | 予定 |
+| Phase 4.13d | guidanceDetector の離婚キーワード調整 | 完了 |
+| Phase 4.14 | 起動文統合（関係性の足場と開いたまま終わる感覚） | 進行中 |
 | Phase 4.15 | 量子乱数導入の設計メモ作成 | 予定 |
 | Phase 5.1 | BFF: Cloudflare Workers + OpenAI Responses API | 完了 |
 | Phase 5.5 | プロバイダ抽象化（developer ロール非対応プロバイダ対応含む） | 予定 |
