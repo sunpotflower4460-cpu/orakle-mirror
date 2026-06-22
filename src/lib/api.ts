@@ -1,5 +1,5 @@
 import type {
-  BackendErrorResponse,
+  BackendErrorCode,
   ChatMessage,
   FatalError,
   SamplingParams,
@@ -8,25 +8,46 @@ import type {
 import { BACKEND_URL, IS_PROD, isBackendUrlPlaceholder } from './env';
 
 type Stage = 'reception' | 'discernment';
+type BackendResult = { text: string } | { error: BackendErrorCode; message?: string };
+
+const BACKEND_ERROR_CODES: readonly BackendErrorCode[] = [
+  'NOT_FOUND',
+  'ORIGIN_NOT_ALLOWED',
+  'UNSUPPORTED_MEDIA_TYPE',
+  'BODY_TOO_LARGE',
+  'INVALID_JSON',
+  'INVALID_STAGE',
+  'INVALID_REQUEST',
+  'RATE_LIMITED',
+  'SERVER_MISCONFIGURED',
+  'UPSTREAM_ERROR',
+];
+
+function normalizeBackendErrorCode(code: unknown): BackendErrorCode {
+  if (typeof code === 'string' && BACKEND_ERROR_CODES.includes(code as BackendErrorCode)) {
+    return code as BackendErrorCode;
+  }
+  return 'UPSTREAM_ERROR';
+}
 
 /**
  * BFF 経由で LLM を呼び出す。
  *
  * Phase 5.5 時点で、フロントエンドが持つ LLM インターフェースはこれだけ。
  * BFF (Cloudflare Workers) がプロバイダ差分と秘密情報を吸収し、
- * フロントエンドは ChatMessage / SamplingParams だけを送る。
+ * フロントエンドは ChatMessage / SamplingParams / BackendErrorCode だけを境界型として扱う。
  *
  * @param messages 4 層プロンプトの ChatMessage 配列
- * @param sampling temperature / topP / topK
+ * @param sampling temperature / topP / maxOutputTokens
  * @param stage BFF が Stage 別 instruction を選ぶための識別子
- * @returns LLM の生テキスト
- * @throws FatalError BFF 経由でエラーが返った場合 or 通信失敗
+ * @returns BFF の生テキスト、または正規化済みエラーコード
+ * @throws FatalError 接続設定不備 or 通信失敗
  */
 export async function callLLMWithSampling(
   messages: ChatMessage[],
   sampling: SamplingParams,
   stage: Stage,
-): Promise<string> {
+): Promise<BackendResult> {
   if (!BACKEND_URL || isBackendUrlPlaceholder()) {
     const msg = IS_PROD
       ? '神託サーバーへの接続設定が不完全です。'
@@ -41,7 +62,7 @@ export async function callLLMWithSampling(
   const MAX_ATTEMPTS = 3;
   const RETRY_DELAYS_MS = [500, 1500]; // MAX_ATTEMPTS - 1 = 2 要素
   let lastError: Error | null = null;
-  let lastCode: string | null = null;
+  let lastCode: BackendErrorCode | null = null;
 
   for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
     try {
@@ -54,22 +75,20 @@ export async function callLLMWithSampling(
       if (res.ok) {
         const data = await res.json() as { text?: string };
         if (typeof data.text === 'string' && data.text.length > 0) {
-          return data.text;
+          return { text: data.text };
         }
         const err = new Error('神託の声が届きませんでした。') as FatalError;
         err.fatal = true;
         throw err;
       }
 
-      const errBody = (await res.json().catch(() => null)) as BackendErrorResponse | null;
-      const code = errBody?.error?.code ?? `HTTP_${res.status}`;
-      const message = errBody?.error?.message ?? `HTTP ${res.status}`;
+      const errBody = (await res.json().catch(() => null)) as { error?: { code?: unknown; message?: unknown } } | null;
+      const code = normalizeBackendErrorCode(errBody?.error?.code);
+      const message = typeof errBody?.error?.message === 'string' ? errBody.error.message : `HTTP ${res.status}`;
       const retryable = res.status === 429 || (res.status >= 500 && res.status <= 599);
 
       if (!retryable) {
-        const err = new Error(buildUserFacingError(code, message)) as FatalError;
-        err.fatal = true;
-        throw err;
+        return { error: code, message };
       }
 
       // リトライ可能エラー: コードを保持して次の試行へ
@@ -78,7 +97,7 @@ export async function callLLMWithSampling(
     } catch (e: unknown) {
       const err = e as FatalError;
       if (err?.fatal) throw err;
-      lastCode = 'NETWORK_ERROR';
+      lastCode = 'UPSTREAM_ERROR';
       lastError = err instanceof Error ? err : new Error(String(e));
     }
 
@@ -102,22 +121,18 @@ export async function callLLMWithSampling(
  * BFF エラーコードをユーザー向けメッセージに変換する。
  * 詳細を出しすぎない、世界観を保つ文言。
  */
-function buildUserFacingError(code: string, _message: string): string {
+function buildUserFacingError(code: BackendErrorCode, _message: string): string {
   switch (code) {
     case 'RATE_LIMITED':
       return '今、あまりに多くの問いが鏡に投げかけられています。少し休んでから再び訪れてください。';
-    case 'CONTENT_TOO_LONG':
     case 'BODY_TOO_LARGE':
-    case 'TOO_MANY_MESSAGES':
       return '問いが長すぎるようです。少し言葉を整えてから再び投げかけてください。';
+    case 'NOT_FOUND':
     case 'ORIGIN_NOT_ALLOWED':
     case 'UNSUPPORTED_MEDIA_TYPE':
     case 'INVALID_JSON':
-    case 'INVALID_BODY':
-    case 'INVALID_MESSAGES':
-    case 'INVALID_MESSAGE_SHAPE':
-    case 'INVALID_SAMPLING':
     case 'INVALID_STAGE':
+    case 'INVALID_REQUEST':
       return '神託の経路が乱れています。アプリを再起動して再び試してください。';
     case 'SERVER_MISCONFIGURED':
     case 'UPSTREAM_ERROR':
@@ -170,7 +185,12 @@ export const fetchOracleTwoStage = async (
 ): Promise<TwoStageResult> => {
   const t1Start = Date.now();
   const rawResponse = await callLLMWithSampling(receptionMsgs, RECEPTION_SAMPLING, 'reception');
-  const raw = extractTag(rawResponse, 'reception');
+  if ('error' in rawResponse) {
+    const err = new Error(buildUserFacingError(rawResponse.error, rawResponse.message ?? '')) as FatalError;
+    err.fatal = true;
+    throw err;
+  }
+  const raw = extractTag(rawResponse.text, 'reception');
   const receptionMs = Date.now() - t1Start;
 
   if (!raw) {
@@ -180,7 +200,12 @@ export const fetchOracleTwoStage = async (
   const t2Start = Date.now();
   const discernmentMsgs = discernmentBuilder(raw);
   const finalResponse = await callLLMWithSampling(discernmentMsgs, DISCERNMENT_SAMPLING, 'discernment');
-  const final = extractTag(finalResponse, 'final');
+  if ('error' in finalResponse) {
+    const err = new Error(buildUserFacingError(finalResponse.error, finalResponse.message ?? '')) as FatalError;
+    err.fatal = true;
+    throw err;
+  }
+  const final = extractTag(finalResponse.text, 'final');
   const discernmentMs = Date.now() - t2Start;
 
   if (!final) {

@@ -108,10 +108,8 @@ export interface Storage {
 }
 
 // ─── Chat Message(プロバイダ非依存の内部表現) ──────────
-export type ChatRole = 'system' | 'developer' | 'user' | 'assistant';
-
 export interface ChatMessage {
-  role: ChatRole;
+  role: 'system' | 'developer' | 'user' | 'assistant';
   content: string;
 }
 
@@ -210,21 +208,26 @@ export interface BrowserPlugin {
 export interface SamplingParams {
   temperature: number;
   topP: number;
-  topK?: number;
+  maxOutputTokens?: number;
 }
+
+export type BackendErrorCode =
+  | 'NOT_FOUND'
+  | 'ORIGIN_NOT_ALLOWED'
+  | 'UNSUPPORTED_MEDIA_TYPE'
+  | 'BODY_TOO_LARGE'
+  | 'INVALID_JSON'
+  | 'INVALID_STAGE'
+  | 'INVALID_REQUEST'
+  | 'RATE_LIMITED'
+  | 'SERVER_MISCONFIGURED'
+  | 'UPSTREAM_ERROR';
 
 export interface TwoStageResult {
   raw: string;
   final: string;
   receptionMs: number;
   discernmentMs: number;
-}
-
-export interface BackendErrorResponse {
-  error?: {
-    code?: string;
-    message?: string;
-  };
 }
 
 export interface FatalError extends Error {
