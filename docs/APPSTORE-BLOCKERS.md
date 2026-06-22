@@ -44,7 +44,8 @@ and must be completed by a human before App Store submission.
 - Configure In-App Purchase product(s) matching the RevenueCat entitlement.
 - Fill in tax, banking, and contract information.
 
-## Gemini Model
+## LLM Model
 
-- Confirm `GEMINI_MODEL` in `bff/wrangler.toml` is a stable (non-preview) release.
-  See `docs/BFF-PROVIDER-NOTES.md` for details.
+- 現行モデル: `bff/wrangler.toml` の `OPENAI_MODEL` を確認すること。
+- リリース前に、デプロイ時点で実在し続けるモデル名であることを必ず再確認する。
+- 詳細は `docs/BFF-PROVIDER-NOTES.md` を参照。

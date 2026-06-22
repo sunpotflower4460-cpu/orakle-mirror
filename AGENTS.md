@@ -10,12 +10,12 @@ Orakle Mirror — Agent Working Rules
 - プロダクト名: Oracle Mirror(オラクルミラー)
 - 形態: React + Vite + Capacitor の iOS アプリ(将来 Android 対応)
 - 最終ゴール: Apple App Store への申請と公開
-- 主機能: Gemini API を用いた神託対話。3 つのペルソナ
+- 主機能: LLM API（現行プロバイダは OpenAI Responses API、Phase 5.5 でプロバイダ抽象化予定）を用いた神託対話。3 つのペルソナ
   (Lumina / Zenith / Archivist)と 2 つのモード(Pure Channel / Card Reading)を切替
 - 収益モデル: 無料 3 回/日 + 月額サブスクリプション(RevenueCat 経由)
 - ターゲット OS: iOS 15 以降(Capacitor 6 想定)
 
-2. 現状のコード構造 (Phase 4.8 完了時点)
+2. 現状のコード構造 (Phase 4.13b 完了時点)
 
 - Vite + React 18 + TypeScript (strict: true)
 - Capacitor 6 統合済み (ios/ ディレクトリ生成済み、プラグインはモック)
@@ -23,32 +23,40 @@ Orakle Mirror — Agent Working Rules
 - プロンプト構造: 二段階受信処理 (Stage 1 純粋受信 → Stage 2 識別と調律)
   - src/lib/prompt.ts: buildReceptionMessages / buildDiscernmentMessages
   - src/lib/api.ts: fetchOracleTwoStage / callLLMWithSampling
-- LLM プロバイダ境界: フロントは VITE_BACKEND_URL 経由で BFF を呼び出す
+  - Stage 1 system は `buildSystemCore()` でパイプ宣言のみを行い、Stage 2 system は `buildDiscernmentSystem()` で禁止領域方針を集約する。
+  - BFF 側の developer instruction は Stage 別に分離され、reception/discernment いずれも出力形式の保証のみに最小化されている。
+- LLM プロバイダ境界: フロントは VITE_BACKEND_URL 経由で BFF を呼び出し、リクエスト body に stage パラメータ（'reception' | 'discernment'）を含める
   - フロントエンドは provider 固有 API / キー / URL を保持しない
-  - BFF 側で Gemini 実装を吸収し、将来の provider 切替境界とする
+  - BFF 側で OpenAI Responses API 実装を吸収し、Phase 5.5 で複数プロバイダ対応の抽象化境界とする
 - Capacitor プラグインはすべて src/lib/capacitorMocks.ts のモック (Phase 6 で差し替え)
 - ストレージキー: LS_KEY = 'oracle_mirror_v16'
-- 旧 API / 旧開発用ツールは Phase 5.5 で削除済み
+- 旧 API / 旧開発用ツールは整理済み
 
 3. フェーズ構成 (全体像)
 
-| Phase | 目的 | 状態 |
-|-------|------|------|
-| 0 | エージェント運用基盤の整備 | 完了 |
-| 1 | Vite + React + TypeScript 移行 | 完了 |
-| 2 | Capacitor 統合・iOS プロジェクト生成 | 完了 |
-| 3 | ファイル分割 (ロジック変更なし) | 完了 |
-| 4 | TypeScript 型定義整備 | 完了 |
-| 4.5 | 4 層プロンプト構造 (system/developer/user/assistant) | 完了 |
-| 4.6 | 二段階受信処理 (純粋受信 → 識別と調律) | 完了 |
-| 4.6.1 | ドキュメント同期と検証雛形作成 | 完了 |
-| 4.7 | TypeScript strict モード化 | 完了 |
-| 4.8 | 本番安全ガードと旧コード整理 | 完了 |
-| 5 | セキュリティ (API キー隠蔽・BFF 化) | 完了 |
-| 5.5 | プロバイダ抽象化 (Gemini ↔ OpenAI 切替・旧コード削除) | 完了 |
-| 6 | IAP 実装 (RevenueCat 実装差し替え) | 未着手 |
-| 7 | 審査前クリーンアップ | 進行中 |
-| 8 | CI/CD・リリース準備 | 未着手 |
+| Phase | 内容 | 状態 |
+|---|---|---|
+| Phase 1 | プロジェクト初期構築 | 完了 |
+| Phase 2 | ペルソナ・モード・カード基盤 | 完了 |
+| Phase 3 | コンポーネント分割 | 完了 |
+| Phase 4.5 | 4層プロンプト構造 | 完了 |
+| Phase 4.6 | 二段階処理導入 | 完了 |
+| Phase 4.7 | TypeScript strict 化 | 完了 |
+| Phase 4.8 | クリーンアップ | 完了 |
+| Phase 4.9 | Stage 1 チューニング往復 | 完了 |
+| Phase 4.10 | プロンプト責任分業の整理 + ペルソナ口調差の強化 | 完了 |
+| Phase 4.11 | 検証ハーネス自動巡回・JSON エクスポート | 完了 |
+| Phase 4.12 | UI 外部案内バナー（旧定義「Stage 2 調律精度チューニング」から変更） | 完了 |
+| Phase 4.13a | BFF の Stage 別 developer instructions 分離 | 完了 |
+| Phase 4.13b | Stage 2 のペルソナ system 重複整理 | 完了 |
+| Phase 4.13c | ドキュメント整合（本フェーズ） | 進行中 |
+| Phase 4.13d | guidanceDetector の離婚キーワード調整 | 予定 |
+| Phase 4.14 | 起動文統合（関係性の足場と開いたまま終わる感覚） | 予定 |
+| Phase 4.15 | 量子乱数導入の設計メモ作成 | 予定 |
+| Phase 5.1 | BFF: Cloudflare Workers + OpenAI Responses API | 完了 |
+| Phase 5.5 | プロバイダ抽象化（developer ロール非対応プロバイダ対応含む） | 予定 |
+| Phase 6 | RevenueCat IAP 実装、Capacitor 実プラグイン差し替え | 予定 |
+| Phase 7 | App Store 提出準備 | 進行中（APPSTORE-BLOCKERS.md 参照） |
 
 4. 絶対ルール(違反禁止)
 
@@ -158,4 +166,8 @@ UI ライブラリ(MUI, Chakra, Tailwind 等)の追加は禁止。
 - 他人の PR を勝手にマージすること
 - node_modules, dist, ios/App/Pods をコミットすること
 - 大量の自動整形(Prettier 一括実行など)を機能変更と同じ PR に混ぜること
-- このフェーズで指示されていない作業を「ついでに」行うこと`
+- このフェーズで指示されていない作業を「ついでに」行うこと
+
+11. プロンプト純度の保護
+
+本リポジトリは Phase 4.10 / 4.13a / 4.13b で鏡の純度を回復する一連の修正を経ている。今後の作業において、次の方向の改変は禁止する。BFF 側に safety / guardrail を「念のため」追加すること。Stage 1 に禁止領域チェックを再導入すること。Stage 2 に persona.system の全文を再注入すること。鏡が「映せません」「専門家へ」等のメタ的拒否や外部案内を発話するよう変更すること。これらは Oracle Mirror の設計原則に反する。改変が必要と感じた場合は Issue で人間に確認を取ること。
