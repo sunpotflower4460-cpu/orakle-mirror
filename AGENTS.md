@@ -15,7 +15,7 @@ Orakle Mirror — Agent Working Rules
 - 収益モデル: 無料 3 回/日 + 月額サブスクリプション(RevenueCat 経由)
 - ターゲット OS: iOS 15 以降(Capacitor 6 想定)
 
-2. 現状のコード構造 (Phase 4.13b 完了時点)
+2. 現状のコード構造 (Phase 5.5b 完了時点)
 
 - Vite + React 18 + TypeScript (strict: true)
 - Capacitor 6 統合済み (ios/ ディレクトリ生成済み、プラグインはモック)
@@ -28,6 +28,7 @@ Orakle Mirror — Agent Working Rules
 - LLM プロバイダ境界: フロントは VITE_BACKEND_URL 経由で BFF を呼び出し、リクエスト body に stage パラメータ（'reception' | 'discernment'）を含める
   - フロントエンドは provider 固有 API / キー / URL を保持しない
   - BFF 側で OpenAI Responses API 実装を吸収し、Phase 5.5 で複数プロバイダ対応の抽象化境界とする
+  - BFF 側の provider 実装は `bff/src/providers/` 配下に分離済み（`types.ts` / `index.ts` / `openai.ts` / `adapter.ts`）
 - Capacitor プラグインはすべて src/lib/capacitorMocks.ts のモック (Phase 6 で差し替え)
 - ストレージキー: LS_KEY = 'oracle_mirror_v16'
 - 旧 API / 旧開発用ツールは整理済み
@@ -55,7 +56,7 @@ Orakle Mirror — Agent Working Rules
 | Phase 4.15 | 量子乱数導入の設計メモ作成 | 完了 |
 | Phase 5.1 | BFF: Cloudflare Workers + OpenAI Responses API | 完了 |
 | Phase 5.5a | フロント側の型整理とプロバイダ非依存化 | 完了 |
-| Phase 5.5b | BFF 側のプロバイダディレクトリ化 | 予定 |
+| Phase 5.5b | BFF 側のプロバイダディレクトリ化 | 完了 |
 | Phase 5.5c | BFF エラー正規化の拡張 | 予定 |
 | Phase 5.5d | developer ロール非対応プロバイダ対応 | 予定 |
 | Phase 6 | RevenueCat IAP 実装、Capacitor 実プラグイン差し替え | 予定 |

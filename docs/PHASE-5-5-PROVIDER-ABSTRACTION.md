@@ -23,6 +23,25 @@
 - `src/lib/api.ts` の `callLLMWithSampling` は Stage 引数（`reception` / `discernment`）を受け取り、Stage 1 / Stage 2 は同関数経由で BFF を呼び出す。
 - `ChatMessage.role` は `system` / `developer` / `user` / `assistant` の 4 値に統一した。
 
+
+## Phase 5.5b 完了: BFF プロバイダディレクトリ化
+
+- `bff/src/openai.ts` を `bff/src/providers/openai.ts` に移動し、OpenAI Responses API 呼び出し本体のリトライ、payload 構築、レスポンス抽出ロジックを維持したまま `openaiProvider` として公開した。
+- `bff/src/providers/types.ts` に `LLMProvider` / `ProviderResult` を定義し、`supportsDeveloperRole` で developer ロールのネイティブ対応有無を表す境界を追加した。
+- `bff/src/providers/index.ts` に `selectProvider()` を追加した。現時点では OpenAI 固定で返し、`env.LLM_PROVIDER` 等による切り替えは Phase 5.5c 以降に委ねる。
+- `bff/src/providers/adapter.ts` に developer ロール非対応プロバイダ向けの `foldDeveloperIntoSystem()` 雛形を追加した。本フェーズでは呼び出さず、将来プロバイダ追加時のために export のみに留める。
+- `bff/src/index.ts` は provider オブジェクト経由で呼び出し、プロバイダ固有エラーコードをフロントへ漏らさず `UPSTREAM_ERROR` に正規化する。
+
+現在の BFF プロバイダ構造:
+
+```text
+bff/src/providers/
+├── adapter.ts  # developer → system 連結アダプタ雛形（未使用）
+├── index.ts    # selectProvider() と provider 型の再 export
+├── openai.ts   # OpenAI Responses API provider 実装
+└── types.ts    # LLMProvider / ProviderResult 共通型
+```
+
 ## BFF 側の責務
 
 - 環境変数・secret の保持
@@ -32,7 +51,7 @@
 
 ## 将来のプロバイダ切替指針
 
-将来プロバイダを切り替える場合、フロント側は `callLLMWithSampling(messages, sampling, stage)` を使い続ける。変更箇所は BFF 側に閉じ、プロバイダ別実装を将来的に `bff/src/providers/` 配下へ移す設計を前提に差し替える。
+将来プロバイダを切り替える場合、フロント側は `callLLMWithSampling(messages, sampling, stage)` を使い続ける。変更箇所は BFF 側に閉じ、既存の `bff/src/providers/` 配下のプロバイダ実装と `selectProvider()` を差し替える。
 
 ## Phase 5.5 の到達点
 

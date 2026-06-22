@@ -6,17 +6,23 @@
 モデル名は `bff/wrangler.toml` の `OPENAI_MODEL` 環境変数で管理。
 リリース前に、デプロイ時点で実在し続けるモデル名であることを必ず再確認すること。
 
-## Phase 5.5 予定: プロバイダ抽象化
+## Phase 5.5 プロバイダ抽象化
 
-Phase 5.5 で `bff/src/providers/` 配下に provider 別実装を分離する予定。
-候補プロバイダは次のとおり。
+Phase 5.5b で `bff/src/providers/` 配下に provider 別実装を分離済み。現時点の構造は次のとおり。
+
+- `types.ts`: `LLMProvider` / `ProviderResult` 共通型。`supportsDeveloperRole` で developer ロールのネイティブ対応有無を表す。
+- `index.ts`: `selectProvider()`。現在は OpenAI 固定で、環境変数による切り替えは Phase 5.5c 以降。
+- `openai.ts`: OpenAI Responses API provider 実装。既存の呼び出しロジックを維持。
+- `adapter.ts`: developer ロール非対応プロバイダ向け `foldDeveloperIntoSystem()` 雛形。本フェーズでは未使用。
+
+将来の候補プロバイダは次のとおり。
 
 - OpenAI（developer ロール公式対応、現行実装）
 - Gemini Flash 系（無料枠あり、developer ロール非対応のため system 末尾に統合する変換が必要）
 - Groq Llama 系（無料枠あり、developer ロール非対応のため同上）
 - Anthropic 系（system ロール公式対応、別途検討）
 
-developer ロール非対応プロバイダ向けには、ChatMessage の developer ロールを system の末尾に連結する統一インターフェイスを Phase 5.5 で実装する。
+developer ロール非対応プロバイダ向けには、ChatMessage の developer ロールを system の末尾に連結する `foldDeveloperIntoSystem()` を利用する想定。ただし Phase 5.5b では雛形のみで、実プロバイダ追加時まで呼び出さない。
 
 ## 参考: 過去の Gemini 実装メモ
 
