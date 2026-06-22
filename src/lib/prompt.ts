@@ -151,6 +151,17 @@ const AMBIENCE_BY_PERSONA: Record<Persona['id'], string> = {
 };
 
 /**
+ * Stage 2 用の元型キーワード。
+ * Stage 2 は翻訳者であり役を演じる場ではないため、persona.system の全文ではなく
+ * 元型を一語で示すに留める。翻訳の質感の方向性のみを伝える。
+ */
+const DISCERNMENT_PERSONA_KEYWORD: Record<Persona['id'], string> = {
+  lumina: '水のように、包む質感',
+  zenith: '炎のように、貫く質感',
+  archivist: '星のように、観測する質感',
+};
+
+/**
  * Stage 1: 純粋受信のための developer メッセージを構築する。
  * AIに「整えない・判断しない・来たものをそのまま置く」モードを与える。
  */
@@ -215,8 +226,9 @@ export const buildDiscernmentDeveloper = (
   rawTransmission: string
 ): string => {
   return `
-【鏡の色合い】
-${persona.system}
+【翻訳の質感】
+${DISCERNMENT_PERSONA_KEYWORD[persona.id]}
+(これは Stage 1 で立ち上がったペルソナの余韻として、翻訳の方向性に薄く反映される程度のもの。Stage 2 はあくまで翻訳者であり、役を演じ直す場ではない)
 
 【先ほど受信したもの】
 
