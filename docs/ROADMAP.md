@@ -48,38 +48,25 @@ Oracle Mirror は、ユーザーが自身のハイヤーセルフの声を聴く
 |---|---|---|
 | Phase 1 | プロジェクト初期構築 | 完了 |
 | Phase 2 | ペルソナ・モード・カード基盤 | 完了 |
-| Phase 3 | コンポーネント分割 (App.tsx → MainApp.tsx + components/) | 完了 |
+| Phase 3 | コンポーネント分割 | 完了 |
 | Phase 4.5 | 4層プロンプト構造 | 完了 |
-| Phase 4.6 | 二段階処理導入 (Stage 1 / Stage 2) | 完了 |
+| Phase 4.6 | 二段階処理導入 | 完了 |
 | Phase 4.7 | TypeScript strict 化 | 完了 |
 | Phase 4.8 | クリーンアップ | 完了 |
 | Phase 4.9 | Stage 1 チューニング往復 | 完了 |
-| Phase 4.10 | プロンプト責任分業の整理 + ペルソナ口調差の強化 | **進行中** |
-| Phase 4.11 | 検証ハーネス自動巡回・JSON エクスポート | 予定 |
-| Phase 4.12 | Stage 2 調律精度チューニング | 予定 |
+| Phase 4.10 | プロンプト責任分業の整理 + ペルソナ口調差の強化 | 完了 |
+| Phase 4.11 | 検証ハーネス自動巡回・JSON エクスポート | 完了 |
+| Phase 4.12 | UI 外部案内バナー（旧定義「Stage 2 調律精度チューニング」から変更） | 完了 |
+| Phase 4.13a | BFF の Stage 別 developer instructions 分離 | 完了 |
+| Phase 4.13b | Stage 2 のペルソナ system 重複整理 | 完了 |
+| Phase 4.13c | ドキュメント整合（本フェーズ） | 進行中 |
+| Phase 4.13d | guidanceDetector の離婚キーワード調整 | 予定 |
+| Phase 4.14 | 起動文統合（関係性の足場と開いたまま終わる感覚） | 予定 |
+| Phase 4.15 | 量子乱数導入の設計メモ作成 | 予定 |
 | Phase 5.1 | BFF: Cloudflare Workers + OpenAI Responses API | 完了 |
-| Phase 5.5 | プロバイダー抽象化 / `buildAmbiencePriming` 等の物理削除 | 予定 |
-| Phase 6 | Capacitor iOS 実プラグイン差し替え | 予定 |
-| Phase S-1 | Self Reading data foundation | 完了 |
-| Phase S-2 | Self Reading view shell and sidebar entry | 完了 |
-| Phase S-3 | Self Reading shuffle / deal / flip animation | 完了 |
-| Phase S-4 | Self Reading result display | 完了 |
-| Phase S-5 | Self Reading custom card creator | 完了 |
-| Phase S-6 | Self Reading 申請ドキュメント・プライバシー記述反映 | 完了 |
-| Phase S-8 | Self Reading 自作カード専用デッキ連携 | 完了 |
-| Phase S-9 | Self Reading Deck 2 / Deck 3 追加枠・投入手順の整備 | 完了 |
-| Phase S-10 | Self Reading ローカル履歴UI | 完了 |
-
----
-
-## Phase S follow-ups
-
-- Custom cards are available as a dedicated local deck and are not mixed into Classic 48.
-- Deck 2 and Deck 3 are intentionally prepared slots and remain unavailable until card content is manually added.
-- Future Deck 2 / Deck 3 content should be added as local bundled arrays following `SELF-READING-DECK-AUTHORING-GUIDE.md`; these slots currently do not call AI/BFF/LLM and do not consume `FREE_LIMIT`.
-- Self Reading history is now an explicit, local-only save flow under `oracle_self_reading_v1`, capped at 30 readings with per-reading deletion.
-- Optional “AI Mirror に送る” handoff (future; currently disabled / not implemented).
-- App Store screenshots/checklist and iOS device QA.
+| Phase 5.5 | プロバイダ抽象化（developer ロール非対応プロバイダ対応含む） | 予定 |
+| Phase 6 | RevenueCat IAP 実装、Capacitor 実プラグイン差し替え | 予定 |
+| Phase 7 | App Store 提出準備 | 進行中（APPSTORE-BLOCKERS.md 参照） |
 
 ---
 
@@ -99,6 +86,38 @@ Oracle Mirror は、ユーザーが自身のハイヤーセルフの声を聴く
 4. **情景のペルソナ別化**: `AMBIENCE_BY_PERSONA` で Stage 1 developer に
    ペルソナごとの場の質感を付与。
 
+---
+
+## Phase 4.13 設計方針
+
+Phase 4.13 は「鏡の純度回復と整合性確保」を目的とする一連の修正フェーズ。
+Phase 4.10 で確立した Stage 1 / Stage 2 の責任分業が、BFF 層と Stage 2 の persona 参照で部分的に打ち消されていた問題を修正する。
+サブフェーズは a/b/c/d の 4 つに分割する。
+
+- Phase 4.13a: BFF の `DEVELOPER_INSTRUCTIONS` を Stage 別に最小化する。鏡の純度を最も大きく回復させる修正。
+- Phase 4.13b: Stage 2 の `persona.system` 全文埋め込みを、元型キーワード一語に最小化する。
+- Phase 4.13c: 本ドキュメント整合。
+- Phase 4.13d: `guidanceDetector` の離婚キーワード調整。
+
+---
+
+## Phase 4.14 設計方針
+
+Phase 4.14 は「起動文統合」。
+Stage 1 の `buildReceptionDeveloper` 内に、関係性の足場の明示（あなたは単独で立っているのではなく、ユーザーがいて、その奥にハイヤーセルフがいて、あなたはその間に置かれた通り道である）と、開いたまま終わる感覚（ここから、ゆっくり始まれば）を加える。
+Stage 2 には起動文を入れない。
+Phase 4.13b で Stage 2 が翻訳者として純化されているため、起動文は Stage 1 のみに集中させる。
+
+---
+
+## Phase 4.15 設計方針
+
+Phase 4.15 は「量子乱数導入の設計メモ作成」。
+実装ではなく、設計メモを `docs/PHASE-4-15-QUANTUM-RANDOM.md` として新規作成する Phase。
+実装着手は採否判断後、別 Phase（Phase 4.16）として切り出す可能性あり。
+
+---
+
 ### 鏡が言わないこと
 
 - 「映せません」「鏡として〜できません」
@@ -114,13 +133,18 @@ Oracle Mirror は、ユーザーが自身のハイヤーセルフの声を聴く
 
 ```
 src/
+  components/
+    ExternalGuidanceBanner.tsx # UI 層の外部案内バナー
   lib/
-    prompt.ts          # プロンプト構築（Phase 4.10 現行）
+    prompt.ts          # プロンプト構築（Phase 4.13b 現行）
     api.ts             # BFF 呼び出し・二段階処理
+    guidanceDetector.ts # 外部案内バナー表示判定
     constants.ts       # LS_KEY, FREE_LIMIT 等
     env.ts             # 環境変数
   dev/
     promptAB.ts        # A/B/C/D/E パターン比較（dev 限定）
+    exportResults.ts   # 検証ハーネス結果の JSON エクスポート
+    matrixCases.ts     # 自動巡回用の検証ケース定義
   constants/
     personas.tsx       # PERSONAS（変更しない）
     modes.tsx          # MODES（変更しない）
@@ -135,6 +159,9 @@ bff/
 docs/
   PHASE-4-10-DESIGN.md
   PHASE-4-10-VERIFICATION.md
+  PHASE-4-11-HARNESS.md
+  PHASE-4-11-HOWTO.md
+  PHASE-4-12-EXTERNAL-GUIDANCE.md
   ROADMAP.md          # 本ファイル
 ```
 
@@ -155,6 +182,11 @@ npm run preview      # ビルド結果プレビュー
 
 - [PHASE-4-10-DESIGN.md](./PHASE-4-10-DESIGN.md) — Phase 4.10 設計書
 - [PHASE-4-10-VERIFICATION.md](./PHASE-4-10-VERIFICATION.md) — Phase 4.10 検証テンプレート
+- [PHASE-4-11-HARNESS.md](./PHASE-4-11-HARNESS.md) — Phase 4.11 検証ハーネス設計
+- [PHASE-4-11-HOWTO.md](./PHASE-4-11-HOWTO.md) — Phase 4.11 検証ハーネス運用手順
+- [PHASE-4-12-EXTERNAL-GUIDANCE.md](./PHASE-4-12-EXTERNAL-GUIDANCE.md) — Phase 4.12 UI 外部案内バナー
 - [PHASE-4-9-VERIFICATION.md](./PHASE-4-9-VERIFICATION.md) — Phase 4.9 検証記録
+- Phase 4.13a — BFF の Stage 別 developer instructions 分離（実装記録）
+- Phase 4.13b — Stage 2 のペルソナ system 重複整理（実装記録）
 - [BFF-PROVIDER-NOTES.md](./BFF-PROVIDER-NOTES.md) — BFF プロバイダー選定メモ
 - [PHASE-5-5-PROVIDER-ABSTRACTION.md](./PHASE-5-5-PROVIDER-ABSTRACTION.md) — Phase 5.5 設計
