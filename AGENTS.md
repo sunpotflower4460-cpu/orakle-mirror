@@ -52,9 +52,12 @@ Orakle Mirror — Agent Working Rules
 | Phase 4.13c | ドキュメント整合（本フェーズ） | 完了 |
 | Phase 4.13d | guidanceDetector の離婚キーワード調整 | 完了 |
 | Phase 4.14 | 起動文統合（関係性の足場と開いたまま終わる感覚） | 完了 |
-| Phase 4.15 | 量子乱数導入の設計メモ作成 | 進行中 |
+| Phase 4.15 | 量子乱数導入の設計メモ作成 | 完了 |
 | Phase 5.1 | BFF: Cloudflare Workers + OpenAI Responses API | 完了 |
-| Phase 5.5 | プロバイダ抽象化（developer ロール非対応プロバイダ対応含む） | 予定 |
+| Phase 5.5a | フロント側の型整理とプロバイダ非依存化 | 完了 |
+| Phase 5.5b | BFF 側のプロバイダディレクトリ化 | 予定 |
+| Phase 5.5c | BFF エラー正規化の拡張 | 予定 |
+| Phase 5.5d | developer ロール非対応プロバイダ対応 | 予定 |
 | Phase 6 | RevenueCat IAP 実装、Capacitor 実プラグイン差し替え | 予定 |
 | Phase 7 | App Store 提出準備 | 進行中（APPSTORE-BLOCKERS.md 参照） |
 
