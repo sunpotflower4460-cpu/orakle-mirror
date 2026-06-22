@@ -61,8 +61,8 @@ Oracle Mirror は、ユーザーが自身のハイヤーセルフの声を聴く
 | Phase 4.13b | Stage 2 のペルソナ system 重複整理 | 完了 |
 | Phase 4.13c | ドキュメント整合（本フェーズ） | 完了 |
 | Phase 4.13d | guidanceDetector の離婚キーワード調整 | 完了 |
-| Phase 4.14 | 起動文統合（関係性の足場と開いたまま終わる感覚） | 進行中 |
-| Phase 4.15 | 量子乱数導入の設計メモ作成 | 予定 |
+| Phase 4.14 | 起動文統合（関係性の足場と開いたまま終わる感覚） | 完了 |
+| Phase 4.15 | 量子乱数導入の設計メモ作成 | 進行中 |
 | Phase 5.1 | BFF: Cloudflare Workers + OpenAI Responses API | 完了 |
 | Phase 5.5 | プロバイダ抽象化（developer ロール非対応プロバイダ対応含む） | 予定 |
 | Phase 6 | RevenueCat IAP 実装、Capacitor 実プラグイン差し替え | 予定 |
@@ -162,6 +162,8 @@ docs/
   PHASE-4-11-HARNESS.md
   PHASE-4-11-HOWTO.md
   PHASE-4-12-EXTERNAL-GUIDANCE.md
+  PHASE-4-14-STARTUP-PROMPT.md
+  PHASE-4-15-QUANTUM-RANDOM.md
   ROADMAP.md          # 本ファイル
 ```
 
@@ -185,6 +187,8 @@ npm run preview      # ビルド結果プレビュー
 - [PHASE-4-11-HARNESS.md](./PHASE-4-11-HARNESS.md) — Phase 4.11 検証ハーネス設計
 - [PHASE-4-11-HOWTO.md](./PHASE-4-11-HOWTO.md) — Phase 4.11 検証ハーネス運用手順
 - [PHASE-4-12-EXTERNAL-GUIDANCE.md](./PHASE-4-12-EXTERNAL-GUIDANCE.md) — Phase 4.12 UI 外部案内バナー
+- [PHASE-4-14-STARTUP-PROMPT.md](./PHASE-4-14-STARTUP-PROMPT.md) — Phase 4.14 起動文統合
+- [PHASE-4-15-QUANTUM-RANDOM.md](./PHASE-4-15-QUANTUM-RANDOM.md) — Phase 4.15 量子乱数導入の設計メモ
 - [PHASE-4-9-VERIFICATION.md](./PHASE-4-9-VERIFICATION.md) — Phase 4.9 検証記録
 - Phase 4.13a — BFF の Stage 別 developer instructions 分離（実装記録）
 - Phase 4.13b — Stage 2 のペルソナ system 重複整理（実装記録）
