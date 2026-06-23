@@ -3,7 +3,7 @@ import { ChevronLeft } from 'lucide-react';
 import { DECKS } from '../../constants/decks';
 import { SPREADS } from '../../constants/spreads';
 import { useT } from '../../i18n';
-import { drawCards } from '../../lib/draw';
+import { drawCardsQuantum } from '../../lib/draw';
 import { loadSelfReadingStore, saveSelfReading } from '../../lib/selfReadingStorage';
 import type { OracleCard, SelfReading, SelfReadingDeck, SelfReadingDeckId, SelfReadingSpreadId, UserCard } from '../../types';
 import { DeckPicker } from './DeckPicker';
@@ -62,10 +62,19 @@ export function SelfReadingView({ onBack }: SelfReadingViewProps) {
   const hasEnoughCards = selectedDeck.cards.length >= spreadCardCount;
   const canDraw = Boolean(selectedDeck && selectedSpread && selectedDeck.ready && hasEnoughCards);
 
-  const handleDraw = () => {
+  // Phase 4.16: 「引く」操作で演出を即開始しつつ、その裏で QRNG を取得する。
+  // 取得が済むと drawnCards が埋まり、DrawStage がカードを伏せから開く。
+  // 取得が演出より遅れても、DrawStage 側がカード確定前に完了させない（静かに待つ）。
+  const startDraw = useCallback(async () => {
     if (!canDraw) return;
-    setDrawnCards(drawCards(selectedDeck, spreadCardCount));
+    setDrawnCards([]);
     setStep('drawing');
+    const { cards } = await drawCardsQuantum(selectedDeck, spreadCardCount);
+    setDrawnCards(cards);
+  }, [canDraw, selectedDeck, spreadCardCount]);
+
+  const handleDraw = () => {
+    void startDraw();
   };
 
   const handleDrawComplete = () => {
@@ -73,9 +82,7 @@ export function SelfReadingView({ onBack }: SelfReadingViewProps) {
   };
 
   const handleDrawAgain = () => {
-    if (!canDraw) return;
-    setDrawnCards(drawCards(selectedDeck, spreadCardCount));
-    setStep('drawing');
+    void startDraw();
   };
 
   const handleChangeSetup = () => {

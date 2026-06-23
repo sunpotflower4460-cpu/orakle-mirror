@@ -131,18 +131,75 @@ export function getEntropyDiagnostics(): EntropyDiagnostics | null {
   return lastDiagnostics;
 }
 
+/** number[]（0-255）を検証して Uint8Array に変換する。不正なら null。 */
+function parseBytes(value: unknown, minLength: number): Uint8Array | null {
+  if (!Array.isArray(value) || value.length < minLength) return null;
+  const buf = new Uint8Array(value.length);
+  for (let i = 0; i < value.length; i++) {
+    const v = value[i];
+    if (typeof v !== 'number' || !Number.isInteger(v) || v < 0 || v > 255) return null;
+    buf[i] = v;
+  }
+  return buf;
+}
+
+/**
+ * BACKEND_URL（.../oracle）から /random エンドポイントを導出する。
+ * 静的 import を避けて動的 import にすることで、純粋関数群を env 非依存に保つ
+ * （Node 単体テストが env / fetch を読み込まずに済む）。
+ */
+async function resolveRandomEndpoint(): Promise<string | null> {
+  try {
+    const { BACKEND_URL, isBackendUrlPlaceholder } = await import('./env');
+    if (!BACKEND_URL || isBackendUrlPlaceholder()) return null;
+    const u = new URL(BACKEND_URL);
+    u.pathname = '/random';
+    u.search = '';
+    return u.toString();
+  } catch {
+    return null;
+  }
+}
+
 /**
  * 抽選のための十分なバイトを取得する。
  *
- * Phase 4.16-a 時点では BFF `/random` がまだ無いため、常に crypto フォールバックで
- * 完結する（呼び出しインターフェースだけ先に確定させる）。実際の BFF fetch 結線は
- * Phase 4.16-c で本関数を差し替える。
+ * 1) BFF `/random` を叩いて QRNG バイトを取得（タイムアウト付き）
+ * 2) 失敗・タイムアウト・オフライン・形不正なら crypto.getRandomValues() で生成
  *
- * いずれの経路でも「引いた瞬間」に呼ばれ、プールはしない（§1-2 / §3.3）。
+ * 「引いた瞬間」に呼ばれ、プールはしない（§1-2 / §3.3）。失敗しても必ず返す（§4）。
+ * 診断（source / failure）は記録するが UI には出さない。
  */
 export async function acquireEntropy(byteLength: number): Promise<Entropy> {
   const len = Math.max(1, Math.min(1024, Math.floor(byteLength)));
-  void RANDOM_TIMEOUT_MS; // 4.16-c で fetch のタイムアウトに使用する
-  recordDiagnostics({ source: 'crypto', provider: null, failure: 'no-backend', at: Date.now() });
-  return entropyFromBytes(cryptoBytes(len), 'crypto');
+
+  const endpoint = await resolveRandomEndpoint();
+  if (!endpoint) {
+    recordDiagnostics({ source: 'crypto', provider: null, failure: 'no-backend', at: Date.now() });
+    return entropyFromBytes(cryptoBytes(len), 'crypto');
+  }
+
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), RANDOM_TIMEOUT_MS);
+  try {
+    const res = await fetch(`${endpoint}?bytes=${len}`, { method: 'GET', signal: controller.signal });
+    if (!res.ok) {
+      recordDiagnostics({ source: 'crypto', provider: null, failure: 'http-error', at: Date.now() });
+      return entropyFromBytes(cryptoBytes(len), 'crypto');
+    }
+    const data = (await res.json()) as { bytes?: unknown };
+    const bytes = parseBytes(data.bytes, len);
+    if (!bytes) {
+      recordDiagnostics({ source: 'crypto', provider: null, failure: 'bad-response', at: Date.now() });
+      return entropyFromBytes(cryptoBytes(len), 'crypto');
+    }
+    recordDiagnostics({ source: 'qrng', provider: 'anu', failure: 'none', at: Date.now() });
+    return entropyFromBytes(bytes, 'qrng');
+  } catch (e) {
+    const aborted = e instanceof DOMException && e.name === 'AbortError';
+    recordDiagnostics({ source: 'crypto', provider: null, failure: aborted ? 'timeout' : 'network-error', at: Date.now() });
+    return entropyFromBytes(cryptoBytes(len), 'crypto');
+  } finally {
+    clearTimeout(timer);
+  }
 }

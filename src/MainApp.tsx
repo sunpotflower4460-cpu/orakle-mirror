@@ -7,7 +7,7 @@ import {
   Trash2, AlertCircle, Lock, Unlock, KeyRound
 } from 'lucide-react';
 import { GLOBAL_STYLES } from './styles/globals';
-import { getRandomCards } from './constants/cards';
+import { getRandomCardsQuantum } from './constants/cards';
 import { MODES } from './constants/modes';
 import { PERSONAS } from './constants/personas';
 import { LS_KEY, genId, FREE_LIMIT, MAX_ROOMS } from './lib/constants';
@@ -454,8 +454,13 @@ export function MainApp() {
       ? currentStorage.rooms[activeRoomId].messages 
       : [];
 
+    // Phase 4.16: card モードのカード抽選を QRNG 化。送信〜AI 応答の待ち時間の裏で
+    // 取得されるため体感負荷はほぼなく、失敗時は crypto で確定する（必ず引ける）。
     let drawnCards: OracleCard[] = [];
-    if (mode.id === 'card') drawnCards = getRandomCards(2);
+    if (mode.id === 'card') {
+      const drawn = await getRandomCardsQuantum(2);
+      drawnCards = drawn.cards;
+    }
 
     const receptionMsgs = buildReceptionMessages(persona, mode, drawnCards, currentMessages, userMsg.text);
 

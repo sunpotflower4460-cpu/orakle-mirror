@@ -64,6 +64,7 @@ function SelfReadingCardFace({ card }: { card: OracleCard }) {
 export function DrawStage({ cards, spread, onComplete }: DrawStageProps) {
   const t = useT();
   const spreadClass = `sr-spread-${spread.id}`;
+  const hasCards = cards.length > 0;
 
   return (
     <section className="sr-draw-stage" aria-label={t('a11y.sr.drawStage')}>
@@ -87,32 +88,39 @@ export function DrawStage({ cards, spread, onComplete }: DrawStageProps) {
           ))}
         </div>
 
-        <div className={`sr-card-row ${spreadClass}`}>
-          {cards.map((card, index) => (
-            <article
-              key={`${card.name}-${index}`}
-              className="sr-card-shell"
-              style={{ animationDelay: `${1.45 + index * 0.16}s` }}
-            >
-              <div className="sr-flip-card" style={{ animationDelay: `${2.0 + index * 0.34}s` }}>
-                <div className="sr-card-side sr-card-back" aria-hidden />
-                <div className="sr-card-side sr-card-front">
-                  <SelfReadingCardFace card={card} />
-                </div>
-              </div>
-            </article>
-          ))}
-        </div>
+        {/* Phase 4.16: カードは QRNG 取得後に伏せから開く。取得が済むまで
+            card-row と完了通知はマウントしない＝確定前に result へ遷移しない。
+            keyframes・delay は不変（タイミング協調のみ）。 */}
+        {hasCards && (
+          <>
+            <div className={`sr-card-row ${spreadClass}`}>
+              {cards.map((card, index) => (
+                <article
+                  key={`${card.name}-${index}`}
+                  className="sr-card-shell"
+                  style={{ animationDelay: `${1.45 + index * 0.16}s` }}
+                >
+                  <div className="sr-flip-card" style={{ animationDelay: `${2.0 + index * 0.34}s` }}>
+                    <div className="sr-card-side sr-card-back" aria-hidden />
+                    <div className="sr-card-side sr-card-front">
+                      <SelfReadingCardFace card={card} />
+                    </div>
+                  </div>
+                </article>
+              ))}
+            </div>
 
-        <div
-          className="sr-complete"
-          onAnimationEnd={event => {
-            if (event.currentTarget === event.target) onComplete?.();
-          }}
-          style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}
-        >
-          <p style={{ margin: 0, color: '#7f8998', fontSize: 12, lineHeight: 1.8, letterSpacing: '0.06em', textAlign: 'center' }}>{t('sr.draw.complete')}</p>
-        </div>
+            <div
+              className="sr-complete"
+              onAnimationEnd={event => {
+                if (event.currentTarget === event.target) onComplete?.();
+              }}
+              style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}
+            >
+              <p style={{ margin: 0, color: '#7f8998', fontSize: 12, lineHeight: 1.8, letterSpacing: '0.06em', textAlign: 'center' }}>{t('sr.draw.complete')}</p>
+            </div>
+          </>
+        )}
       </div>
     </section>
   );
