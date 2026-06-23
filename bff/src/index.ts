@@ -5,8 +5,9 @@ import { MAX_BODY_BYTES, validateBodySize, validateRequest } from './validate';
 import { selectProvider } from './providers';
 import { fetchQuantumBytes } from './random';
 
-// /random が要求できるバイト数の上限(1 抽選ぶんに十分な範囲に制限)。
-const RANDOM_MAX_BYTES = 256;
+// /random が要求できるバイト数の上限。フロントの上限(1024)および ANU の
+// length 上限(1024)と揃える。1 抽選ぶんを 1 リクエストで満たすための範囲。
+const RANDOM_MAX_BYTES = 1024;
 
 function jsonResponse(status: number, body: OracleResponseSuccess | OracleResponseError | RandomResponseSuccess, corsHeaders: Record<string, string>): Response {
   return new Response(JSON.stringify(body), {
