@@ -38,6 +38,12 @@ export const GLOBAL_STYLES: string = `
     --om-shadow-navy: 0 16px 38px rgba(10,16,36,0.22);
     --om-glow-rose: 0 0 58px rgba(217,111,140,0.22);
     --om-glow-rose-wide: 0 0 104px rgba(217,111,140,0.14);
+
+    /* ── Phase U: iPad ユニバーサル対応トークン ───────────────── */
+    /* 主コンテンツ列(ヘッダー内側 / チャット本文 / 入力欄 / Self Reading)の
+       最大幅。iPhone(画面幅 < 720px)では実質フル幅のままで見た目は変わらない。
+       iPad の広い画面でのみ、この幅に収めて間延びを防ぐ。 */
+    --om-content-max: 720px;
   }
   * { box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color: transparent; }
   body {
@@ -174,6 +180,11 @@ export const GLOBAL_STYLES: string = `
 
   /* 入力欄シェル:フォーカス時にやわらかく息づく */
   .input-shell { transition:box-shadow 0.45s ease, border-color 0.45s ease, transform 0.45s cubic-bezier(0.16,1,0.3,1); }
+
+  /* Phase U: ヘッダー / 入力欄の内側ラッパ。既定はフル幅で iPhone は不変。
+     iPad では下の min-width:768px ブロックで中央 720px に収める。 */
+  .app-header-inner { width: 100%; }
+  .input-area-inner { width: 100%; }
 
   /* 空のhero:鏡そのものが淡く発光するような、放射状の聖なる光暈 */
   .empty-state { position: relative; }
@@ -312,6 +323,19 @@ export const GLOBAL_STYLES: string = `
     .onboarding-primary {
       width: 100% !important;
       justify-content: center !important;
+    }
+  }
+
+  /* ── Phase U: iPad / 大画面のレイアウト隔離帯 ───────────────────
+     iPhone(幅 < 768px)には一切影響しない。タブレット以上でのみ、
+     主要列(ヘッダー内側・入力欄)を中央 var(--om-content-max) に収め、
+     画面端までの間延びを防ぐ。U-2 / U-3 の内側ラッパと対になる。 */
+  @media (min-width: 768px) {
+    .app-header-inner,
+    .input-area-inner {
+      max-width: var(--om-content-max);
+      margin-left: auto;
+      margin-right: auto;
     }
   }
 
