@@ -70,6 +70,7 @@ Oracle Mirror は、ユーザーが自身のハイヤーセルフの声を聴く
 | Phase 5.5d | developer ロール非対応プロバイダ対応 | 予定 |
 | Phase 6 | RevenueCat IAP 実装、Capacitor 実プラグイン差し替え | 予定 |
 | Phase 7 | App Store 提出準備 | 進行中（APPSTORE-BLOCKERS.md 参照） |
+| Phase U | iPad ユニバーサル対応（レイアウト幅安定化） | 完了 |
 
 ---
 
@@ -129,6 +130,55 @@ Phase 4.15 は「量子乱数導入の設計メモ作成」。
 - 「その道の人と分かち合うことかもしれません」
 
 これらは UI 層が担う。鏡は光を向け直すだけ。
+
+---
+
+## Phase U 設計方針（iPad ユニバーサル対応）
+
+App Store 申請を iPhone + iPad 両対応（Universal / `TARGETED_DEVICE_FAMILY = "1,2"`）
+とするため、iPad の大画面でレイアウトが間延び・破綻しないようにする Phase。
+プロンプト・BFF・ストレージ・依存には一切触れず、UI レイアウト幅のみを扱う。
+
+### 核心方針
+
+1. **コンテンツ最大幅トークンの導入**: `--om-content-max: 720px` を `:root` に追加。
+   既存のチャット本文（`maxWidth: 660`）と整合する主コンテンツ列の最大幅。
+2. **タブレット帯ブレークポイントの追加**: 既存スマホ用 `@media (max-width:600px)`
+   とは別に `@media (min-width:768px)` を新設し、iPad 以上にだけルールを足す。
+   iPhone 用ブロックの中身は一切変更しない。
+3. **内側ラッパで中央寄せ**: ヘッダー（`.app-header-inner`）と入力欄
+   （`.input-area-inner`）の中身だけを内側ラッパで包み、iPad で中央 720px に収める。
+   枠線・blur の帯は全幅のまま保つ。
+4. **Self Reading カード列の vw 依存解消**: `.sr-card-shell` を `min(29vw, …)` から
+   `flex: 1 1 0` ベースに変更し、`.sr-card-row` に `max-width: 520px` を与えて
+   iPad でカードが横長にならず中央整列するようにする。アニメーション
+   （keyframes / flip / shuffle）と `prefers-reduced-motion` は変更しない。
+
+### 不変条件（iPhone 非破壊）
+
+- 既存 `@media (max-width:600px)` ブロックは破壊しない。
+- iPhone（幅 < 768px）では新規ルールが発火しないため見た目は不変。
+- `prompt.ts` / `api.ts` / `bff/` / ストレージ / `LS_KEY` に触れない。依存追加ゼロ。
+
+### PR 分割
+
+| PR | 目的 | 主な対象 |
+|---|---|---|
+| U-1 | 最大幅トークン + `min-width:768px` 帯の土台 | `src/styles/globals.ts` |
+| U-2 | ヘッダー内側ラッパで中央寄せ | `src/MainApp.tsx`（header）, `globals.ts` |
+| U-3 | 入力欄ラッパ + Self Reading カード列の幅安定化 | `src/MainApp.tsx`（input）, `selfReadingStyles.ts` |
+| U-4 | 向き（Landscape）/ Split View / 全体微調整 | `globals.ts`（必要時）, 実機・Simulator 確認 |
+| U-5 | ドキュメント更新 | `docs/ROADMAP.md`, `docs/APP-REVIEW-NOTES-DRAFT.md` |
+
+### U-4 の確認状況
+
+レイアウトは `min-width:768px` の隔離帯で対応するため、`Info.plist` で iPad の
+向き制限や `UIRequiresFullScreen` を立てる「逃げ」は取らない。
+
+- **Web（DevTools）**: 390×844 / 768×1024 / 1024×1366 / 1366×1024 / 540×720 で
+  iPhone 不変・iPad 間延びなし・Split View 幅でスマホレイアウトに落ちることを確認。
+- **iPad 実機 / Simulator**: ネットワーク・Xcode を要するため本 Phase では未実施。
+  iOS ビルドでの最終確認は別途行う。
 
 ---
 

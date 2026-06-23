@@ -73,6 +73,21 @@ Implementation-reference checklist:
 - Deck 2 / Deck 3 remain preparation slots and are not complete decks yet.
 - Self Reading history is saved only when the user taps the save action; saved readings stay local, can be deleted, do not call AI/BFF/LLM, and do not consume `FREE_LIMIT`.
 
+## iPad Support (Universal)
+
+The app is submitted as a Universal app supporting both iPhone and iPad
+(`TARGETED_DEVICE_FAMILY = "1,2"`).
+
+- On iPad, the main columns (header, chat body, input bar, and Self Reading
+  card row) are centered within a maximum content width so the layout does not
+  stretch edge-to-edge on the large screen.
+- iPhone layout is unchanged; the iPad rules live in a separate
+  `min-width: 768px` media query and never affect phone widths.
+- Portrait and Landscape orientations are both supported on iPad, and the
+  layout degrades to the phone layout under Split View / Slide Over narrow widths.
+- iPad screenshots (13-inch, 2064×2752 portrait) are prepared separately and
+  are not substituted by iPhone screenshots, per App Store requirements.
+
 ## Language
 
 The UI supports Japanese and English. AI oracle responses are currently generated in Japanese.
