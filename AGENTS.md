@@ -54,6 +54,7 @@ Orakle Mirror — Agent Working Rules
 | Phase 4.13d | guidanceDetector の離婚キーワード調整 | 完了 |
 | Phase 4.14 | 起動文統合（関係性の足場と開いたまま終わる感覚） | 完了 |
 | Phase 4.15 | 量子乱数導入の設計メモ作成 | 完了 |
+| Phase 4.16 | 量子乱数（QRNG）実装（引いた瞬間取得 + crypto フォールバック） | 完了 |
 | Phase 5.1 | BFF: Cloudflare Workers + OpenAI Responses API | 完了 |
 | Phase 5.5a | フロント側の型整理とプロバイダ非依存化 | 完了 |
 | Phase 5.5b | BFF 側のプロバイダディレクトリ化 | 完了 |

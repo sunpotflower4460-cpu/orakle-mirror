@@ -42,12 +42,25 @@ Required implementation notes for review:
 - Deck 2 / Deck 3 currently do not call AI, BFF, or LLM services and do not consume `FREE_LIMIT`.
 - Adding Deck 2 / Deck 3 content later will remain local-only if implemented as bundled card arrays.
 
+## Card Randomness (Quantum RNG)
+
+- Card draws request entropy from an external quantum RNG (ANU Quantum Numbers)
+  **via the BFF only**. The request carries **only the number of bytes** needed for
+  the draw — no user ID, question text, persona, mode, or card history.
+- The quantum RNG request is never linked to the question content or the drawn result.
+- The frontend does not hold the ANU URL, key, or API spec; the BFF normalizes the
+  response to a plain byte array.
+- If the quantum RNG fails, times out, or is offline, the app falls back to the
+  device's `crypto.getRandomValues()`; cards can always be drawn.
+- The BFF does not log the random request together with any individual user's prompt.
+
 ## Third Parties
 
 - Apple / StoreKit
 - RevenueCat
 - Cloudflare Workers
 - Google Gemini API
+- ANU Quantum Numbers (quantum RNG for card draws, via BFF; byte count only)
 
 ## Not Collected
 
