@@ -8,6 +8,7 @@
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
+    "test:entropy": "node --experimental-strip-types scripts/entropy-selftest.ts",
     "ios:sync": "npm run build && npx cap sync ios",
     "ios:open": "npx cap open ios",
     "ios:run": "npm run build && npx cap sync ios && npx cap run ios",

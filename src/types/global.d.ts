@@ -18,6 +18,14 @@ interface Window {
       sal: string;
     };
   };
+  // Phase 4.16: 直近のカード抽選がどのエントロピー源で確定したかの診断記録。
+  // UI には出さない。問い・カード結果とは結びつけない。
+  __oracleMirrorEntropyDiagnostics?: {
+    source: 'qrng' | 'crypto';
+    provider: string | null;
+    failure: 'none' | 'no-backend' | 'timeout' | 'http-error' | 'bad-response' | 'network-error';
+    at: number;
+  };
   __abResults?: {
     aPatternRaw?: string;
     aPatternFinal?: string;
