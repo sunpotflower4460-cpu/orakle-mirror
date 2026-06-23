@@ -44,10 +44,17 @@ export const SELF_READING_STYLES = `
     align-items: flex-start;
     gap: clamp(10px, 3vw, 18px);
     width: 100%;
+    /* Phase U: iPad で画面端まで横長にならないよう本文幅に揃えて中央寄せ。
+       iPhone(幅 < 520px)では width:100% が効くため見た目は変わらない。 */
+    max-width: 520px;
+    margin-left: auto;
+    margin-right: auto;
   }
 
+  /* Phase U: vw 依存を外し、親 .sr-card-row の幅に対する flex で安定させる。
+     これで iPad でもカードが間延びせず、本文幅の中で 1/2/3 枚が整列する。 */
   .sr-card-shell {
-    width: min(29vw, 126px);
+    flex: 1 1 0;
     min-width: 86px;
     max-width: 126px;
     opacity: 0;
@@ -55,7 +62,7 @@ export const SELF_READING_STYLES = `
     perspective: 900px;
   }
 
-  .sr-spread-one .sr-card-shell { width: min(42vw, 136px); max-width: 136px; }
+  .sr-spread-one .sr-card-shell { max-width: 150px; }
   .sr-spread-three .sr-card-shell:nth-child(1) { transform-origin: bottom right; }
   .sr-spread-three .sr-card-shell:nth-child(3) { transform-origin: bottom left; }
 

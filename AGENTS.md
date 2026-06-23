@@ -61,6 +61,7 @@ Orakle Mirror — Agent Working Rules
 | Phase 5.5d | developer ロール非対応プロバイダ対応 | 予定 |
 | Phase 6 | RevenueCat IAP 実装、Capacitor 実プラグイン差し替え | 予定 |
 | Phase 7 | App Store 提出準備 | 進行中（APPSTORE-BLOCKERS.md 参照） |
+| Phase U | iPad ユニバーサル対応（レイアウト幅安定化） | 完了 |
 
 4. 絶対ルール(違反禁止)
 
