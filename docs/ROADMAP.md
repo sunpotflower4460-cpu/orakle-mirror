@@ -63,6 +63,7 @@ Oracle Mirror は、ユーザーが自身のハイヤーセルフの声を聴く
 | Phase 4.13d | guidanceDetector の離婚キーワード調整 | 完了 |
 | Phase 4.14 | 起動文統合（関係性の足場と開いたまま終わる感覚） | 完了 |
 | Phase 4.15 | 量子乱数導入の設計メモ作成 | 完了 |
+| Phase 4.16 | 量子乱数（QRNG）実装（引いた瞬間取得 + crypto フォールバック） | 完了 |
 | Phase 5.1 | BFF: Cloudflare Workers + OpenAI Responses API | 完了 |
 | Phase 5.5a | フロント側の型整理とプロバイダ非依存化 | 完了 |
 | Phase 5.5b | BFF 側のプロバイダディレクトリ化 | 完了 |
@@ -130,6 +131,52 @@ Phase 4.15 は「量子乱数導入の設計メモ作成」。
 - 「その道の人と分かち合うことかもしれません」
 
 これらは UI 層が担う。鏡は光を向け直すだけ。
+
+---
+
+## Phase 4.16 設計方針（量子乱数 QRNG 実装）
+
+カード抽選の乱数源を量子乱数（ANU Quantum Numbers, BFF 経由）にする。
+Phase 4.15 の採否メモを承けた実装フェーズ。`prompt.ts` には触れない。
+
+### 核心方針
+
+1. **引いた瞬間に取得**: 事前プールは採らず、カードを引くたびにその場で QRNG を
+   1 リクエスト取得し、その抽選を確定する（§思想的一貫性）。
+2. **確率の正しさ**: 整数化は rejection sampling で行い modulo bias を排除する。
+   Fisher-Yates の各ステップもこの一様整数で回す（`src/lib/entropy.ts` に一本化）。
+3. **必ず引けるフォールバック**: 取得失敗・タイムアウト・オフライン時は
+   `crypto.getRandomValues()` にフォールバック（`Math.random()` は不使用）。
+   フォールバックや量子/擬似の区別は UI に出さず、診断記録にのみ残す。
+4. **BFF 集約**: フロントは ANU の URL・キー・仕様を持たない。BFF `/random` が
+   `{ bytes, source }` に正規化する（Phase 5.5 のプロバイダ抽象化と同じ思想）。
+5. **体験の維持**: Self Reading は演出（シャッフル）開始と同時に取得を走らせ、
+   演出が終わる頃に結果が揃う。アニメーション keyframe は変更しない。
+
+### PR 分割
+
+| PR | 目的 | 主な対象 |
+|---|---|---|
+| 4.16-a | エントロピー基盤（rejection sampling / crypto）+ 自己検証 | `src/lib/entropy.ts`, `cards.ts`, `draw.ts` |
+| 4.16-b | BFF `/random` + ANU 連携 | `bff/src/random.ts`, `bff/src/index.ts` |
+| 4.16-c | フロント結線（非同期版 + 演出協調 + 診断） | `SelfReadingView.tsx`, `DrawStage.tsx`, `MainApp.tsx` |
+| 4.16-d | ドキュメント | `ROADMAP.md`, `APP-PRIVACY-DATA-MAP.md`, `APP-REVIEW-NOTES-DRAFT.md` |
+
+### 誇大表現の禁止
+
+「QRNG だから占いの精度が上がる/確率が正確になる」とは書かない。QRNG の価値は
+非決定性・予測不可能性であり、一様性は `Math.random` と同じである（App Store 4.3/2.3
+リスク回避）。
+
+### 後方互換
+
+`getRandomCards` / `drawCards` のシグネチャは不変（内部を crypto 同期版へ置換）。
+QRNG 主経路は非同期版 `getRandomCardsQuantum` / `drawCardsQuantum` に分離した。
+
+### 運用メモ
+
+QRNG 経路を有効化するには BFF に `wrangler secret put ANU_API_KEY` を人間が実行する。
+未設定でもフロントは crypto フォールバックで動作し、カードは必ず引ける。
 
 ---
 

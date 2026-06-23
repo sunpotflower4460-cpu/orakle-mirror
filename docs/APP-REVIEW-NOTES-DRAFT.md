@@ -88,6 +88,20 @@ The app is submitted as a Universal app supporting both iPhone and iPad
 - iPad screenshots (13-inch, 2064×2752 portrait) are prepared separately and
   are not substituted by iPhone screenshots, per App Store requirements.
 
+## Card Randomness
+
+Card draws use a quantum random number generator (ANU Quantum Numbers) accessed
+through the backend (BFF). The request sends only the number of random bytes
+needed; it does not send the question, the result, or any personal data.
+
+If the quantum source is unavailable, times out, or the device is offline, the app
+falls back to the device's cryptographic RNG (`crypto.getRandomValues`). A card can
+always be drawn, and this fallback is silent (no error or spinner is shown).
+
+Note: The app does not claim that quantum randomness improves divination accuracy or
+makes probabilities "more correct." A uniform draw is uniform regardless of source;
+the quantum source is used only for its non-deterministic, unpredictable quality.
+
 ## Language
 
 The UI supports Japanese and English. AI oracle responses are currently generated in Japanese.

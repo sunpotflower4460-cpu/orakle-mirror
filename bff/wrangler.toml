@@ -11,6 +11,7 @@ ALLOWED_ORIGINS = "capacitor://localhost,ionic://localhost,http://localhost,http
 
 # Secrets は wrangler secret put で別途登録:
 # - OPENAI_API_KEY
+# - ANU_API_KEY   (Phase 4.16: 量子乱数 /random 用。`wrangler secret put ANU_API_KEY` を人間が実行)
 
 # 観測性(Cloudflare ダッシュボードでログが見える)
 [observability]
