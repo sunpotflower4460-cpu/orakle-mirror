@@ -42,9 +42,9 @@ export default {
       if (!isOriginAllowed(origin, env)) {
         return jsonResponse(403, { error: { code: 'ORIGIN_NOT_ALLOWED', message: 'Origin not allowed' } }, corsHeaders);
       }
-      // レート制限(/oracle と共通の IP バケット)
+      // レート制限(/oracle とは別バケット。card モードでクォータを食い合わない)
       const clientIp = getClientIp(request);
-      const rate = checkRateLimit(clientIp);
+      const rate = checkRateLimit(clientIp, 'random');
       if (!rate.allowed) {
         return jsonResponse(429, { error: { code: 'RATE_LIMITED', message: `Too many requests (${rate.reason})` } }, corsHeaders);
       }

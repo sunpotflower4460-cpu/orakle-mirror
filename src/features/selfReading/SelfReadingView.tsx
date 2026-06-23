@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ChevronLeft } from 'lucide-react';
 import { DECKS } from '../../constants/decks';
 import { SPREADS } from '../../constants/spreads';
@@ -65,11 +65,16 @@ export function SelfReadingView({ onBack }: SelfReadingViewProps) {
   // Phase 4.16: 「引く」操作で演出を即開始しつつ、その裏で QRNG を取得する。
   // 取得が済むと drawnCards が埋まり、DrawStage がカードを伏せから開く。
   // 取得が演出より遅れても、DrawStage 側がカード確定前に完了させない（静かに待つ）。
+  // QRNG はレイテンシがばらつくため、連続「引き直し」で先行リクエストが後着しても
+  // 最新の操作だけが反映されるよう、ドロートークンで in-flight を識別する。
+  const drawTokenRef = useRef(0);
   const startDraw = useCallback(async () => {
     if (!canDraw) return;
+    const token = ++drawTokenRef.current;
     setDrawnCards([]);
     setStep('drawing');
     const { cards } = await drawCardsQuantum(selectedDeck, spreadCardCount);
+    if (drawTokenRef.current !== token) return; // 後続の引き直し / 画面遷移が発生したら破棄
     setDrawnCards(cards);
   }, [canDraw, selectedDeck, spreadCardCount]);
 
@@ -86,6 +91,7 @@ export function SelfReadingView({ onBack }: SelfReadingViewProps) {
   };
 
   const handleChangeSetup = () => {
+    drawTokenRef.current += 1; // in-flight の引きを無効化
     setDrawnCards([]);
     setStep('setup');
   };

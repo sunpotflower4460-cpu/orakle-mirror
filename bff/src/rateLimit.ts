@@ -58,12 +58,14 @@ export interface RateLimitResult {
   reason?: string;
 }
 
-export function checkRateLimit(clientIp: string): RateLimitResult {
+// scope でエンドポイントごとにバケットを分ける。これにより /random（カード抽選）の
+// 消費が /oracle（AI 問い）のクォータを食い合わない（card モードで二重消費しない）。
+export function checkRateLimit(clientIp: string, scope: string = 'oracle'): RateLimitResult {
   const now = Date.now();
   cleanup(now);
 
-  const minuteKey = `${clientIp}:m`;
-  const hourKey = `${clientIp}:h`;
+  const minuteKey = `${clientIp}:${scope}:m`;
+  const hourKey = `${clientIp}:${scope}:h`;
 
   if (!checkBucket(minuteBuckets, minuteKey, MINUTE_LIMIT, MINUTE_MS, now)) {
     return { allowed: false, reason: '1 分あたりの制限を超過' };
