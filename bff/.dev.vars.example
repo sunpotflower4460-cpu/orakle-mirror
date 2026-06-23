@@ -1,3 +1,8 @@
 # OpenAI API Key (platform.openai.com で取得)
 # 本番では wrangler secret put OPENAI_API_KEY で登録すること
 OPENAI_API_KEY=
+
+# ANU Quantum Numbers API Key (Phase 4.16: /random 用。quantumnumbers.anu.edu.au で取得)
+# 本番では wrangler secret put ANU_API_KEY で登録すること。未設定でもフロントは
+# crypto フォールバックで動作する(カードは必ず引ける)。
+ANU_API_KEY=

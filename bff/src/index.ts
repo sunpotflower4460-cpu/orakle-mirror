@@ -1,10 +1,14 @@
-import type { Env, OracleResponseError, OracleResponseSuccess } from './types';
+import type { Env, OracleResponseError, OracleResponseSuccess, RandomResponseSuccess } from './types';
 import { buildCorsHeaders, handlePreflight, isOriginAllowed } from './cors';
 import { checkRateLimit, getClientIp } from './rateLimit';
 import { MAX_BODY_BYTES, validateBodySize, validateRequest } from './validate';
 import { selectProvider } from './providers';
+import { fetchQuantumBytes } from './random';
 
-function jsonResponse(status: number, body: OracleResponseSuccess | OracleResponseError, corsHeaders: Record<string, string>): Response {
+// /random が要求できるバイト数の上限(1 抽選ぶんに十分な範囲に制限)。
+const RANDOM_MAX_BYTES = 256;
+
+function jsonResponse(status: number, body: OracleResponseSuccess | OracleResponseError | RandomResponseSuccess, corsHeaders: Record<string, string>): Response {
   return new Response(JSON.stringify(body), {
     status,
     headers: { 'Content-Type': 'application/json', ...corsHeaders },
@@ -25,6 +29,41 @@ export default {
     const url = new URL(request.url);
     if (request.method === 'GET' && url.pathname === '/') {
       return jsonResponse(200, { text: 'oracle-mirror-bff is alive' }, corsHeaders);
+    }
+
+    // 量子乱数(QRNG)エンドポイント(GET /random?bytes=NN)
+    // フロントは ANU の URL/キー/仕様を持たない。バイト数だけを受け取る(§7 プライバシー)。
+    if (url.pathname === '/random') {
+      if (request.method !== 'GET') {
+        return jsonResponse(404, { error: { code: 'NOT_FOUND', message: 'Route not found' } }, corsHeaders);
+      }
+      // Origin ガード(/oracle と同じ方針)
+      if (!isOriginAllowed(origin, env)) {
+        return jsonResponse(403, { error: { code: 'ORIGIN_NOT_ALLOWED', message: 'Origin not allowed' } }, corsHeaders);
+      }
+      // レート制限(/oracle と共通の IP バケット)
+      const clientIp = getClientIp(request);
+      const rate = checkRateLimit(clientIp);
+      if (!rate.allowed) {
+        return jsonResponse(429, { error: { code: 'RATE_LIMITED', message: `Too many requests (${rate.reason})` } }, corsHeaders);
+      }
+      // bytes クエリ検証(1..RANDOM_MAX_BYTES の整数)
+      const bytesParam = url.searchParams.get('bytes');
+      const requested = Number(bytesParam);
+      if (bytesParam === null || !Number.isInteger(requested) || requested < 1 || requested > RANDOM_MAX_BYTES) {
+        return jsonResponse(400, { error: { code: 'INVALID_REQUEST', message: `bytes must be an integer in 1..${RANDOM_MAX_BYTES}` } }, corsHeaders);
+      }
+      const result = await fetchQuantumBytes(requested, env);
+      if (!result.ok) {
+        // 詳細・キーは出さない。フロントが crypto フォールバックへ切れる形に正規化する。
+        console.error('QRNG fetch failed', { status: result.status, code: result.code });
+        return jsonResponse(
+          result.status >= 500 ? 502 : result.status,
+          { error: { code: 'UPSTREAM_ERROR', message: 'QRNG provider unavailable' } },
+          corsHeaders,
+        );
+      }
+      return jsonResponse(200, { bytes: result.bytes, source: result.source }, corsHeaders);
     }
 
     // ここから先は POST /oracle のみ
