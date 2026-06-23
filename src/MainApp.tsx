@@ -846,6 +846,9 @@ export function MainApp() {
           padding: 'calc(10px + var(--sat)) calc(16px + var(--sar)) 10px calc(16px + var(--sal))', flexShrink: 0,
           borderBottom: `1px solid rgba(217,164,181,0.22)`, background: 'rgba(255,253,253,0.72)', backdropFilter: 'blur(14px)', WebkitBackdropFilter: 'blur(14px)', boxShadow: 'var(--om-shadow-soft)'
         }}>
+          {/* Phase U: ヘッダーの枠線・blur は全幅のまま。内側の中身だけ
+              iPad で中央 720px に収める内側ラッパで包む(iPhone は不変)。 */}
+          <div className="app-header-inner">
           <div className="app-header-top" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div className="app-header-brand" style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
               <button aria-label={t('a11y.menu')} aria-expanded={sidebarOpen} onClick={() => setSidebarOpen(v => !v)}
@@ -917,6 +920,7 @@ export function MainApp() {
                 {m.icon} {t(`mode.${m.id}.name`)}
               </button>
             ))}
+          </div>
           </div>
         </header>
 
@@ -1034,8 +1038,11 @@ export function MainApp() {
           padding: USE_JS_KEYBOARD_PADDING
             ? `10px calc(18px + var(--sar)) calc(max(18px, env(safe-area-inset-bottom)) + ${keyboardPadding}) calc(18px + var(--sal))`
             : `10px calc(18px + var(--sar)) max(18px, calc(env(safe-area-inset-bottom) + 8px)) calc(18px + var(--sal))`,
-          flexShrink: 0 
+          flexShrink: 0
         }}>
+          {/* Phase U: 外側パディング(safe-area)はそのまま。入力欄シェルだけ
+              iPad で中央 720px に揃える内側ラッパで包む(iPhone は不変)。 */}
+          <div className="input-area-inner">
           <div className="input-shell" style={{
             display: 'flex', alignItems: 'flex-end', gap: 10,
             background: inputFocused ? 'linear-gradient(130deg, rgba(255,255,255,0.92), rgba(255,246,251,0.82), rgba(240,248,255,0.76))' : 'linear-gradient(130deg, rgba(255,255,255,0.88), rgba(255,246,251,0.78), rgba(240,248,255,0.68))',
@@ -1093,6 +1100,7 @@ export function MainApp() {
                 ? <Loader2 size={18} style={{ animation: 'spin 1s linear infinite' }}/>
                 : (isLocked ? <Lock size={18} strokeWidth={1.5}/> : <Wind size={18} strokeWidth={1.5}/>)}
             </button>
+          </div>
           </div>
         </div>
           </>
