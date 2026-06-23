@@ -454,16 +454,7 @@ export function MainApp() {
       ? currentStorage.rooms[activeRoomId].messages 
       : [];
 
-    // Phase 4.16: card モードのカード抽選を QRNG 化。送信〜AI 応答の待ち時間の裏で
-    // 取得されるため体感負荷はほぼなく、失敗時は crypto で確定する（必ず引ける）。
-    let drawnCards: OracleCard[] = [];
-    if (mode.id === 'card') {
-      const drawn = await getRandomCardsQuantum(2);
-      drawnCards = drawn.cards;
-    }
-
-    const receptionMsgs = buildReceptionMessages(persona, mode, drawnCards, currentMessages, userMsg.text);
-
+    // ユーザーの問いはまず即座に表示する（QRNG 取得を待たせない）。
     setStorage(prev => {
       let newOrder = prev.roomOrder.includes(targetRoomId) ? prev.roomOrder : [targetRoomId, ...prev.roomOrder];
       let newRooms = { ...prev.rooms };
@@ -488,6 +479,16 @@ export function MainApp() {
     });
 
     if (isNewRoom) setActiveRoomId(targetRoomId);
+
+    // Phase 4.16: card モードのカード抽選を QRNG 化。問い表示後・AI 応答待ちの裏で
+    // 取得されるため体感負荷はほぼなく、失敗時は crypto で確定する（必ず引ける）。
+    let drawnCards: OracleCard[] = [];
+    if (mode.id === 'card') {
+      const drawn = await getRandomCardsQuantum(2);
+      drawnCards = drawn.cards;
+    }
+
+    const receptionMsgs = buildReceptionMessages(persona, mode, drawnCards, currentMessages, userMsg.text);
 
     try {
       const result = await fetchOracleTwoStage(
