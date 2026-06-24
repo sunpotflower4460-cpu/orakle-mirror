@@ -401,6 +401,15 @@ export function MainApp() {
     el.style.height = Math.min(el.scrollHeight, 120) + 'px';
   }, [input]);
 
+  // Q-3: サイドバーを Escape で閉じられるようにする（モーダル群と同じ作法）。
+  // 開いているときだけ listener を張り、cleanup で必ず外す。
+  useEffect(() => {
+    if (!sidebarOpen) return;
+    const handleEsc = (e: KeyboardEvent) => { if (e.key === 'Escape') setSidebarOpen(false); };
+    document.addEventListener('keydown', handleEsc);
+    return () => document.removeEventListener('keydown', handleEsc);
+  }, [sidebarOpen]);
+
   const copiedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => {
     return () => { if (copiedTimerRef.current) clearTimeout(copiedTimerRef.current); };
@@ -727,7 +736,9 @@ export function MainApp() {
       {showSubscribeModal && <SubscribeModal onClose={() => setShowSubscribeModal(false)} onSubscribe={handleSubscribe} onRestore={handleRestore} isPurchasing={isPurchasing} />}
 
       {sidebarOpen && (
-        <div onClick={() => setSidebarOpen(false)} style={{
+        // Q-4: 装飾的なマウス用クローズ領域。正規の閉じ手段は Esc(Q-3)とサイドバー内の操作。
+        // スクリーンリーダーには余計な操作要素として読み上げさせない。
+        <div aria-hidden="true" onClick={() => setSidebarOpen(false)} style={{
           position: 'fixed', inset: 0, background: 'rgba(80,70,78,0.26)',
           zIndex: 98, backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)'
         }} />
