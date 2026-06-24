@@ -5,69 +5,84 @@ export interface GuidanceMatch {
   matchedKeywords: string[];
 }
 
+// Phase Q-1: 安全網のキーワードを日本語・英語の両方に対応させる。
+// 思想（AGENTS.md §11）: 安全網は「鏡の発話の外側」で案内する仕組み。UI 言語に関わらず
+// 守りを広めに張るため、ja/en 両方のキーワードを常に照合する（英語 UI でも日本語で書く／
+// その逆もあるため）。表示文言は detector では持たず、category を返して Banner 側が i18n で出す。
+//
+// ⚠️ 英語キーワードは「過剰検出 ↔ 取りこぼし」のバランスに配慮し、誤検出しやすい短い単語
+// （'sue' / 'tax' / 'invest' 等の単独）は避け、語句や十分に固有な語にしている。
+// 安全に関わるため、語彙の最終確定は人間レビューを前提とする。
 const KEYWORDS: Record<GuidanceCategory, string[]> = {
   life: [
+    // 日本語
     '死にたい', '消えたい', 'いなくなりたい',
     '自殺', '自死',
     '自傷', 'リストカット', 'リスカ',
     '殺して', '殺したい',
     'もう生きていけない', 'もう生きたくない',
     '生きる意味がない', '生きていたくない',
+    // English（小文字で保持。照合は大文字小文字を区別しない）
+    'want to die', 'wanna die', 'kill myself', 'killing myself',
+    'end my life', 'ending my life', 'end it all',
+    'suicide', 'suicidal', 'self-harm', 'self harm',
+    'hurt myself', 'cut myself', 'cutting myself',
+    "don't want to live", 'do not want to live',
+    'no reason to live', 'better off dead', 'want to disappear',
   ],
   medical: [
+    // 日本語
     '病気', '症状', '診断', '処方', '副作用',
     '薬', '服薬', '通院', '治療',
     'うつ', 'うつ病', 'パニック障害', '不安障害',
     'がん', 'ガン', '癌', '腫瘍',
     '妊娠', '流産', '中絶',
+    // English
+    'diagnosis', 'diagnosed', 'symptom', 'prescription', 'prescribed',
+    'cancer', 'tumor', 'tumour', 'chemotherapy',
+    'depression', 'depressed', 'anxiety disorder', 'panic attack',
+    'pregnant', 'pregnancy', 'miscarriage', 'abortion', 'medication',
   ],
   legal: [
+    // 日本語
     '訴訟', '裁判', '告訴', '告発',
     '契約', '解約', '違約',
     '法的', '違法', '犯罪',
     '離婚 弁護士', '離婚 調停', '離婚 慰謝料', '離婚 親権', '離婚 養育費',
     '相続', '遺産',
     '逮捕', '示談',
+    // English
+    'lawsuit', 'sued', 'being sued', 'lawyer', 'attorney',
+    'court case', 'go to court', 'divorce', 'custody', 'inheritance',
+    'arrested', 'restraining order', 'breach of contract', 'illegal',
   ],
   financial: [
+    // 日本語
     '投資', '株', 'FX', '仮想通貨', '暗号資産',
     '借金', '債務', 'ローン', '返済',
     '税', '確定申告', '節税',
     '資産運用', '保険',
     '破産', '倒産', '自己破産',
+    // English
+    'investment', 'investing', 'stocks', 'stock market',
+    'crypto', 'cryptocurrency', 'bitcoin',
+    'in debt', 'loan', 'mortgage', 'bankruptcy', 'bankrupt',
+    'tax return', 'foreclosure',
   ],
-};
-
-export const GUIDANCE_HEADLINE: Record<GuidanceCategory, string> = {
-  life: 'ひとりで抱えなくて大丈夫です。話せる窓口があります。',
-  medical: '体や心のことは、医療の専門家との対話も大切に。',
-  legal: '法的な判断は、弁護士など専門家への相談もご検討ください。',
-  financial: 'お金に関する判断は、金融の専門家にもご相談を。',
-};
-
-export const GUIDANCE_DETAIL: Record<GuidanceCategory, string> = {
-  life: [
-    '緊急の危険がある場合は、今いる地域の緊急窓口に連絡してください。',
-    '日本では、よりそいホットライン、いのちの電話、こころの健康相談統一ダイヤルなどの相談先があります。',
-    '相談窓口の電話番号や受付時間は変わることがあるため、アプリ実装時・リリース前に公式情報で必ず再確認してください。',
-  ].join('\n'),
-  medical:
-    '症状や服薬、診断に関わるご判断は、かかりつけの医師や、最寄りの医療機関にご相談ください。',
-  legal:
-    '具体的な法的判断・手続きについては、弁護士、司法書士、または公的相談窓口にご相談ください。',
-  financial:
-    '投資・税務・債務など、お金に関する具体的判断は、ファイナンシャルプランナー、税理士、または各種公的相談窓口にご相談ください。',
 };
 
 export const detectGuidance = (texts: string[]): GuidanceMatch[] => {
   const joined = texts.filter(Boolean).join('\n');
   if (!joined.trim()) return [];
 
+  // 大文字小文字を区別せずに照合する。日本語は toLowerCase の影響を受けない。
+  const lower = joined.toLowerCase();
+
   const matches: GuidanceMatch[] = [];
   const priority: GuidanceCategory[] = ['life', 'medical', 'legal', 'financial'];
 
   for (const category of priority) {
-    const hits = KEYWORDS[category].filter((kw) => joined.includes(kw));
+    const hits = KEYWORDS[category].filter((kw) => lower.includes(kw.toLowerCase()));
     if (hits.length > 0) {
       matches.push({ category, matchedKeywords: hits });
     }

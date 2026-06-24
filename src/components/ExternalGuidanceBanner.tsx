@@ -1,20 +1,18 @@
 import React, { useState } from 'react';
-import {
-  GuidanceMatch,
-  GUIDANCE_HEADLINE,
-  GUIDANCE_DETAIL,
-} from '../lib/guidanceDetector';
+import { GuidanceMatch } from '../lib/guidanceDetector';
+import { useT } from '../i18n';
 
 interface Props {
   matches: GuidanceMatch[];
 }
 
 export const ExternalGuidanceBanner: React.FC<Props> = ({ matches }) => {
+  const t = useT();
   if (!matches || matches.length === 0) return null;
 
   return (
     <section
-      aria-label="アプリからのご案内"
+      aria-label={t('guidance.bannerAriaLabel')}
       style={{
         marginTop: 12,
         padding: '14px 18px',
@@ -32,7 +30,7 @@ export const ExternalGuidanceBanner: React.FC<Props> = ({ matches }) => {
         marginTop: 0,
         fontStyle: 'italic',
       }}>
-        ※ 以下は鏡からのメッセージではなく、アプリからのご案内です
+        {t('guidance.bannerNotice')}
       </p>
       {matches.map((m) => (
         <GuidanceItem key={m.category} match={m} />
@@ -42,6 +40,7 @@ export const ExternalGuidanceBanner: React.FC<Props> = ({ matches }) => {
 };
 
 const GuidanceItem: React.FC<{ match: GuidanceMatch }> = ({ match }) => {
+  const t = useT();
   const isLife = match.category === 'life';
   const [open, setOpen] = useState(isLife);
 
@@ -81,7 +80,7 @@ const GuidanceItem: React.FC<{ match: GuidanceMatch }> = ({ match }) => {
           lineHeight: 1.5,
           letterSpacing: '0.02em',
         }}>
-          {GUIDANCE_HEADLINE[match.category]}
+          {t(`guidance.${match.category}.headline`)}
         </span>
         {!isLife && (
           <span aria-hidden="true" style={{ fontSize: 10, color: '#94a3b8', flexShrink: 0 }}>
@@ -97,7 +96,7 @@ const GuidanceItem: React.FC<{ match: GuidanceMatch }> = ({ match }) => {
           margin: '4px 0 8px',
           whiteSpace: 'pre-line',
         }}>
-          {GUIDANCE_DETAIL[match.category]}
+          {t(`guidance.${match.category}.detail`)}
         </p>
       )}
     </article>

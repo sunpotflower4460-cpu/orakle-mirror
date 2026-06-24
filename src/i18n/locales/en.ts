@@ -134,6 +134,18 @@ export const en: Record<keyof typeof ja, string> = {
   // Phase A: parallel keyword layer. Understated wording; implies no importance/relevance.
   'keywords.title': 'Words drawn now',
 
+  // Phase Q-1/Q-2: external guidance banner (safety net). Guidance outside the mirror's voice.
+  'guidance.bannerAriaLabel': 'A note from the app',
+  'guidance.bannerNotice': 'Note: the following is not a message from the mirror, but guidance from the app.',
+  'guidance.life.headline': "You don't have to carry this alone. Support is available.",
+  'guidance.life.detail': 'If you are in immediate danger, please contact your local emergency number.\nIf you are struggling, please reach out to a crisis or mental-health helpline in your area.\nHelpline numbers and hours vary by region, so please verify current official information for your country before relying on them.',
+  'guidance.medical.headline': 'For matters of body and mind, a conversation with a medical professional matters too.',
+  'guidance.medical.detail': 'For decisions about symptoms, medication, or a diagnosis, please consult your doctor or a nearby medical institution.',
+  'guidance.legal.headline': 'For legal decisions, please also consider consulting a professional such as a lawyer.',
+  'guidance.legal.detail': 'For specific legal decisions or procedures, please consult a lawyer or a public legal-advice service.',
+  'guidance.financial.headline': 'For decisions about money, please also consider consulting a financial professional.',
+  'guidance.financial.detail': 'For specific decisions about investing, taxes, or debt, please consult a financial planner, a tax advisor, or a public advisory service.',
+
   // Self Reading
   'sr.home.title': 'Self Reading',
   'sr.home.body': 'A quiet room to hold your question, choose a deck and spread, and reveal cards only on this device.',
