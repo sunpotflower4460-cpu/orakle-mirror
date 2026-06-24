@@ -13,8 +13,12 @@
 // クランプ + slice）を leaf モジュール（entropy.ts / constants/keywords.ts）から
 // 直接再現して検証する。実プール・実シャッフルを使うため挙動は同一。
 
-import { entropyFromBytes, shuffleWithEntropy, cryptoBytes, type Entropy } from '../src/lib/entropy.ts';
+import { entropyFromBytes, shuffleWithEntropy, cryptoBytes, recommendedByteLength, type Entropy } from '../src/lib/entropy.ts';
 import { KEYWORD_POOL, KEYWORD_COUNT, type KeywordEntry } from '../src/constants/keywords.ts';
+
+// selectKeywords は pool 全体をシャッフルするため、pool サイズに応じた十分なバイトが要る
+// （pickKeywordsQuantum と同じ recommendedByteLength で確保する）。
+const BYTE_LEN = recommendedByteLength(KEYWORD_POOL.length);
 
 // src/lib/keywords.ts の selectKeywords と同一ロジック。
 function selectKeywords(entropy: Entropy, count = KEYWORD_COUNT): KeywordEntry[] {
@@ -36,7 +40,7 @@ console.log('keywords self-test');
 // 1 & 2 & 3: count 個、重複なし、プール内の語のみ
 console.log('• selects N distinct words from the pool');
 {
-  const picked = selectKeywords(entropyFromBytes(cryptoBytes(64), 'crypto'), 3);
+  const picked = selectKeywords(entropyFromBytes(cryptoBytes(BYTE_LEN), 'crypto'), 3);
   check('returns requested count', picked.length === 3);
   const words = picked.map((k) => k.word);
   check('no duplicates', new Set(words).size === words.length);
@@ -46,15 +50,16 @@ console.log('• selects N distinct words from the pool');
 // クランプ: プールより多い数を要求してもプール数まで
 console.log('• clamps when count exceeds pool size');
 {
-  const picked = selectKeywords(entropyFromBytes(cryptoBytes(128), 'crypto'), KEYWORD_POOL.length + 5);
+  const picked = selectKeywords(entropyFromBytes(cryptoBytes(BYTE_LEN), 'crypto'), KEYWORD_POOL.length + 5);
   check('clamped to pool size', picked.length === KEYWORD_POOL.length);
   check('still no duplicates', new Set(picked.map((k) => k.word)).size === picked.length);
 }
 
-// 4: 既知バイト列で決定的
+// 4: 既知バイト列で決定的（pool 全体のシャッフルに足りる長さの固定パターン）
 console.log('• deterministic for a fixed byte sequence');
 {
-  const fixed = new Uint8Array([5, 240, 17, 88, 3, 199, 41, 130, 22, 70, 9, 211]);
+  const fixed = new Uint8Array(BYTE_LEN);
+  for (let i = 0; i < fixed.length; i++) fixed[i] = (i * 37 + 11) % 256;
   const a = selectKeywords(entropyFromBytes(fixed, 'crypto'), 3).map((k) => k.word).join('|');
   const b = selectKeywords(entropyFromBytes(fixed, 'crypto'), 3).map((k) => k.word).join('|');
   check('same input -> same selection', a === b);
@@ -62,7 +67,7 @@ console.log('• deterministic for a fixed byte sequence');
 
 // 0 個要求は空
 console.log('• count 0 -> empty');
-check('empty for count 0', selectKeywords(entropyFromBytes(cryptoBytes(16), 'crypto'), 0).length === 0);
+check('empty for count 0', selectKeywords(entropyFromBytes(cryptoBytes(BYTE_LEN), 'crypto'), 0).length === 0);
 
 if (failures > 0) { console.error(`\n${failures} check(s) failed`); process.exit(1); }
 console.log('\nall checks passed');
