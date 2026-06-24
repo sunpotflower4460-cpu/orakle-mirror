@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import type { MessageKey } from '../i18n';
+import type { KeywordEntry } from '../constants/keywords';
 
 // ─── Persona ───────────────────────────────────────────
 export type PersonaId = 'lumina' | 'zenith' | 'archivist';
@@ -94,6 +95,9 @@ export interface Message {
   personaId?: PersonaId;
   modeId?: ModeId;
   drawnCards?: OracleCard[];
+  // Phase A: 量子乱数で「場から選ばれた」並走キーワード。AI 非関与・本文とは独立。
+  // optional 追加のため既存の oracle_mirror_v16 保存データ（keywords なし）もそのまま読める。
+  keywords?: KeywordEntry[];
 }
 
 export interface Room {
