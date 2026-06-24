@@ -131,6 +131,8 @@ export const ja = {
   'mode.pure.guidance': '論理を手放し、詩的で抽象的なメッセージを受け取ります。感覚に浸りたい時に。',
   'mode.card.guidance': '象徴（カード）からインスピレーションを受け、その響きを感性で言葉にします。',
   'cards.drawnTitle': '現れたカード',
+  // Phase A: 並走キーワード層。断定・重要度・適合を示唆しない控えめな文言。
+  'keywords.title': 'いま、選ばれた言葉',
 
   // Self Reading（自分で引く）
   'sr.home.title': '自分で引く',
