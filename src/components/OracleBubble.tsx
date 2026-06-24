@@ -154,8 +154,8 @@ export const OracleBubble = React.memo(function OracleBubble({ msg, idx, copiedI
             }}>{line || '\u00A0'}</p>;
           })}
         </div>
-        {/* Phase A: \u4E26\u8D70\u30AD\u30FC\u30EF\u30FC\u30C9\u5C64\u3002\u672C\u6587\u3068\u306F\u72EC\u7ACB\u306B\u3001\u91CF\u5B50\u4E71\u6570\u3067\u300C\u5834\u304B\u3089\u9078\u3070\u308C\u305F\u300D\u8A00\u8449\u3092
-            \u9759\u304B\u306B\u6DFB\u3048\u308B\u3002\u672C\u6587\u30FB\u30B3\u30D4\u30FC\u5BFE\u8C61\u306B\u306F\u4E00\u5207\u89E6\u308C\u306A\u3044\u3002\u9069\u5408\u5224\u5B9A\u3082\u5F37\u8ABF\u3082\u3057\u306A\u3044\u3002 */}
+        {/* Phase A: 並走キーワード層。本文とは独立に、量子乱数で「場から選ばれた」言葉を
+            静かに添える。本文・コピー対象には一切触れない。適合判定も強調もしない。 */}
         {msg.keywords && msg.keywords.length > 0 && (
           <div className="oracle-bubble-keywords" style={{ marginTop: 22, display: 'flex', flexDirection: 'column', gap: 7, animation: 'cardReveal 0.7s cubic-bezier(0.16,1,0.3,1) 0.25s both' }}>
             <div style={{ fontSize: 10, letterSpacing: '0.18em', color: '#aab2bf', fontWeight: 500 }}>
