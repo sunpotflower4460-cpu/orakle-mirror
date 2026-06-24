@@ -164,7 +164,7 @@ export const OracleBubble = React.memo(function OracleBubble({ msg, idx, copiedI
             <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 9, fontSize: 13, letterSpacing: '0.12em', color: '#7b8494', fontWeight: 400 }}>
               {msg.keywords.map((k, ki) => (
                 <React.Fragment key={`${k.word}-${ki}`}>
-                  {ki > 0 && <span aria-hidden="true" style={{ color: '#d4dae3' }}>\u00B7</span>}
+                  {ki > 0 && <span aria-hidden="true" style={{ color: '#d4dae3' }}>·</span>}
                   <span>{k.word}</span>
                 </React.Fragment>
               ))}
