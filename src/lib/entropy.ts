@@ -145,8 +145,15 @@ function parseBytes(value: unknown, minLength: number): Uint8Array | null {
 
 /**
  * BACKEND_URL（.../oracle）から /random エンドポイントを導出する。
- * 静的 import を避けて動的 import にすることで、純粋関数群を env 非依存に保つ
- * （Node 単体テストが env / fetch を読み込まずに済む）。
+ *
+ * 静的 import を避けて動的 import にすることで、純粋関数群（entropyFromBytes /
+ * shuffleWithEntropy 等）を env 非依存に保つ。これにより scripts/*-selftest.ts が
+ * Node の --experimental-strip-types で entropy.ts を読み込んでも env →
+ * capacitorMocks の連鎖（拡張子なし相対 import）を辿らずに済む。
+ *
+ * Q-5 注記: この動的 import により Vite ビルドで「env.ts is dynamically imported …
+ * but also statically imported …」という警告が出るが、これは意図的であり無害。
+ * 静的 import に戻すと上記のテスト隔離が壊れるため、警告は承知の上で残している。
  */
 async function resolveRandomEndpoint(): Promise<string | null> {
   try {
