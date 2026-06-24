@@ -3,7 +3,7 @@
  * @description Dev-only A/B/C/D/E パターン比較ユーティリティ。
  *
  * パターン概要:
- *   A: Phase 4.5 以前 — 単一ステージ、buildDeveloperContext ベース
+ *   A: Phase 4.5 以前 — 単一ステージ方式（現存しない旧構造の再現）
  *   B: Phase 4.6 — 二段階導入直後、シンプルな system + developer
  *   C: Phase 4.9 — Stage 1 チューニング往復あり、Stage 2 は旧 developer のみ
  *   D: Phase 4.9 構造をローカル関数で再現（旧 buildSystemCore + 旧 buildDiscernmentDeveloper）
