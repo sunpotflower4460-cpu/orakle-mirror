@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { GLOBAL_STYLES } from './styles/globals';
 import { getRandomCardsQuantum } from './constants/cards';
+import { pickKeywordsQuantum } from './lib/keywords';
 import { MODES } from './constants/modes';
 import { PERSONAS } from './constants/personas';
 import { LS_KEY, genId, FREE_LIMIT, MAX_ROOMS } from './lib/constants';
@@ -490,6 +491,11 @@ export function MainApp() {
 
     const receptionMsgs = buildReceptionMessages(persona, mode, drawnCards, currentMessages, userMsg.text);
 
+    // Phase A: 並走キーワードを量子乱数で選ぶ。AI 応答とは独立・並行に取得し、
+    // AI のプロンプト(receptionMsgs)には一切渡さない(純度厳守)。失敗は握りつぶす
+    // (キーワードが無ければ表示しないだけ。本文表示は止めない)。pure / card 両方で出す。
+    const keywordsPromise = pickKeywordsQuantum().catch(() => ({ keywords: [] }));
+
     try {
       const result = await fetchOracleTwoStage(
         receptionMsgs,
@@ -503,7 +509,8 @@ export function MainApp() {
           discernment: result.discernmentMs,
         });
       }
-      const aiMsg: Message  = { id: genId(), role: 'model', text: aiText, personaId: persona.id, modeId: mode.id, drawnCards };
+      const { keywords } = await keywordsPromise;
+      const aiMsg: Message  = { id: genId(), role: 'model', text: aiText, personaId: persona.id, modeId: mode.id, drawnCards, keywords };
       
       setStorage(prev => {
         const room = prev.rooms[targetRoomId];
