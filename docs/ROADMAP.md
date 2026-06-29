@@ -72,6 +72,7 @@ Oracle Mirror は、ユーザーが自身のハイヤーセルフの声を聴く
 | Phase 6 | RevenueCat IAP 実装、Capacitor 実プラグイン差し替え | 予定 |
 | Phase 7 | App Store 提出準備 | 進行中（APPSTORE-BLOCKERS.md 参照） |
 | Phase U | iPad ユニバーサル対応（レイアウト幅安定化） | 完了 |
+| Phase L | 遅延低減・体感スムーズ化（QRNG タイムアウト短縮 / 先行起動 / Stage 2 ストリーミング） | 完了 |
 
 ---
 
@@ -226,6 +227,41 @@ App Store 申請を iPhone + iPad 両対応（Universal / `TARGETED_DEVICE_FAMIL
   iPhone 不変・iPad 間延びなし・Split View 幅でスマホレイアウトに落ちることを確認。
 - **iPad 実機 / Simulator**: ネットワーク・Xcode を要するため本 Phase では未実施。
   iOS ビルドでの最終確認は別途行う。
+
+---
+
+## Phase L 設計方針（遅延低減・体感スムーズ化）
+
+「量子乱数 → AI」の体感遅延を、体験を損なわずに減らす 3 段階。詳細は
+[PHASE-L-LATENCY-STREAMING-DESIGN.md](./PHASE-L-LATENCY-STREAMING-DESIGN.md)。
+遅延の 8〜9 割は AI 二段階の LLM 生成で、乱数は数百 ms と相対的に小さい。
+
+- **L-1: QRNG タイムアウト短縮**（`RANDOM_TIMEOUT_MS` 2500→1500 / `ANU_TIMEOUT_MS`
+  2500→1200）。フロント ≧ BFF の関係を保ち、ANU 不調時に素早く crypto フォールバック。
+  crypto フォールバックのロジックは不変。
+- **L-2: カード抽選の先行起動**。`handleSend` で UI 更新より前に `getRandomCardsQuantum`
+  を起動し、`setStorage` の描画と取得をオーバーラップ。順序依存・「引いた瞬間に取得」は不変。
+- **L-3: Stage 2 ストリーミング「タイプ表示」**（本命）。Stage 1 は内部処理なのでストリーム
+  しない。Stage 2 のみ SSE で増分配信し、タイプライターで一定速度に均して出す。
+  - L-3a: BFF 基盤（`/oracle` に `stream:true` 分岐、`callOpenAIStream`）。既存非ストリーム不変。
+  - L-3b: フロント API（`fetchOracleTwoStageStreaming` / `callLLMStreaming` / `streamText`）。
+    `<final>` タグを表示に漏らさない安全な抽出。失敗時は非ストリームにフォールバック。
+  - L-3c: タイプ表示 UI（`StreamingBubble`、速度 `TYPE_CHARS_PER_SEC=45`・句読点で軽く間、
+    `prefers-reduced-motion` 即時表示）。確定メッセージは fetch 解決時点で即保存し、
+    タイプ完了を待たない（部屋切替等でハングしない）。コピー対象は確定本文。
+
+### 不変条件
+
+- 二段階処理の純度（Stage 1 純粋受信 / Stage 2 識別と調律）は不変。テキストは従来と同一で
+  「出し方」だけが変わる。
+- 「事前プールなし」（Phase 4.16）・並走キーワードの「AI に渡さない」（Phase A）も不変。
+- 失敗しても必ず答えが出る（L-1: crypto / L-3: 非ストリーム）。`LS_KEY=v16` 不変・依存追加ゼロ。
+
+### 確認状況
+
+Web レベル（typecheck/build/lint、`test:entropy`/`test:keywords`/`test:streamtext`、BFF の
+SSE モックテスト）は通過。**ストリーム本番の体感確認は実 OpenAI キー + `wrangler dev` が必要**で、
+オーナーが実施。タイプ速度は `StreamingBubble.tsx` 冒頭の定数で調整可能。
 
 ---
 
