@@ -71,5 +71,18 @@ export function validateRequest(parsed: unknown): { ok: true; data: OracleReques
     return { ok: false, error: { code: 'INVALID_STAGE', message: 'stage must be reception or discernment.' } };
   }
 
-  return { ok: true, data: { messages: req.messages as ChatMessage[], sampling: req.sampling, stage: req.stage } };
+  // Phase L-3a: stream は任意の boolean。未指定/不正型は拒否、欠落は false 扱い(非ストリーム)。
+  if (req.stream !== undefined && typeof req.stream !== 'boolean') {
+    return { ok: false, error: { code: 'INVALID_STREAM', message: 'stream must be a boolean.' } };
+  }
+
+  return {
+    ok: true,
+    data: {
+      messages: req.messages as ChatMessage[],
+      sampling: req.sampling,
+      stage: req.stage,
+      stream: req.stream === true,
+    },
+  };
 }
