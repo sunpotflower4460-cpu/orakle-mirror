@@ -460,9 +460,16 @@ export function MainApp() {
     const isNewRoom = !activeRoomId;
     const userMsg: Message = { id: genId(), role: 'user', text };
     
-    const currentMessages = activeRoomId && currentStorage.rooms[activeRoomId] 
-      ? currentStorage.rooms[activeRoomId].messages 
+    const currentMessages = activeRoomId && currentStorage.rooms[activeRoomId]
+      ? currentStorage.rooms[activeRoomId].messages
       : [];
+
+    // Phase L-2: カード抽選(QRNG)を UI 更新より前に起動し、setStorage の描画と取得を
+    // オーバーラップさせる(数百 ms を隠す)。Stage 1 プロンプトにはカード名が必要なため
+    // receptionMsgs 構築の直前で await する(順序依存・「引いた瞬間に取得」は不変)。pure は素通り。
+    const drawPromise = mode.id === 'card'
+      ? getRandomCardsQuantum(2)
+      : Promise.resolve({ cards: [] as OracleCard[] });
 
     // ユーザーの問いはまず即座に表示する（QRNG 取得を待たせない）。
     setStorage(prev => {
@@ -490,13 +497,9 @@ export function MainApp() {
 
     if (isNewRoom) setActiveRoomId(targetRoomId);
 
-    // Phase 4.16: card モードのカード抽選を QRNG 化。問い表示後・AI 応答待ちの裏で
-    // 取得されるため体感負荷はほぼなく、失敗時は crypto で確定する（必ず引ける）。
-    let drawnCards: OracleCard[] = [];
-    if (mode.id === 'card') {
-      const drawn = await getRandomCardsQuantum(2);
-      drawnCards = drawn.cards;
-    }
+    // Phase 4.16 / L-2: 先行起動したカード抽選(QRNG)をここで受ける。UI 更新中に裏で
+    // 取得が進むため体感負荷はほぼなく、失敗時は crypto で確定する（必ず引ける）。
+    const { cards: drawnCards } = await drawPromise;
 
     const receptionMsgs = buildReceptionMessages(persona, mode, drawnCards, currentMessages, userMsg.text);
 
