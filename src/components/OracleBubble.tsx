@@ -14,7 +14,7 @@ interface OracleBubbleProps {
   onSwitch: (idx: number, targetPersonaId: PersonaId) => Promise<void>;
 }
 
-interface DrawnCardViewProps {
+export interface DrawnCardViewProps {
   card: OracleCard;
   index: number;
   accent: string;
@@ -22,7 +22,7 @@ interface DrawnCardViewProps {
   soft: string;
 }
 
-function DrawnCardView({ card, index, accent, border, soft }: DrawnCardViewProps) {
+export function DrawnCardView({ card, index, accent, border, soft }: DrawnCardViewProps) {
   const [imageFailed, setImageFailed] = React.useState(false);
   const hasImage = Boolean(card.image) && !imageFailed;
 

@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import type { MessageKey } from '../i18n';
 import type { KeywordEntry } from '../constants/keywords';
+export type { KeywordEntry } from '../constants/keywords';
 
 // ─── Persona ───────────────────────────────────────────
 export type PersonaId = 'lumina' | 'zenith' | 'archivist';
