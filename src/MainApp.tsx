@@ -30,16 +30,17 @@ import { ExternalGuidanceBanner } from './components/ExternalGuidanceBanner';
 import { SelfReadingView } from './features/selfReading/SelfReadingView';
 import { detectGuidance } from './lib/guidanceDetector';
 import { useT } from './i18n';
-import type { Storage, OracleCard, Message, PersonaId, Mode, Persona, KeywordEntry } from './types';
+import type { Storage, OracleCard, Message, PersonaId, Mode, Persona } from './types';
 
 // ─── Main App ─────────────────────────────────────────────────────────────────
 // Phase L-3c: ストリーミング中の(まだ保存していない)応答の表示状態。
 interface StreamingInfo {
   roomId: string;
+  /** 確定メッセージの id。タイプ中はこの id の OracleBubble を抑制する。 */
+  msgId: string;
   persona: Persona;
   mode: Mode;
   drawnCards: OracleCard[];
-  keywords: KeywordEntry[];
   target: string;
   done: boolean;
   reduceMotion: boolean;
@@ -48,14 +49,10 @@ interface StreamingInfo {
 export function MainApp() {
   const t = useT();
   const [isStorageLoaded, setIsStorageLoaded] = useState<boolean>(false);
-  // Phase L-3c: タイプ表示中の応答(確定前)。確定したら storage に移して null に戻す。
+  // Phase L-3c: タイプ表示中の応答。確定メッセージは即 storage に保存し、タイプ中だけ
+  // その OracleBubble を抑制して StreamingBubble に差し替える。タイプ完了で streaming を消す。
   const [streaming, setStreaming] = useState<StreamingInfo | null>(null);
-  const finishStreamRef = useRef<(() => void) | null>(null);
-  const handleStreamFinished = useCallback(() => {
-    const resolve = finishStreamRef.current;
-    finishStreamRef.current = null;
-    resolve?.();
-  }, []);
+  const handleStreamFinished = useCallback(() => setStreaming(null), []);
   const [storage,         setStorage]         = useState<Storage>({ rooms: {}, roomOrder: [] });
   const [keyboardPadding, setKeyboardPadding] = useState<string>('0px');
   
@@ -534,9 +531,11 @@ export function MainApp() {
       && typeof window.matchMedia === 'function'
       && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
+    const aiMsgId = genId();
+
     try {
       // 受信中の表示(本文が来るまでは空のバブル＋カーソル)。dots は streaming 中は出さない。
-      setStreaming({ roomId: targetRoomId, persona, mode, drawnCards, keywords: [], target: '', done: false, reduceMotion });
+      setStreaming({ roomId: targetRoomId, msgId: aiMsgId, persona, mode, drawnCards, target: '', done: false, reduceMotion });
 
       const result = await fetchOracleTwoStageStreaming(
         receptionMsgs,
@@ -552,13 +551,10 @@ export function MainApp() {
       }
       const { keywords } = await keywordsPromise;
 
-      // 最終本文を確定し、タイプが追いつき切る(StreamingBubble.onFinished)まで待つ。
-      await new Promise<void>((resolve) => {
-        finishStreamRef.current = resolve;
-        setStreaming((s) => (s ? { ...s, target: result.final, keywords, done: true } : s));
-      });
-
-      const aiMsg: Message  = { id: genId(), role: 'model', text: result.final, personaId: persona.id, modeId: mode.id, drawnCards, keywords };
+      // 確定メッセージを即保存する(タイプ完了を待たない＝部屋切替などで固まらない)。
+      // タイプ中はこのメッセージの OracleBubble を抑制し、StreamingBubble が本文を打ち出す。
+      // 打ち終えたら onFinished → streaming を消して OracleBubble へ差し替える(同じ位置・同じ本文)。
+      const aiMsg: Message  = { id: aiMsgId, role: 'model', text: result.final, personaId: persona.id, modeId: mode.id, drawnCards, keywords };
 
       setStorage(prev => {
         const room = prev.rooms[targetRoomId];
@@ -574,13 +570,12 @@ export function MainApp() {
           }
         };
       });
-      setStreaming(null);
+      setStreaming((s) => (s ? { ...s, target: result.final, done: true } : s));
 
       playMagicSound();
       incrementUsage();
 
     } catch (e: unknown) {
-      finishStreamRef.current = null;
       setStreaming(null);
       setError(e instanceof Error ? e.message : t('error.connection'));
       setStorage(prev => {
@@ -1051,6 +1046,12 @@ export function MainApp() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: 28 }}>
               {messages.map((msg: Message, idx: number) => {
                 const isUser = msg.role === 'user';
+                // Phase L-3c: タイプ中のメッセージ行は出さない(下の StreamingBubble が打ち出す)。
+                // 抑制条件は StreamingBubble の表示条件(target !== '')と一致させ、
+                // 「抑制されたのにバブルも出ない＝メッセージが消える」を防ぐ。
+                if (!isUser && streaming && streaming.target !== '' && streaming.roomId === activeRoomId && streaming.msgId === msg.id) {
+                  return null;
+                }
                 return (
                   <div key={msg.id || idx} style={{ display: 'flex', justifyContent: isUser ? 'flex-end' : 'flex-start' }}>
                     {isUser ? (
