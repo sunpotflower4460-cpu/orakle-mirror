@@ -21,6 +21,9 @@ export interface OracleRequest {
   messages: ChatMessage[];
   sampling: SamplingParams;
   stage: Stage;
+  // Phase L-3a: true のとき SSE(text/event-stream)で増分配信する。
+  // 未指定/false は従来どおり非ストリームの JSON(挙動不変)。Stage 2 のみが true を使う想定。
+  stream?: boolean;
 }
 
 export interface OracleResponseSuccess {

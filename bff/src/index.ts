@@ -158,6 +158,51 @@ export default {
 
     // Provider 呼び出し（現在は OpenAI 固定）
     const provider = selectProvider(env);
+
+    // Phase L-3a: stream:true かつ provider が callStream 対応なら SSE(text/event-stream)で返す。
+    // 既存の Origin / CORS / Content-Type / レート制限 / env チェックは上で通過済み(ストリーム経路も同じ守り)。
+    // stream 未指定/false は下の非ストリーム JSON パス(挙動不変)。
+    if (validated.data.stream === true && provider.callStream) {
+      const callStream = provider.callStream.bind(provider);
+      const encoder = new TextEncoder();
+      const stream = new ReadableStream<Uint8Array>({
+        async start(controller) {
+          const sse = (event: string, data: unknown): void => {
+            controller.enqueue(encoder.encode(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`));
+          };
+          try {
+            const streamResult = await callStream(
+              validated.data.messages,
+              validated.data.sampling,
+              validated.data.stage,
+              env,
+              (delta) => sse('delta', { text: delta }),
+            );
+            if (streamResult.ok) {
+              // 全文を done で送る。フロントは increments で表示しつつ、確定は done の全文を使う。
+              sse('done', { text: streamResult.text });
+            } else {
+              console.error('Provider stream failed', { provider: provider.name, status: streamResult.status, code: streamResult.code });
+              sse('error', { code: 'UPSTREAM_ERROR', message: '天との接続が途切れました。少し時間をおいてから再び問いかけてください。' });
+            }
+          } catch (e) {
+            console.error('Provider stream crashed', e);
+            sse('error', { code: 'UPSTREAM_ERROR', message: '天との接続が途切れました。少し時間をおいてから再び問いかけてください。' });
+          } finally {
+            controller.close();
+          }
+        },
+      });
+      return new Response(stream, {
+        status: 200,
+        headers: {
+          'Content-Type': 'text/event-stream; charset=utf-8',
+          'Cache-Control': 'no-cache, no-transform',
+          ...corsHeaders,
+        },
+      });
+    }
+
     const result = await provider.call(validated.data.messages, validated.data.sampling, validated.data.stage, env);
 
     if (!result.ok) {
