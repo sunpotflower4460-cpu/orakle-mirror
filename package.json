@@ -11,6 +11,7 @@
     "lint": "eslint .",
     "test:entropy": "node --experimental-strip-types scripts/entropy-selftest.ts",
     "test:keywords": "node --experimental-strip-types scripts/keywords-selftest.ts",
+    "test:streamtext": "node --experimental-strip-types scripts/streamtext-selftest.ts",
     "ios:sync": "npm run build && npx cap sync ios",
     "ios:open": "npx cap open ios",
     "ios:run": "npm run build && npx cap sync ios && npx cap run ios",

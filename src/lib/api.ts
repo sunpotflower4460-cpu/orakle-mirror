@@ -6,6 +6,7 @@ import type {
   TwoStageResult,
 } from '../types';
 import { BACKEND_URL, IS_PROD, isBackendUrlPlaceholder } from './env';
+import { extractFinalForDisplay } from './streamText';
 
 type Stage = 'reception' | 'discernment';
 type BackendResult = { text: string } | { error: BackendErrorCode; message?: string };
@@ -213,4 +214,175 @@ export const fetchOracleTwoStage = async (
   }
 
   return { raw, final, receptionMs, discernmentMs };
+};
+
+// ── Phase L-3b: ストリーミング版 ────────────────────────────────────────────
+
+/**
+ * 表示用テキストの累積を受け取るコールバック。
+ * delta ではなく「今わかっている表示本文の全体」を渡す(絶対指定)。タイプ表示 UI は
+ * これを「ターゲット」にして一定速度で追いかける。絶対指定なので、ストリーム途中で
+ * 非ストリームにフォールバックしても重複や巻き戻りが起きない。
+ */
+export type OnDisplayText = (displaySoFar: string) => void;
+
+/**
+ * BFF /oracle を stream:true で呼び、SSE(event: delta / done / error)を解釈する。
+ * 受信した増分を extractFinalForDisplay で「タグを含まない表示本文」に整え、
+ * 伸びるたびに onText に累積で渡す。戻り値はストリームで得た全文(<final> タグ込み)
+ * または正規化エラー。ストリーム非対応/失敗時はエラーを返し、呼び出し側が非ストリームへ
+ * フォールバックできるようにする。
+ */
+async function callLLMStreaming(
+  messages: ChatMessage[],
+  sampling: SamplingParams,
+  stage: Stage,
+  onText: OnDisplayText,
+): Promise<BackendResult> {
+  if (!BACKEND_URL || isBackendUrlPlaceholder()) {
+    return { error: 'SERVER_MISCONFIGURED' };
+  }
+
+  let res: Response;
+  try {
+    res = await fetch(BACKEND_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ messages, sampling, stage, stream: true }),
+    });
+  } catch (e) {
+    return { error: 'UPSTREAM_ERROR', message: e instanceof Error ? e.message : 'network error' };
+  }
+
+  if (!res.ok) {
+    const errBody = (await res.json().catch(() => null)) as { error?: { code?: unknown } } | null;
+    return { error: normalizeBackendErrorCode(errBody?.error?.code) };
+  }
+
+  const contentType = res.headers.get('Content-Type') ?? '';
+  if (!contentType.includes('text/event-stream') || !res.body) {
+    // ストリーム非対応(古い BFF 等)。フォールバックさせる。
+    return { error: 'UPSTREAM_ERROR', message: 'not a stream' };
+  }
+
+  const reader = res.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = '';
+  let raw = '';
+  let shownLen = 0;
+  let doneText: string | null = null;
+  let streamError: BackendResult | null = null;
+
+  const update = (): void => {
+    const display = extractFinalForDisplay(raw);
+    if (display.length > shownLen) {
+      shownLen = display.length;
+      onText(display);
+    }
+  };
+
+  try {
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+
+      let sep: number;
+      while ((sep = buffer.indexOf('\n\n')) !== -1) {
+        const rawEvent = buffer.slice(0, sep);
+        buffer = buffer.slice(sep + 2);
+
+        let evName = 'message';
+        let dataStr = '';
+        for (const line of rawEvent.split('\n')) {
+          const l = line.trimStart();
+          if (l.startsWith('event:')) evName = l.slice(6).trim();
+          else if (l.startsWith('data:')) dataStr += l.slice(5).trim();
+        }
+        if (!dataStr) continue;
+
+        let payload: { text?: unknown; code?: unknown };
+        try {
+          payload = JSON.parse(dataStr);
+        } catch {
+          continue;
+        }
+
+        if (evName === 'delta' && typeof payload.text === 'string') {
+          raw += payload.text;
+          update();
+        } else if (evName === 'done') {
+          doneText = typeof payload.text === 'string' ? payload.text : raw;
+        } else if (evName === 'error') {
+          streamError = { error: normalizeBackendErrorCode(payload.code) };
+        }
+      }
+    }
+  } catch (e) {
+    return { error: 'UPSTREAM_ERROR', message: e instanceof Error ? e.message : 'stream read error' };
+  }
+
+  if (streamError) return streamError;
+
+  const fullText = doneText ?? raw;
+  if (!fullText) return { error: 'UPSTREAM_ERROR', message: 'empty stream' };
+
+  // done の全文で表示を確定(取りこぼした増分があれば最後に流す)。
+  raw = fullText;
+  update();
+
+  return { text: fullText };
+}
+
+/**
+ * 二段階処理のストリーミング版。
+ * Stage 1(純粋受信)は内部処理なのでストリームしない(従来どおり完了待ち)。
+ * Stage 2(識別と調律)のみをストリーミングし、表示用本文の累積を onText に渡す。
+ * ストリーム失敗時は Stage 2 を非ストリームでやり直してフォールバック(Stage 1 は再実行しない)。
+ *
+ * テキストそのものは従来 fetchOracleTwoStage と同一。「出し方」だけが変わる(設計書 §5.7)。
+ */
+export const fetchOracleTwoStageStreaming = async (
+  receptionMsgs: ChatMessage[],
+  discernmentBuilder: (raw: string) => ChatMessage[],
+  onText: OnDisplayText,
+): Promise<TwoStageResult> => {
+  const t1Start = Date.now();
+  const rawResponse = await callLLMWithSampling(receptionMsgs, RECEPTION_SAMPLING, 'reception');
+  if ('error' in rawResponse) {
+    const err = new Error(buildUserFacingError(rawResponse.error, rawResponse.message ?? '')) as FatalError;
+    err.fatal = true;
+    throw err;
+  }
+  const raw = extractTag(rawResponse.text, 'reception');
+  const receptionMs = Date.now() - t1Start;
+
+  if (!raw) {
+    throw new Error('Stage 1 (reception) returned empty content');
+  }
+
+  const t2Start = Date.now();
+  const discernmentMsgs = discernmentBuilder(raw);
+
+  let finalText: string;
+  const streamed = await callLLMStreaming(discernmentMsgs, DISCERNMENT_SAMPLING, 'discernment', onText);
+  if ('text' in streamed) {
+    finalText = streamed.text;
+  } else {
+    // ストリーム失敗 → Stage 2 を非ストリームでやり直す(必ず答えが出る)。
+    const finalResponse = await callLLMWithSampling(discernmentMsgs, DISCERNMENT_SAMPLING, 'discernment');
+    if ('error' in finalResponse) {
+      const err = new Error(buildUserFacingError(finalResponse.error, finalResponse.message ?? '')) as FatalError;
+      err.fatal = true;
+      throw err;
+    }
+    finalText = finalResponse.text;
+    // 表示ターゲットを確定本文に一括設定(絶対指定なので重複しない)。
+    onText(extractTag(finalText, 'final'));
+  }
+
+  const final = extractTag(finalText, 'final');
+  const discernmentMs = Date.now() - t2Start;
+
+  return { raw, final: final || raw, receptionMs, discernmentMs };
 };
