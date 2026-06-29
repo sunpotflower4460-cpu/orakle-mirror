@@ -18,8 +18,9 @@ import { getAudioContext, playMagicSound } from './lib/audio';
 import { IS_PROD, USE_JS_KEYBOARD_PADDING } from './lib/env';
 import { safeStartTransition } from './lib/react-compat';
 import { Preferences, Share, Purchases, SplashScreen, Keyboard, StatusBar } from './lib/capacitorMocks';
-import { fetchOracleTwoStage } from './lib/api';
+import { fetchOracleTwoStage, fetchOracleTwoStageStreaming } from './lib/api';
 import { Toast } from './components/Toast';
+import { StreamingBubble } from './components/StreamingBubble';
 import { SubscribeModal } from './components/SubscribeModal';
 import { HelpModal } from './components/HelpModal';
 import { OracleBubble } from './components/OracleBubble';
@@ -29,12 +30,32 @@ import { ExternalGuidanceBanner } from './components/ExternalGuidanceBanner';
 import { SelfReadingView } from './features/selfReading/SelfReadingView';
 import { detectGuidance } from './lib/guidanceDetector';
 import { useT } from './i18n';
-import type { Storage, OracleCard, Message, PersonaId, Mode } from './types';
+import type { Storage, OracleCard, Message, PersonaId, Mode, Persona, KeywordEntry } from './types';
 
 // ─── Main App ─────────────────────────────────────────────────────────────────
+// Phase L-3c: ストリーミング中の(まだ保存していない)応答の表示状態。
+interface StreamingInfo {
+  roomId: string;
+  persona: Persona;
+  mode: Mode;
+  drawnCards: OracleCard[];
+  keywords: KeywordEntry[];
+  target: string;
+  done: boolean;
+  reduceMotion: boolean;
+}
+
 export function MainApp() {
   const t = useT();
   const [isStorageLoaded, setIsStorageLoaded] = useState<boolean>(false);
+  // Phase L-3c: タイプ表示中の応答(確定前)。確定したら storage に移して null に戻す。
+  const [streaming, setStreaming] = useState<StreamingInfo | null>(null);
+  const finishStreamRef = useRef<(() => void) | null>(null);
+  const handleStreamFinished = useCallback(() => {
+    const resolve = finishStreamRef.current;
+    finishStreamRef.current = null;
+    resolve?.();
+  }, []);
   const [storage,         setStorage]         = useState<Storage>({ rooms: {}, roomOrder: [] });
   const [keyboardPadding, setKeyboardPadding] = useState<string>('0px');
   
@@ -508,12 +529,20 @@ export function MainApp() {
     // (キーワードが無ければ表示しないだけ。本文表示は止めない)。pure / card 両方で出す。
     const keywordsPromise = pickKeywordsQuantum().catch(() => ({ keywords: [] }));
 
+    // Phase L-3c: Stage 2 をストリーミングし、タイプ表示する。OS の reduce-motion は即時表示。
+    const reduceMotion = typeof window !== 'undefined'
+      && typeof window.matchMedia === 'function'
+      && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
     try {
-      const result = await fetchOracleTwoStage(
+      // 受信中の表示(本文が来るまでは空のバブル＋カーソル)。dots は streaming 中は出さない。
+      setStreaming({ roomId: targetRoomId, persona, mode, drawnCards, keywords: [], target: '', done: false, reduceMotion });
+
+      const result = await fetchOracleTwoStageStreaming(
         receptionMsgs,
         (raw) => buildDiscernmentMessages(persona, raw),
+        (displaySoFar) => setStreaming((s) => (s ? { ...s, target: displaySoFar } : s)),
       );
-      const aiText = result.final;
       if (import.meta.env.DEV) {
         console.log('[Oracle Mirror] raw transmission:', result.raw);
         console.log('[Oracle Mirror] timings:', {
@@ -522,11 +551,18 @@ export function MainApp() {
         });
       }
       const { keywords } = await keywordsPromise;
-      const aiMsg: Message  = { id: genId(), role: 'model', text: aiText, personaId: persona.id, modeId: mode.id, drawnCards, keywords };
-      
+
+      // 最終本文を確定し、タイプが追いつき切る(StreamingBubble.onFinished)まで待つ。
+      await new Promise<void>((resolve) => {
+        finishStreamRef.current = resolve;
+        setStreaming((s) => (s ? { ...s, target: result.final, keywords, done: true } : s));
+      });
+
+      const aiMsg: Message  = { id: genId(), role: 'model', text: result.final, personaId: persona.id, modeId: mode.id, drawnCards, keywords };
+
       setStorage(prev => {
         const room = prev.rooms[targetRoomId];
-        if (!room) return prev; 
+        if (!room) return prev;
         return {
           ...prev,
           rooms: {
@@ -538,11 +574,14 @@ export function MainApp() {
           }
         };
       });
-      
+      setStreaming(null);
+
       playMagicSound();
       incrementUsage();
 
     } catch (e: unknown) {
+      finishStreamRef.current = null;
+      setStreaming(null);
       setError(e instanceof Error ? e.message : t('error.connection'));
       setStorage(prev => {
         const room = prev.rooms[targetRoomId];
@@ -1031,7 +1070,22 @@ export function MainApp() {
                 );
               })}
 
-              {isLoading && (
+              {/* Phase L-3c: Stage 2 のタイプ表示(確定前)。本文が来るまでは下のドット。 */}
+              {streaming && streaming.target !== '' && streaming.roomId === activeRoomId && (
+                <div style={{ width: '100%' }}>
+                  <StreamingBubble
+                    target={streaming.target}
+                    done={streaming.done}
+                    reduceMotion={streaming.reduceMotion}
+                    persona={streaming.persona}
+                    mode={streaming.mode}
+                    drawnCards={streaming.drawnCards}
+                    onFinished={handleStreamFinished}
+                  />
+                </div>
+              )}
+
+              {isLoading && (!streaming || streaming.target === '') && (
                 <div aria-busy="true" style={{ display: 'flex', justifyContent: 'flex-start', animation: 'oracleReveal 0.6s cubic-bezier(0.16,1,0.3,1)' }}>
                   <div style={{ padding: '20px 26px', background: 'rgba(255,255,255,0.95)', borderRadius: 24, border: `1px solid ${p.border}`, display: 'flex', alignItems: 'center', gap: 14, boxShadow: `0 8px 32px ${p.accent}12` }}>
                     <div style={{ display: 'flex', gap: 5 }} aria-hidden="true">
