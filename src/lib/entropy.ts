@@ -40,8 +40,16 @@ export interface EntropyDiagnostics {
   at: number;
 }
 
-/** QRNG fetch のタイムアウト（演出時間と協調。実測で調整可）。 */
-const RANDOM_TIMEOUT_MS = 2500;
+/**
+ * QRNG fetch のタイムアウト（演出時間と協調。実測で調整可: 1000〜1800ms 目安）。
+ *
+ * Phase L-1: ANU が正常なら数百 ms で返る。1.5 秒待っても返らないなら不調とみなし
+ * crypto フォールバックへ。フロント側(1500) ≧ BFF 側(ANU_TIMEOUT_MS=1200) の関係にする。
+ * フロントは BFF より長く待つので、BFF が先にタイムアウトして正規化エラーを返せば、
+ * フロントはそれを受けて即 crypto フォールバックできる（待ちすぎを防ぐ）。
+ * crypto フォールバックのロジックは不変＝QRNG が取れなくても必ずカードが引ける。
+ */
+const RANDOM_TIMEOUT_MS = 1500;
 
 /**
  * バイト列から Entropy を作る。rejection sampling の実装はここに一本化する。
