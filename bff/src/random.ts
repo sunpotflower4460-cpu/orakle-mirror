@@ -7,7 +7,10 @@ import type { Env } from './types';
 // セキュリティ: API キー(env.ANU_API_KEY)は絶対にレスポンスやログに含めない。
 
 const ANU_ENDPOINT = 'https://api.quantumnumbers.anu.edu.au';
-const ANU_TIMEOUT_MS = 2500;
+// Phase L-1: ANU が正常なら数百 ms で返る。フロント側(RANDOM_TIMEOUT_MS=1500) ≧
+// BFF 側(1200) の関係にする。BFF が先にタイムアウトして正規化エラーを返せば、
+// フロントは無駄に待たず即 crypto フォールバックできる（待ちすぎを防ぐ）。
+const ANU_TIMEOUT_MS = 1200;
 const ANU_MAX_LENGTH = 1024;
 
 export interface QuantumBytesSuccess {
