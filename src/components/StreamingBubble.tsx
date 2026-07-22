@@ -20,7 +20,7 @@ interface StreamingBubbleProps {
   persona: Persona;
   mode: Mode;
   drawnCards?: OracleCard[];
-  /** タイプが target 末尾に追いつき、かつ done のとき一度だけ呼ぶ。親が確定メッセージを保存する。 */
+  /** タイプが末尾まで追いついたとき一度だけ呼ぶ。本文は取得完了時点ですでに保存済みで、親は transient 表示を通常バブルへ切り替える。 */
   onFinished: () => void;
 }
 

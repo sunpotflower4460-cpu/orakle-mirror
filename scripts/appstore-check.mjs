@@ -174,6 +174,11 @@ check(
   envReady(localEnv, 'VITE_SUPPORT_URL') || envReady(localEnv, 'VITE_SUPPORT_EMAIL'),
   'Add a real support URL or support email to .env.local',
 );
+check(
+  'VITE_REVENUECAT_IOS_API_KEY is set for native subscription testing',
+  envReady(localEnv, 'VITE_REVENUECAT_IOS_API_KEY'),
+  'Add the RevenueCat iOS Public SDK key to .env.local before native IAP testing',
+);
 
 // ── 5. Purchases mock not in production imports ────────────────────────────────
 section('\nRevenueCat / native purchase readiness');
