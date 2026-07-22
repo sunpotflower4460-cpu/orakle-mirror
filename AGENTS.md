@@ -1,4 +1,4 @@
-Orakle Mirror — Agent Working Rules
+Oracle Mirror — Agent Working Rules
 
 このドキュメントは本リポジトリで作業するすべての AI エージェント
 (Claude Code / Cursor Background Agent / Devin など)が
@@ -10,27 +10,31 @@ Orakle Mirror — Agent Working Rules
 - プロダクト名: Oracle Mirror(オラクルミラー)
 - 形態: React + Vite + Capacitor の iOS アプリ(将来 Android 対応)
 - 最終ゴール: Apple App Store への申請と公開
-- 主機能: LLM API（現行プロバイダは OpenAI Responses API、Phase 5.5 でプロバイダ抽象化予定）を用いた神託対話。3 つのペルソナ
+- 主機能: LLM API（現行プロバイダは OpenAI Responses API）を用いた神託対話。3 つのペルソナ
   (Lumina / Zenith / Archivist)と 2 つのモード(Pure Channel / Card Reading)を切替
 - 収益モデル: 無料 3 回/日 + 月額サブスクリプション(RevenueCat 経由)
-- ターゲット OS: iOS 15 以降(Capacitor 6 想定)
+- ターゲット OS: iOS 15 以降(Capacitor 6、iPhone / iPad Universal)
 
-2. 現状のコード構造 (Phase 5.5b 完了時点)
+2. 現状のコード構造 (Phase L-3d 完了時点)
 
 - Vite + React 18 + TypeScript (strict: true)
-- Capacitor 6 統合済み (ios/ ディレクトリ生成済み、プラグインはモック)
-- ファイル分割完了 (src/components, src/constants, src/lib, src/styles, src/types)
+- Capacitor 6 統合済み (ios/ ディレクトリ生成済み)
+- ネイティブ iOS では Capacitor / RevenueCat の実プラグインを使用し、Web では `capacitorWebMocks.ts` を使用する
+- ファイル分割完了 (src/components, src/constants, src/features, src/lib, src/styles, src/types)
 - プロンプト構造: 二段階受信処理 (Stage 1 純粋受信 → Stage 2 識別と調律)
   - src/lib/prompt.ts: buildReceptionMessages / buildDiscernmentMessages
-  - src/lib/api.ts: fetchOracleTwoStage / callLLMWithSampling
-  - Stage 1 system は `buildSystemCore()` でパイプ宣言のみを行い、Stage 2 system は `buildDiscernmentSystem()` で禁止領域方針を集約する。
-  - BFF 側の developer instruction は Stage 別に分離され、reception/discernment いずれも出力形式の保証のみに最小化されている。
+  - src/lib/api.ts: fetchOracleTwoStage / fetchOracleTwoStageStreaming
+  - Stage 1 system は `buildSystemCore()` でパイプ宣言のみを行い、Stage 2 system は `buildDiscernmentSystem()` で禁止領域方針を集約する
+  - BFF 側の developer instruction は Stage 別に分離され、reception/discernment いずれも出力形式の保証のみに最小化されている
+  - Stage 1 は非ストリーム、Stage 2 は SSE ストリーミング + タイプ表示。失敗時は非ストリームへフォールバックする
 - LLM プロバイダ境界: フロントは VITE_BACKEND_URL 経由で BFF を呼び出し、リクエスト body に stage パラメータ（'reception' | 'discernment'）を含める
   - フロントエンドは provider 固有 API / キー / URL を保持しない
-  - BFF 側で OpenAI Responses API 実装を吸収し、Phase 5.5 で複数プロバイダ対応の抽象化境界とする
+  - BFF 側で OpenAI Responses API 実装を吸収する
   - BFF 側の provider 実装は `bff/src/providers/` 配下に分離済み（`types.ts` / `index.ts` / `openai.ts` / `adapter.ts`）
-- Capacitor プラグインはすべて src/lib/capacitorMocks.ts のモック (Phase 6 で差し替え)
-- ストレージキー: LS_KEY = 'oracle_mirror_v16'
+- カード抽選は BFF QRNG を主経路とし、rejection sampling と `crypto.getRandomValues()` フォールバックを使用する
+- Self Reading は `oracle_self_reading_v1` に分離され、AI/BFF/FREE_LIMIT を使用しない
+- RevenueCat は configure / Offering取得 / 購入 / 復元 / `premium` entitlement判定までコード結線済み。実商品設定・起動時再同期・Sandbox実機確認は未完了
+- AI Mirror ストレージキー: LS_KEY = 'oracle_mirror_v16'
 - 旧 API / 旧開発用ツールは整理済み
 
 3. フェーズ構成 (全体像)
@@ -50,7 +54,7 @@ Orakle Mirror — Agent Working Rules
 | Phase 4.12 | UI 外部案内バナー（旧定義「Stage 2 調律精度チューニング」から変更） | 完了 |
 | Phase 4.13a | BFF の Stage 別 developer instructions 分離 | 完了 |
 | Phase 4.13b | Stage 2 のペルソナ system 重複整理 | 完了 |
-| Phase 4.13c | ドキュメント整合（本フェーズ） | 完了 |
+| Phase 4.13c | ドキュメント整合 | 完了 |
 | Phase 4.13d | guidanceDetector の離婚キーワード調整 | 完了 |
 | Phase 4.14 | 起動文統合（関係性の足場と開いたまま終わる感覚） | 完了 |
 | Phase 4.15 | 量子乱数導入の設計メモ作成 | 完了 |
@@ -60,10 +64,14 @@ Orakle Mirror — Agent Working Rules
 | Phase 5.5b | BFF 側のプロバイダディレクトリ化 | 完了 |
 | Phase 5.5c | BFF エラー正規化の拡張 | 予定 |
 | Phase 5.5d | developer ロール非対応プロバイダ対応 | 予定 |
-| Phase 6 | RevenueCat IAP 実装、Capacitor 実プラグイン差し替え | 予定 |
+| Phase 6 | RevenueCatコード結線 | 部分完了（実サービス設定・起動時同期・Sandbox確認が残り） |
 | Phase 7 | App Store 提出準備 | 進行中（APPSTORE-BLOCKERS.md 参照） |
-| Phase U | iPad ユニバーサル対応（レイアウト幅安定化） | 完了 |
+| Phase S | Self Reading Beta（S-1〜S-11） | 完了 |
+| Phase U | iPad ユニバーサル対応（レイアウト幅安定化） | 完了（実機確認は残り） |
+| Phase A | deprecated整理 + AI非関与の並走キーワード層 | 完了 |
+| Phase Q | 安全網ja/en、a11y、ESLint、ビルド衛生 | 完了 |
 | Phase L | 遅延低減・体感スムーズ化（タイムアウト短縮 / 先行起動 / Stage 2 ストリーミング） | 完了 |
+| Phase R-1 | App Store readiness 環境設定診断の整理 | 完了 |
 
 4. 絶対ルール(違反禁止)
 
@@ -102,8 +110,9 @@ Orakle Mirror — Agent Working Rules
 - @capacitor/core, @capacitor/cli, @capacitor/ios
 - @capacitor/preferences, @capacitor/share, @capacitor/splash-screen
 - @capacitor/keyboard, @capacitor/status-bar, @capacitor/browser
-- @revenuecat/purchases-capacitor(Phase 6 で導入)
+- @revenuecat/purchases-capacitor
 - vite, @vitejs/plugin-react, typescript, @types/react, @types/react-dom
+- eslint, eslint-plugin-react-hooks, globals, typescript-eslint（dev-only）
 
 UI ライブラリ(MUI, Chakra, Tailwind 等)の追加は禁止。
 
@@ -119,11 +128,11 @@ UI ライブラリ(MUI, Chakra, Tailwind 等)の追加は禁止。
 
 5. コーディング規約
 
-- TypeScript: 段階的に TS 化。any は許容するが理由をコメント
+- TypeScript: strict を維持する。any は許容するが理由をコメント
 - ファイル長: 1 ファイル 400 行を目安に分割
 - 命名: 既存コードの命名規則に従う(camelCase、コンポーネントは PascalCase)
 - コメント: 日本語可。意図と「なぜ」を書く(「何を」はコード自体が示す)
-- i18n: 現状は日本語固定で OK。将来の i18n を見据えて文言は定数化推奨
+- i18n: UI文言は `ja.ts` を正準とする型安全な日本語/英語辞書を使用する。ユーザー向け文言をTSXへ新規ハードコードしない
 - インデント: 既存コードに合わせて 2 スペース
 - セミコロン: 既存コードに合わせて使用する
 - クォート: シングルクォート優先(既存コード準拠)
