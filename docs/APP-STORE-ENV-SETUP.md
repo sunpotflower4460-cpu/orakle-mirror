@@ -19,7 +19,7 @@ The `VITE_*` values are public Vite client environment values and are bundled in
 | VITE_PRIVACY_URL | Privacy Policy page | Yes | Must be a reachable public URL. |
 | VITE_SUPPORT_URL | Support page | Either URL or email | Public support route. |
 | VITE_SUPPORT_EMAIL | Support email | Either URL or email | Use if no support URL. |
-| VITE_REVENUECAT_IOS_API_KEY | RevenueCat iOS public SDK key | Required for native IAP readiness if subscriptions are enabled | This is a client SDK key, not a server secret. |
+| VITE_REVENUECAT_IOS_API_KEY | RevenueCat iOS public SDK key | Yes for native subscription testing/release readiness | This is a client SDK key, not a server secret. |
 
 ## Validation
 
@@ -31,7 +31,7 @@ npm run typecheck
 npm run build
 ```
 
-`npm run appstore:check` is expected to fail until real backend, legal, and support values are supplied locally. Template placeholders in `.env.example` are instructional only and are not treated as production-ready configuration.
+`npm run appstore:check` is expected to fail until real backend, legal, support, and RevenueCat Public SDK values are supplied locally. Template placeholders in `.env.example` are instructional only and are not treated as production-ready configuration.
 
 ## Values that must not be committed
 
