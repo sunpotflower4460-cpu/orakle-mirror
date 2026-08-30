@@ -47,30 +47,41 @@ export function getOracleErrorMessage(error: unknown, t: TFunction): string {
 }
 
 // QRNG は 1.5s。LLM は数秒〜十数秒が通常。ハングでスピナーが永続しないよう 1 試行 45s。
+// タイマーはヘッダー到着ではなく、body 消費が終わるまで残す(SSE はヘッダーが先に来る)。
 const ORACLE_FETCH_TIMEOUT_MS = 45_000;
 
-async function fetchOraclePost(body: unknown, parentSignal?: AbortSignal): Promise<Response> {
+function bindAbortTimeout(timeoutMs: number, parent?: AbortSignal): { signal: AbortSignal; dispose: () => void } {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  const onParentAbort = (): void => { controller.abort(); };
+  parent?.addEventListener('abort', onParentAbort);
+  if (parent?.aborted) controller.abort();
+  return {
+    signal: controller.signal,
+    dispose: () => {
+      clearTimeout(timer);
+      parent?.removeEventListener('abort', onParentAbort);
+    },
+  };
+}
+
+async function fetchOraclePost(body: unknown, parentSignal?: AbortSignal): Promise<{ res: Response; dispose: () => void }> {
   if (parentSignal?.aborted) throw new OracleCancelledError();
 
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), ORACLE_FETCH_TIMEOUT_MS);
-  const onParentAbort = (): void => { controller.abort(); };
-  parentSignal?.addEventListener('abort', onParentAbort);
-
+  const timed = bindAbortTimeout(ORACLE_FETCH_TIMEOUT_MS, parentSignal);
   try {
-    return await fetch(BACKEND_URL, {
+    const res = await fetch(BACKEND_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
-      signal: controller.signal,
+      signal: timed.signal,
     });
+    return { res, dispose: timed.dispose };
   } catch (e) {
+    timed.dispose();
     if (parentSignal?.aborted) throw new OracleCancelledError();
     if (isAbortError(e)) throw new Error('timeout');
     throw e;
-  } finally {
-    clearTimeout(timer);
-    parentSignal?.removeEventListener('abort', onParentAbort);
   }
 }
 
@@ -136,9 +147,12 @@ export async function callLLMWithSampling(
   let lastCode: BackendErrorCode | null = null;
 
   for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
+    let dispose: (() => void) | undefined;
     try {
       if (signal?.aborted) throw new OracleCancelledError();
-      const res = await fetchOraclePost({ messages, sampling, stage }, signal);
+      const fetched = await fetchOraclePost({ messages, sampling, stage }, signal);
+      dispose = fetched.dispose;
+      const res = fetched.res;
 
       if (res.ok) {
         const data = await res.json() as { text?: string };
@@ -164,12 +178,15 @@ export async function callLLMWithSampling(
       if (e instanceof OracleCancelledError) throw e;
       const err = e as FatalError;
       if (err?.fatal) throw err;
+      if (signal?.aborted) throw new OracleCancelledError();
       // タイムアウトはハング回復が目的。45s 待ったあとに同じ長さの再試行はしない。
-      if (e instanceof Error && e.message === 'timeout') {
+      if (e instanceof Error && (e.message === 'timeout' || isAbortError(e))) {
         throw oracleError('error.timeout');
       }
       lastCode = 'UPSTREAM_ERROR';
       lastError = err instanceof Error ? err : new Error(String(e));
+    } finally {
+      dispose?.();
     }
 
     if (attempt < MAX_ATTEMPTS - 1) {
@@ -308,8 +325,11 @@ async function callLLMStreaming(
   }
 
   let res: Response;
+  let dispose: (() => void) | undefined;
   try {
-    res = await fetchOraclePost({ messages, sampling, stage, stream: true }, signal);
+    const fetched = await fetchOraclePost({ messages, sampling, stage, stream: true }, signal);
+    dispose = fetched.dispose;
+    res = fetched.res;
   } catch (e) {
     if (e instanceof OracleCancelledError) throw e;
     if (e instanceof Error && e.message === 'timeout') {
@@ -318,97 +338,101 @@ async function callLLMStreaming(
     return { error: 'UPSTREAM_ERROR', message: e instanceof Error ? e.message : 'network error' };
   }
 
-  if (!res.ok) {
-    const errBody = (await res.json().catch(() => null)) as { error?: { code?: unknown } } | null;
-    return { error: normalizeBackendErrorCode(errBody?.error?.code) };
-  }
-
-  const contentType = res.headers.get('Content-Type') ?? '';
-  if (!contentType.includes('text/event-stream') || !res.body) {
-    // ストリーム非対応(古い BFF 等)。フォールバックさせる。
-    return { error: 'UPSTREAM_ERROR', message: 'not a stream' };
-  }
-
-  const reader = res.body.getReader();
-  const decoder = new TextDecoder();
-  let buffer = '';
-  let raw = '';
-  let shownLen = 0;
-  let doneText: string | null = null;
-  let streamError: BackendResult | null = null;
-
-  const update = (): void => {
-    const display = extractFinalForDisplay(raw);
-    if (display.length > shownLen) {
-      shownLen = display.length;
-      onText(display);
-    }
-  };
-
-  const consumeEvent = (rawEvent: string): void => {
-    let evName = 'message';
-    let dataStr = '';
-    for (const line of rawEvent.split('\n')) {
-      const l = line.trimStart();
-      if (l.startsWith('event:')) evName = l.slice(6).trim();
-      else if (l.startsWith('data:')) dataStr += l.slice(5).trim();
-    }
-    if (!dataStr) return;
-
-    let payload: { text?: unknown; code?: unknown };
-    try {
-      payload = JSON.parse(dataStr);
-    } catch {
-      return;
-    }
-
-    if (evName === 'delta' && typeof payload.text === 'string') {
-      raw += payload.text;
-      update();
-    } else if (evName === 'done') {
-      doneText = typeof payload.text === 'string' ? payload.text : raw;
-    } else if (evName === 'error') {
-      streamError = { error: normalizeBackendErrorCode(payload.code) };
-    }
-  };
-
-  const drainBuffer = (): void => {
-    let sep: number;
-    while ((sep = buffer.indexOf('\n\n')) !== -1) {
-      const rawEvent = buffer.slice(0, sep);
-      buffer = buffer.slice(sep + 2);
-      consumeEvent(rawEvent);
-    }
-  };
-
   try {
-    for (;;) {
-      if (signal?.aborted) throw new OracleCancelledError();
-      const { done, value } = await reader.read();
-      if (done) break;
-      buffer += decoder.decode(value, { stream: true });
-      drainBuffer();
+    if (!res.ok) {
+      const errBody = (await res.json().catch(() => null)) as { error?: { code?: unknown } } | null;
+      return { error: normalizeBackendErrorCode(errBody?.error?.code) };
     }
-    buffer += decoder.decode();
-    drainBuffer();
-    if (buffer.trim()) consumeEvent(buffer);
-  } catch (e) {
-    if (e instanceof OracleCancelledError) throw e;
-    if (signal?.aborted) throw new OracleCancelledError();
-    if (isAbortError(e)) throw oracleError('error.timeout');
-    return { error: 'UPSTREAM_ERROR', message: e instanceof Error ? e.message : 'stream read error' };
+
+    const contentType = res.headers.get('Content-Type') ?? '';
+    if (!contentType.includes('text/event-stream') || !res.body) {
+      // ストリーム非対応(古い BFF 等)。フォールバックさせる。
+      return { error: 'UPSTREAM_ERROR', message: 'not a stream' };
+    }
+
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+    let raw = '';
+    let shownLen = 0;
+    let doneText: string | null = null;
+    let streamError: BackendResult | null = null;
+
+    const update = (): void => {
+      const display = extractFinalForDisplay(raw);
+      if (display.length > shownLen) {
+        shownLen = display.length;
+        onText(display);
+      }
+    };
+
+    const consumeEvent = (rawEvent: string): void => {
+      let evName = 'message';
+      let dataStr = '';
+      for (const line of rawEvent.split('\n')) {
+        const l = line.trimStart();
+        if (l.startsWith('event:')) evName = l.slice(6).trim();
+        else if (l.startsWith('data:')) dataStr += l.slice(5).trim();
+      }
+      if (!dataStr) return;
+
+      let payload: { text?: unknown; code?: unknown };
+      try {
+        payload = JSON.parse(dataStr);
+      } catch {
+        return;
+      }
+
+      if (evName === 'delta' && typeof payload.text === 'string') {
+        raw += payload.text;
+        update();
+      } else if (evName === 'done') {
+        doneText = typeof payload.text === 'string' ? payload.text : raw;
+      } else if (evName === 'error') {
+        streamError = { error: normalizeBackendErrorCode(payload.code) };
+      }
+    };
+
+    const drainBuffer = (): void => {
+      let sep: number;
+      while ((sep = buffer.indexOf('\n\n')) !== -1) {
+        const rawEvent = buffer.slice(0, sep);
+        buffer = buffer.slice(sep + 2);
+        consumeEvent(rawEvent);
+      }
+    };
+
+    try {
+      for (;;) {
+        if (signal?.aborted) throw new OracleCancelledError();
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        drainBuffer();
+      }
+      buffer += decoder.decode();
+      drainBuffer();
+      if (buffer.trim()) consumeEvent(buffer);
+    } catch (e) {
+      if (e instanceof OracleCancelledError) throw e;
+      if (signal?.aborted) throw new OracleCancelledError();
+      if (isAbortError(e)) throw oracleError('error.timeout');
+      return { error: 'UPSTREAM_ERROR', message: e instanceof Error ? e.message : 'stream read error' };
+    }
+
+    if (streamError) return streamError;
+
+    const fullText = doneText ?? raw;
+    if (!fullText) return { error: 'UPSTREAM_ERROR', message: 'empty stream' };
+
+    // done の全文で表示を確定(取りこぼした増分があれば最後に流す)。
+    raw = fullText;
+    update();
+
+    return { text: fullText };
+  } finally {
+    dispose?.();
   }
-
-  if (streamError) return streamError;
-
-  const fullText = doneText ?? raw;
-  if (!fullText) return { error: 'UPSTREAM_ERROR', message: 'empty stream' };
-
-  // done の全文で表示を確定(取りこぼした増分があれば最後に流す)。
-  raw = fullText;
-  update();
-
-  return { text: fullText };
 }
 
 /**

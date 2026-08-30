@@ -448,13 +448,11 @@ export function MainApp() {
     el.style.height = Math.min(el.scrollHeight, 120) + 'px';
   }, [input]);
 
-  useEffect(() => {
-    setStreaming((s) => {
-      if (!s) return s;
-      if (appView !== 'oracle' || activeRoomId !== s.roomId) return null;
-      return s;
-    });
-  }, [activeRoomId, appView]);
+  // 部屋切替や Self Reading へ移っても streaming は残す。
+  // 消すと in-flight の onText が setStreaming(s => s ? … : s) で再作成できず、
+  // 元の部屋に戻ったときに待機点だけが出て本文が最後に一気に落ちる。
+  // 吹き出しは streaming.roomId === activeRoomId のときだけ描画する。
+
   // Q-3: サイドバーを Escape で閉じられるようにする（モーダル群と同じ作法）。
   // 開いているときだけ listener を張り、cleanup で必ず外す。
   useEffect(() => {
@@ -563,6 +561,7 @@ export function MainApp() {
 
     if (isNewRoom) setActiveRoomId(targetRoomId);
 
+    try {
     // Phase 4.16 / L-2: 先行起動したカード抽選(QRNG)をここで受ける。UI 更新中に裏で
     // 取得が進むため体感負荷はほぼなく、失敗時は crypto で確定する（必ず引ける）。
     const { cards: drawnCards } = await drawPromise;
@@ -582,7 +581,6 @@ export function MainApp() {
 
     const aiMsgId = genId();
 
-    try {
       // 受信中の表示(本文が来るまでは空のバブル＋カーソル)。dots は streaming 中は出さない。
       setStreaming({ roomId: targetRoomId, msgId: aiMsgId, persona, mode, drawnCards, target: '', done: false, reduceMotion });
 
