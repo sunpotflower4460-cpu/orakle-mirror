@@ -1,7 +1,9 @@
 import React, { useEffect } from 'react';
-import { X } from 'lucide-react';
+import { X, RefreshCw } from 'lucide-react';
 import { MODES } from '../constants/modes';
 import { PERSONAS } from '../constants/personas';
+import { APP_STORE_MANAGE_SUBSCRIPTIONS_URL } from '../lib/premium';
+import { openExternalUrl } from '../lib/openExternal';
 import { LegalLinks } from './LegalLinks';
 import { LOCALES, useLocale } from '../i18n';
 import type { Mode } from '../types';
@@ -9,9 +11,11 @@ import type { Mode } from '../types';
 interface HelpModalProps {
   onClose: () => void;
   onDeleteAllHistory: () => void;
+  onRestore: () => Promise<void>;
+  isPurchasing: boolean;
 }
 
-export function HelpModal({ onClose, onDeleteAllHistory }: HelpModalProps) {
+export function HelpModal({ onClose, onDeleteAllHistory, onRestore, isPurchasing }: HelpModalProps) {
   const { locale, setLocale, t } = useLocale();
 
   useEffect(() => {
@@ -77,6 +81,32 @@ export function HelpModal({ onClose, onDeleteAllHistory }: HelpModalProps) {
 
         {/* App Store審査必須要件：プライバシーポリシーと利用規約への安全なリンク */}
         <LegalLinks style={{ marginTop: 24 }} />
+
+        <div style={{ marginTop: 16, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
+          <button
+            type="button"
+            onClick={() => { void onRestore(); }}
+            disabled={isPurchasing}
+            style={{
+              background: 'none', border: 'none', color: '#64748b', fontSize: 11,
+              cursor: isPurchasing ? 'not-allowed' : 'pointer',
+              display: 'inline-flex', alignItems: 'center', gap: 6, padding: '8px 16px',
+            }}
+          >
+            <RefreshCw size={12} />
+            {t('subscribe.restore')}
+          </button>
+          <button
+            type="button"
+            onClick={() => openExternalUrl(APP_STORE_MANAGE_SUBSCRIPTIONS_URL)}
+            style={{
+              background: 'none', border: 'none', padding: 0,
+              fontSize: 11, color: '#94a3b8', textDecoration: 'underline', cursor: 'pointer',
+            }}
+          >
+            {t('subscribe.manage')}
+          </button>
+        </div>
 
         {/* データ管理：全履歴削除 */}
         <div style={{ marginTop: 24, paddingTop: 16, borderTop: '1px solid #f8fafc', textAlign: 'center' }}>

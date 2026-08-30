@@ -8,7 +8,7 @@
 
 ## Secrets
 
-- The Gemini API key must be stored as a Cloudflare secret (`wrangler secret put GEMINI_API_KEY`), not in `wrangler.toml`.
+- The OpenAI API key must be stored as a Cloudflare secret (`wrangler secret put OPENAI_API_KEY`), not in `wrangler.toml`.
 - Never commit API keys or secrets to version control.
 
 ## Rate Limiting

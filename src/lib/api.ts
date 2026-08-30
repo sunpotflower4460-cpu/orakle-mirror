@@ -5,8 +5,26 @@ import type {
   SamplingParams,
   TwoStageResult,
 } from '../types';
+import type { MessageKey, TFunction } from '../i18n';
 import { BACKEND_URL, IS_PROD, isBackendUrlPlaceholder } from './env';
 import { extractFinalForDisplay } from './streamText';
+
+type OracleError = FatalError & { oracleErrorKey: MessageKey };
+
+function oracleError(key: MessageKey): OracleError {
+  const err = new Error(key) as OracleError;
+  err.fatal = true;
+  err.oracleErrorKey = key;
+  return err;
+}
+
+export function getOracleErrorMessage(error: unknown, t: TFunction): string {
+  if (error && typeof error === 'object' && 'oracleErrorKey' in error) {
+    const key = (error as { oracleErrorKey: unknown }).oracleErrorKey;
+    if (typeof key === 'string') return t(key as MessageKey);
+  }
+  return t('error.connection');
+}
 
 type Stage = 'reception' | 'discernment';
 type BackendResult = { text: string } | { error: BackendErrorCode; message?: string };
@@ -50,13 +68,14 @@ export async function callLLMWithSampling(
   stage: Stage,
 ): Promise<BackendResult> {
   if (!BACKEND_URL || isBackendUrlPlaceholder()) {
-    const msg = IS_PROD
-      ? '神託サーバーへの接続設定が不完全です。'
-      : 'VITE_BACKEND_URL is not configured. Set it in .env.local '
-        + '(e.g. http://localhost:8787/oracle for local wrangler dev).';
-    const err = new Error(msg) as FatalError;
-    err.fatal = true;
-    throw err;
+    if (!IS_PROD) {
+      // eslint-disable-next-line no-console
+      console.error(
+        'VITE_BACKEND_URL is not configured. Set it in .env.local '
+        + '(e.g. http://localhost:8787/oracle for local wrangler dev).',
+      );
+    }
+    throw oracleError('error.misconfigured');
   }
 
   // MAX_ATTEMPTS = 試行上限回数。RETRY_DELAYS_MS の要素数は必ず MAX_ATTEMPTS - 1 にすること。
@@ -78,9 +97,7 @@ export async function callLLMWithSampling(
         if (typeof data.text === 'string' && data.text.length > 0) {
           return { text: data.text };
         }
-        const err = new Error('神託の声が届きませんでした。') as FatalError;
-        err.fatal = true;
-        throw err;
+        throw oracleError('error.emptyResponse');
       }
 
       const errBody = (await res.json().catch(() => null)) as { error?: { code?: unknown; message?: unknown } } | null;
@@ -107,39 +124,35 @@ export async function callLLMWithSampling(
     }
   }
 
-  // 全試行失敗: 最後のエラーコードに応じたユーザー向け文言を返す
-  // (例: 429 が連続した場合は RATE_LIMITED 文言になる)
-  const finalMsg = lastCode
-    ? buildUserFacingError(lastCode, lastError?.message ?? '')
-    : '天との接続が安定しません。少し時間をおいてから再び問いかけてください。';
-  const err = new Error(finalMsg) as FatalError & { cause?: unknown };
-  err.fatal = true;
+  // 全試行失敗: 最後のエラーコードを i18n キーへ正規化して投げる。
+  const err = oracleError(lastCode ? errorKeyForCode(lastCode) : 'error.connection');
   err.cause = lastError ?? undefined;
   throw err;
 }
 
 /**
- * BFF エラーコードをユーザー向けメッセージに変換する。
- * 詳細を出しすぎない、世界観を保つ文言。
+ * BFF エラーコードを UI 辞書キーへ変換する。
+ * 詳細を出しすぎない、世界観を保つ文言は ja.ts / en.ts 側に置く。
  */
-function buildUserFacingError(code: BackendErrorCode, _message: string): string {
+function errorKeyForCode(code: BackendErrorCode): MessageKey {
   switch (code) {
     case 'RATE_LIMITED':
-      return '今、あまりに多くの問いが鏡に投げかけられています。少し休んでから再び訪れてください。';
+      return 'error.rateLimited';
     case 'BODY_TOO_LARGE':
-      return '問いが長すぎるようです。少し言葉を整えてから再び投げかけてください。';
+      return 'error.bodyTooLarge';
     case 'NOT_FOUND':
     case 'ORIGIN_NOT_ALLOWED':
     case 'UNSUPPORTED_MEDIA_TYPE':
     case 'INVALID_JSON':
     case 'INVALID_STAGE':
     case 'INVALID_REQUEST':
-      return '神託の経路が乱れています。アプリを再起動して再び試してください。';
+      return 'error.path';
     case 'SERVER_MISCONFIGURED':
+      return 'error.misconfigured';
     case 'UPSTREAM_ERROR':
-      return '天との接続が途切れました。少し時間をおいてから再び問いかけてください。';
+      return 'error.connection';
     default:
-      return '神託の声が届きませんでした。少し時間をおいてから再び問いかけてください。';
+      return 'error.emptyResponse';
   }
 }
 
@@ -187,24 +200,20 @@ export const fetchOracleTwoStage = async (
   const t1Start = Date.now();
   const rawResponse = await callLLMWithSampling(receptionMsgs, RECEPTION_SAMPLING, 'reception');
   if ('error' in rawResponse) {
-    const err = new Error(buildUserFacingError(rawResponse.error, rawResponse.message ?? '')) as FatalError;
-    err.fatal = true;
-    throw err;
+    throw oracleError(errorKeyForCode(rawResponse.error));
   }
   const raw = extractTag(rawResponse.text, 'reception');
   const receptionMs = Date.now() - t1Start;
 
   if (!raw) {
-    throw new Error('Stage 1 (reception) returned empty content');
+    throw oracleError('error.emptyResponse');
   }
 
   const t2Start = Date.now();
   const discernmentMsgs = discernmentBuilder(raw);
   const finalResponse = await callLLMWithSampling(discernmentMsgs, DISCERNMENT_SAMPLING, 'discernment');
   if ('error' in finalResponse) {
-    const err = new Error(buildUserFacingError(finalResponse.error, finalResponse.message ?? '')) as FatalError;
-    err.fatal = true;
-    throw err;
+    throw oracleError(errorKeyForCode(finalResponse.error));
   }
   const final = extractTag(finalResponse.text, 'final');
   const discernmentMs = Date.now() - t2Start;
@@ -350,15 +359,13 @@ export const fetchOracleTwoStageStreaming = async (
   const t1Start = Date.now();
   const rawResponse = await callLLMWithSampling(receptionMsgs, RECEPTION_SAMPLING, 'reception');
   if ('error' in rawResponse) {
-    const err = new Error(buildUserFacingError(rawResponse.error, rawResponse.message ?? '')) as FatalError;
-    err.fatal = true;
-    throw err;
+    throw oracleError(errorKeyForCode(rawResponse.error));
   }
   const raw = extractTag(rawResponse.text, 'reception');
   const receptionMs = Date.now() - t1Start;
 
   if (!raw) {
-    throw new Error('Stage 1 (reception) returned empty content');
+    throw oracleError('error.emptyResponse');
   }
 
   const t2Start = Date.now();
@@ -372,9 +379,7 @@ export const fetchOracleTwoStageStreaming = async (
     // ストリーム失敗 → Stage 2 を非ストリームでやり直す(必ず答えが出る)。
     const finalResponse = await callLLMWithSampling(discernmentMsgs, DISCERNMENT_SAMPLING, 'discernment');
     if ('error' in finalResponse) {
-      const err = new Error(buildUserFacingError(finalResponse.error, finalResponse.message ?? '')) as FatalError;
-      err.fatal = true;
-      throw err;
+      throw oracleError(errorKeyForCode(finalResponse.error));
     }
     finalText = finalResponse.text;
     // 表示ターゲットを確定本文に一括設定(絶対指定なので重複しない)。

@@ -119,6 +119,15 @@ export function assertProductionReady(): void {
   }
   if (Purchases.isMock) {
     errors.push('RevenueCat Purchases plugin is still running in mock mode');
+  } else {
+    const rcKey = (typeof import.meta !== 'undefined'
+      && import.meta.env
+      && typeof import.meta.env.VITE_REVENUECAT_IOS_API_KEY === 'string')
+      ? import.meta.env.VITE_REVENUECAT_IOS_API_KEY.trim()
+      : '';
+    if (!rcKey) {
+      errors.push('VITE_REVENUECAT_IOS_API_KEY is missing');
+    }
   }
 
   if (errors.length > 0) {

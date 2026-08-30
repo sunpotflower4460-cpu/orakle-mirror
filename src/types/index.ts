@@ -182,6 +182,7 @@ export interface PurchasesPlugin {
   isMock?: boolean;
   configure?(options: { apiKey: string }): Promise<void>;
   getOfferings(): Promise<Offerings>;
+  getCustomerInfo?(): Promise<{ customerInfo: CustomerInfo }>;
   purchasePackage(options: { aPackage: PurchasePackage }): Promise<{ customerInfo: CustomerInfo }>;
   restorePurchases(): Promise<{ customerInfo: CustomerInfo }>;
 }

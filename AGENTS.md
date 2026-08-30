@@ -33,7 +33,7 @@ Oracle Mirror — Agent Working Rules
   - BFF 側の provider 実装は `bff/src/providers/` 配下に分離済み（`types.ts` / `index.ts` / `openai.ts` / `adapter.ts`）
 - カード抽選は BFF QRNG を主経路とし、rejection sampling と `crypto.getRandomValues()` フォールバックを使用する
 - Self Reading は `oracle_self_reading_v1` に分離され、AI/BFF/FREE_LIMIT を使用しない
-- RevenueCat は configure / Offering取得 / 購入 / 復元 / `premium` entitlement判定までコード結線済み。実商品設定・起動時再同期・Sandbox実機確認は未完了
+- RevenueCat は configure / Offering取得 / 購入 / 復元 / `premium` entitlement判定、起動時およびフォアグラウンド復帰時の再同期までコード結線済み。実商品設定・Sandbox実機確認は未完了
 - AI Mirror ストレージキー: LS_KEY = 'oracle_mirror_v16'
 - 旧 API / 旧開発用ツールは整理済み
 
@@ -64,7 +64,7 @@ Oracle Mirror — Agent Working Rules
 | Phase 5.5b | BFF 側のプロバイダディレクトリ化 | 完了 |
 | Phase 5.5c | BFF エラー正規化の拡張 | 予定 |
 | Phase 5.5d | developer ロール非対応プロバイダ対応 | 予定 |
-| Phase 6 | RevenueCatコード結線 | 部分完了（実サービス設定・起動時同期・Sandbox確認が残り） |
+| Phase 6 | RevenueCatコード結線 | 部分完了（実サービス設定・Sandbox確認が残り。起動時entitlement再同期はコード側完了） |
 | Phase 7 | App Store 提出準備 | 進行中（APPSTORE-BLOCKERS.md 参照） |
 | Phase S | Self Reading Beta（S-1〜S-11） | 完了 |
 | Phase U | iPad ユニバーサル対応（レイアウト幅安定化） | 完了（実機確認は残り） |

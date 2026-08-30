@@ -69,7 +69,7 @@ Oracle Mirror は、ユーザーが自身のハイヤーセルフの声を聴く
 | Phase 5.5b | BFF 側のプロバイダディレクトリ化 | 完了 |
 | Phase 5.5c | BFF エラー正規化の拡張 | 予定 |
 | Phase 5.5d | developer ロール非対応プロバイダ対応 | 予定 |
-| Phase 6 | RevenueCat IAP 実装、Capacitor 実プラグイン差し替え | 予定 |
+| Phase 6 | RevenueCat IAP 実装、Capacitor 実プラグイン差し替え | 部分完了（実サービス設定・Sandbox確認が残り。起動時entitlement再同期はコード側完了） |
 | Phase 7 | App Store 提出準備 | 進行中（APPSTORE-BLOCKERS.md 参照） |
 | Phase U | iPad ユニバーサル対応（レイアウト幅安定化） | 完了 |
 | Phase L | 遅延低減・体感スムーズ化（QRNG タイムアウト短縮 / 先行起動 / Stage 2 ストリーミング） | 完了 |

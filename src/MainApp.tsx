@@ -18,7 +18,7 @@ import { getAudioContext, playMagicSound } from './lib/audio';
 import { IS_PROD, USE_JS_KEYBOARD_PADDING } from './lib/env';
 import { safeStartTransition } from './lib/react-compat';
 import { Preferences, Share, Purchases, SplashScreen, Keyboard, StatusBar } from './lib/capacitorMocks';
-import { fetchOracleTwoStage, fetchOracleTwoStageStreaming } from './lib/api';
+import { fetchOracleTwoStage, fetchOracleTwoStageStreaming, getOracleErrorMessage } from './lib/api';
 import { Toast } from './components/Toast';
 import { StreamingBubble } from './components/StreamingBubble';
 import { SubscribeModal } from './components/SubscribeModal';
@@ -29,6 +29,12 @@ import { Onboarding } from './components/Onboarding';
 import { ExternalGuidanceBanner } from './components/ExternalGuidanceBanner';
 import { SelfReadingView } from './features/selfReading/SelfReadingView';
 import { detectGuidance } from './lib/guidanceDetector';
+import {
+  configurePurchases,
+  isPurchaseCancelled,
+  persistPremiumFromCustomerInfo,
+  syncPremiumEntitlement,
+} from './lib/premium';
 import { useT } from './i18n';
 import type { Storage, OracleCard, Message, PersonaId, Mode, Persona } from './types';
 
@@ -147,8 +153,10 @@ export function MainApp() {
         sal: safeArea.getPropertyValue('--sal').trim(),
       },
     };
-    // eslint-disable-next-line no-console
-    console.info('[oracle-mirror] ui-diagnostics', window.__oracleMirrorDiagnostics);
+    if (import.meta.env.DEV) {
+      // eslint-disable-next-line no-console
+      console.info('[oracle-mirror] ui-diagnostics', window.__oracleMirrorDiagnostics);
+    }
   }, []);
 
   const sidebarOpenRef = useRef(sidebarOpen);
@@ -183,6 +191,7 @@ export function MainApp() {
       if (document.visibilityState === 'visible') {
         const ctx = getAudioContext();
         if (ctx && ctx.state === 'suspended') ctx.resume();
+        void syncPremiumEntitlement().then(setIsPremium).catch(() => {});
       }
     };
     document.addEventListener('visibilitychange', handleVisibility);
@@ -211,15 +220,9 @@ export function MainApp() {
         console.error('⚠️ [CRITICAL WARNING] App is running in PRODUCTION with mock plugins!');
       }
 
-      // RevenueCat の初期設定（ネイティブ環境かつ API キーが設定されている場合のみ）
-      const rcApiKey = import.meta.env.VITE_REVENUECAT_IOS_API_KEY;
-      if (rcApiKey && typeof Purchases.configure === 'function') {
-        try {
-          await Purchases.configure({ apiKey: rcApiKey });
-        } catch (e) {
-          console.error('[RevenueCat] configure failed:', e);
-        }
-      }
+      // RevenueCat: ネイティブでは configure 後に entitlement を再同期する。
+      // 失効・返金・解約はストアを正とし、ローカルキャッシュだけに依存しない。
+      await configurePurchases();
 
       let parsedStorage = { rooms: {}, roomOrder: [] };
       let premiumStatus = false;
@@ -244,8 +247,7 @@ export function MainApp() {
           }
         }
 
-        const { value: premiumVal } = await Preferences.get({ key: 'app_is_premium' });
-        premiumStatus = premiumVal === 'true';
+        premiumStatus = await syncPremiumEntitlement();
 
         const { value: usageVal } = await Preferences.get({ key: 'app_usage_data' });
         if (usageVal) {
@@ -308,20 +310,21 @@ export function MainApp() {
     try {
       const offerings = await Purchases.getOfferings();
       const monthly = offerings.current?.monthly;
-      if (!monthly) throw new Error('商品が見つかりません');
-      
+      if (!monthly) {
+        showToast(t('subscribe.offeringsUnavailable'));
+        return;
+      }
+
       const { customerInfo } = await Purchases.purchasePackage({ aPackage: monthly });
-      const isActive = customerInfo?.entitlements?.active?.['premium'] !== undefined;
-      
+      const isActive = await persistPremiumFromCustomerInfo(customerInfo);
+      setIsPremium(isActive);
+
       if (isActive) {
-        await Preferences.set({ key: 'app_is_premium', value: 'true' });
-        setIsPremium(true);
         showToast(t('subscribe.unlocked'));
         setShowSubscribeModal(false);
       }
     } catch (e: unknown) {
-      const err = e as { code?: string };
-      if (err.code !== 'PURCHASE_CANCELLED') showToast(t('subscribe.purchaseFailed'));
+      if (!isPurchaseCancelled(e)) showToast(t('subscribe.purchaseFailed'));
     } finally {
       setIsPurchasing(false);
     }
@@ -332,17 +335,16 @@ export function MainApp() {
     setIsPurchasing(true);
     try {
       const { customerInfo } = await Purchases.restorePurchases();
-      const isActive = customerInfo?.entitlements?.active?.['premium'] !== undefined;
-      
+      const isActive = await persistPremiumFromCustomerInfo(customerInfo);
+      setIsPremium(isActive);
+
       if (isActive) {
-        await Preferences.set({ key: 'app_is_premium', value: 'true' });
-        setIsPremium(true);
         showToast(t('subscribe.restored'));
         setShowSubscribeModal(false);
       } else {
         showToast(t('subscribe.noRestore'));
       }
-    } catch (e) {
+    } catch {
       showToast(t('subscribe.restoreFailed'));
     } finally {
       setIsPurchasing(false);
@@ -453,12 +455,15 @@ export function MainApp() {
   }, [showToast, t]);
 
   const handleShareApp = useCallback(async () => {
-    await Share.share({
-      title: 'Oracle Mirror',
-      text: t('share.text'),
-      url: 'https://oraclemirror.app',
-      dialogTitle: t('share.dialogTitle')
-    });
+    try {
+      await Share.share({
+        title: 'Oracle Mirror',
+        text: t('share.text'),
+        dialogTitle: t('share.dialogTitle')
+      });
+    } catch {
+      // ユーザーが共有シートを閉じた場合は何もしない
+    }
   }, [t]);
 
   const handleSend = useCallback(async () => {
@@ -577,7 +582,7 @@ export function MainApp() {
 
     } catch (e: unknown) {
       setStreaming(null);
-      setError(e instanceof Error ? e.message : t('error.connection'));
+      setError(getOracleErrorMessage(e, t));
       setStorage(prev => {
         const room = prev.rooms[targetRoomId];
         if (!room) return prev;
@@ -684,7 +689,7 @@ export function MainApp() {
       playMagicSound();
       incrementUsage();
 
-    } catch (e: unknown) { setError(e instanceof Error ? e.message : t('error.connection')); }
+    } catch (e: unknown) { setError(getOracleErrorMessage(e, t)); }
     finally { setRegenId(null); }
 
   }, [activeRoomId, incrementUsage, showToast, t]);
@@ -769,7 +774,7 @@ export function MainApp() {
 
       {toast && <Toast message={toast} onDone={clearToast}/>}
       {showOnboarding && <Onboarding onComplete={handleOnboardingComplete}/>}
-      {showHelp && <HelpModal onClose={() => setShowHelp(false)} onDeleteAllHistory={handleDeleteAllHistory}/>}
+      {showHelp && <HelpModal onClose={() => setShowHelp(false)} onDeleteAllHistory={handleDeleteAllHistory} onRestore={handleRestore} isPurchasing={isPurchasing} />}
       {showSubscribeModal && <SubscribeModal onClose={() => setShowSubscribeModal(false)} onSubscribe={handleSubscribe} onRestore={handleRestore} isPurchasing={isPurchasing} />}
 
       {sidebarOpen && (
@@ -851,7 +856,7 @@ export function MainApp() {
                 }}>
                 <span style={{ color: rp.accent, flexShrink: 0, display: 'flex' }}>{rp.icon}</span>
                 <span style={{ fontSize: 13, color: isActive ? '#374151' : '#64748b', fontWeight: isActive ? 600 : 400, overflow: 'hidden', textOverflow: 'ellipsis', flex: 1, whiteSpace: 'nowrap' }}>
-                  {room.title || 'Divine Echo'}
+                  {room.title || t('sidebar.untitledRoom')}
                 </span>
                 <button className="room-del" aria-label={t('a11y.deleteRoom')} onClick={e => handleDeleteRoom(room.id, e)}
                   style={{ minWidth: 36, minHeight: 36, background: 'none', border: 'none', cursor: 'pointer', color: '#cbd5e1', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginRight: -6 }}>

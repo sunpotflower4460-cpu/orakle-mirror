@@ -32,7 +32,7 @@ A support contact link is also available in the Help screen.
 ## Backend
 
 The app connects to the production BFF endpoint configured by VITE_BACKEND_URL.
-The BFF does not expose the Gemini API key to the client.
+The BFF does not expose the OpenAI API key to the client.
 
 
 ## Self Reading
@@ -44,8 +44,7 @@ Current Self Reading behavior:
 
 - It uses deck and spread data bundled in the app.
 - Deck 1 uses the existing 48-card Oracle Mirror card set.
-- Deck 2 and Deck 3 are intentionally prepared slots for future bundled card arrays.
-- Deck 2 / Deck 3 remain unavailable until card content is manually added later.
+- Deck 2 and Deck 3 are code-level preparation slots for future bundled card arrays. They stay hidden from the Self Reading picker until card content is added, so the shipping app does not present unfinished features.
 - A dedicated custom-card deck uses only cards saved locally by the user; it is disabled until enough custom cards exist for the selected spread.
 - Users can choose 1 / 2 / 3 card spreads and may enter an optional local question.
 - The shuffle, deal, flip animation, and result view run locally on the device.

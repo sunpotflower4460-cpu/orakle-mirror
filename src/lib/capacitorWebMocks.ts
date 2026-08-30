@@ -34,7 +34,10 @@ export const Share: SharePlugin = {
   async share(options) {
     if (navigator.share) {
       try { await navigator.share(options); } catch (e) { console.error(e); }
-    } else { alert(`共有:\n${options.title}\n${options.text}\n${options.url}`); }
+      return;
+    }
+    const parts = [options.title, options.text, options.url].filter(Boolean).join('\n');
+    window.alert(parts);
   }
 };
 
@@ -51,7 +54,10 @@ export const Purchases: PurchasesPlugin = {
       } 
     }; 
   },
-  async purchasePackage({ aPackage }) { return { customerInfo: { entitlements: { active: { 'premium': {} } } } }; },
+  async getCustomerInfo() {
+    return { customerInfo: { entitlements: { active: {} } } };
+  },
+  async purchasePackage({ aPackage: _aPackage }) { return { customerInfo: { entitlements: { active: { 'premium': {} } } } }; },
   // 復元機能のモック
   async restorePurchases() { return { customerInfo: { entitlements: { active: {} } } }; }
 };
