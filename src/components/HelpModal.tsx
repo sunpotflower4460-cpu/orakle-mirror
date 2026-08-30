@@ -19,7 +19,7 @@ interface HelpModalProps {
 
 export function HelpModal({ onClose, onDeleteAllHistory, onRestore, isPurchasing }: HelpModalProps) {
   const { t } = useLocale();
-  const dialogRef = useDialogChrome(onClose);
+  const dialogRef = useDialogChrome(onClose, !isPurchasing);
 
   return (
     <div
@@ -36,12 +36,19 @@ export function HelpModal({ onClose, onDeleteAllHistory, onRestore, isPurchasing
         WebkitBackdropFilter: 'blur(12px)',
         outline: 'none',
       }}
-      onClick={e => e.target === e.currentTarget && onClose()}
+      onClick={e => {
+        if (e.target === e.currentTarget && !isPurchasing) onClose();
+      }}
     >
       <div className="om-modal-card om-modal-card--sheet" style={{ maxWidth: 420 }}>
-        <div className="om-modal-header">
-          <h2 id="helpTitle" style={{ fontSize: 11, letterSpacing: '0.4em', fontWeight: 800, color: '#8994a6', textTransform: 'uppercase', margin: 0 }}>{t('help.title')}</h2>
-          <button type="button" className="om-icon-btn" aria-label={t('a11y.close')} onClick={onClose} style={{ color: '#9ca6b4' }}><X size={18}/></button>
+        <div className="om-modal-header" style={{ flexDirection: 'column', alignItems: 'stretch', gap: 12 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
+            <h2 id="helpTitle" style={{ fontSize: 11, letterSpacing: '0.4em', fontWeight: 800, color: '#8994a6', textTransform: 'uppercase', margin: 0 }}>{t('help.title')}</h2>
+            <button type="button" className="om-icon-btn" aria-label={t('a11y.close')} onClick={onClose} disabled={isPurchasing} style={{ color: '#9ca6b4', flexShrink: 0 }}><X size={18}/></button>
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'center' }}>
+            <LanguageToggle />
+          </div>
         </div>
         <div className="om-modal-body" style={{ padding: '20px 28px 8px' }}>
           <section style={{ marginBottom: 24 }}>
@@ -66,11 +73,6 @@ export function HelpModal({ onClose, onDeleteAllHistory, onRestore, isPurchasing
             <strong>{t('help.disclaimerTitle')}</strong><br/>
             {t('help.disclaimerBody')}<br/><br/>
             {t('help.disclaimerNote')}
-          </div>
-
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10, marginTop: 24 }}>
-            <span style={{ fontSize: 10, letterSpacing: '0.2em', color: '#aab2bf', textTransform: 'uppercase', fontWeight: 700 }}>{t('help.language')}</span>
-            <LanguageToggle />
           </div>
 
           <LegalLinks style={{ marginTop: 24 }} />
@@ -119,7 +121,7 @@ export function HelpModal({ onClose, onDeleteAllHistory, onRestore, isPurchasing
         </div>
 
         <div className="om-modal-footer">
-          <button type="button" className="om-cta" onClick={onClose} style={{
+          <button type="button" className="om-cta" onClick={onClose} disabled={isPurchasing} style={{
             width: '100%', padding: '14px 0',
             borderRadius: 999, fontSize: 11, letterSpacing: '0.25em', textTransform: 'uppercase',
           }}>{t('help.back')}</button>

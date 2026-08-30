@@ -32,7 +32,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
           <AlertCircle size={48} color="#f43f5e" style={{ marginBottom: 20 }} />
           <h2 style={{ fontSize: 18, marginBottom: 10, letterSpacing: '0.1em' }}>{translate(locale, 'errorBoundary.title')}</h2>
           <p style={{ fontSize: 14, color: '#94a3b8', marginBottom: 30 }}>{translate(locale, 'errorBoundary.body')}</p>
-          <button onClick={() => window.location.reload()} style={{ padding: '12px 24px', background: '#334155', color: '#fff', border: 'none', borderRadius: 999, fontSize: 14, fontWeight: 'bold', cursor: 'pointer' }}>
+          <button type="button" onClick={() => window.location.reload()} style={{ padding: '12px 24px', minHeight: 48, background: '#334155', color: '#fff', border: 'none', borderRadius: 999, fontSize: 14, fontWeight: 'bold', cursor: 'pointer' }}>
             {translate(locale, 'errorBoundary.reload')}
           </button>
         </div>

@@ -226,8 +226,9 @@ export const GLOBAL_STYLES: string = `
     cursor: pointer;
     transition: transform 0.2s cubic-bezier(0.16,1,0.3,1), background 0.25s ease, color 0.25s ease, box-shadow 0.25s ease;
   }
-  .om-icon-btn:hover { background: rgba(255,255,255,0.78); color: #5f6b7a; }
-  .om-icon-btn:active { transform: scale(0.94); }
+  .om-icon-btn:hover:not(:disabled) { background: rgba(255,255,255,0.78); color: #5f6b7a; }
+  .om-icon-btn:active:not(:disabled) { transform: scale(0.94); }
+  .om-icon-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
   .om-star-divider {
     display: flex;
@@ -256,6 +257,7 @@ export const GLOBAL_STYLES: string = `
     padding: 4px;
     border: 1px solid rgba(210,220,238,0.42);
     box-shadow: inset 0 1px 2px rgba(255,255,255,0.85), var(--om-shadow-soft);
+    overflow: hidden;
   }
   .om-lang-thumb {
     position: absolute;

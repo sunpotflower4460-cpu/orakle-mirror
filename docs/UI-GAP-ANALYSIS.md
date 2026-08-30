@@ -63,7 +63,8 @@ window.__oracleMirrorDiagnostics
 | 環境差（workers.dev ブラウザバー） | `index.html`, 配布手順 | CSS改修より先に表示器差を切り分ける | P0 | 不要 |
 | `backdrop-filter` 弱い環境のフォールバック | `src/styles/globals.ts` | `@supports not` でヘッダー / 入力欄 / モーダルに補助不透明度のみ追加 | P1 | 実施済み |
 | CTA / モードインジケータのリムライト | `src/styles/globals.ts` `.om-cta` | 濃紺縦グラデ + 白リム + 極薄ローズグロー。色そのものは不変 | P1 | 実施済み |
-| 言語トグルの発光カプセル | `src/components/LanguageToggle.tsx` | Onboarding / Help で溝の中を滑る共通トグル | P2 | 実施済み |
+| 言語トグルの発光カプセル | `src/components/LanguageToggle.tsx` | Onboarding / Help で溝の中を滑る共通トグル。Help では sticky header に固定し、フッター CTA と重ならない | P2 | 実施済み |
+| ダイアログの背面操作漏れ | `src/lib/useDialogChrome.ts` | Tab 循環をコンテナ自身からも引き戻す。背面 inert + body スクロールロック。購入中は Escape / オーバーレイ閉じを抑止 | P1 | 実施済み |
 | safe-area 差分 | `src/styles/globals.ts`, `src/MainApp.tsx`, `capacitor.config.ts` | 実機値を見て不足分のみ調整 | P0 | 不要 |
 | 中央オーブの統一（Onboarding/Home/Sidebar） | `src/components/OracleOrb.tsx`, `src/components/Onboarding.tsx`, `src/MainApp.tsx` | 既存表現を共通化し、グロウ / ハイライト / 鏡像反射 / 白エッジ / 控えめな虹揺れを追加 | P0 | 不要 |
 | 影の純度調整（カード / ヘッダー / ペルソナチップ） | `src/MainApp.tsx`, `src/components/Onboarding.tsx`, `src/styles/globals.ts` | `--om-shadow-soft` / `--om-shadow-card` ベースへ寄せ、黒影を増やさない | P0 | 不要 |

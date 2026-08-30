@@ -175,7 +175,7 @@ export function SelfReadingView({ onBack }: SelfReadingViewProps) {
                 aria-label={t('a11y.sr.createOpen')}
                 onClick={() => setStep('creator')}
                 style={{
-                  minHeight: 46,
+                  minHeight: 48,
                   borderRadius: 18,
                   border: '1px solid rgba(210,219,236,0.46)',
                   background: 'rgba(255,255,255,0.70)',
@@ -194,7 +194,7 @@ export function SelfReadingView({ onBack }: SelfReadingViewProps) {
                 aria-label={t('a11y.sr.historyOpen')}
                 onClick={() => setStep('history')}
                 style={{
-                  minHeight: 46,
+                  minHeight: 48,
                   borderRadius: 18,
                   border: '1px solid rgba(210,219,236,0.46)',
                   background: 'rgba(255,255,255,0.70)',

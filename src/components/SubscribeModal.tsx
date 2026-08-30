@@ -53,7 +53,8 @@ export function SubscribeModal({ onClose, onSubscribe, onRestore, isPurchasing }
         if (e.target === e.currentTarget && !isPurchasing) onClose();
       }}
     >
-      <div className="om-modal-card" style={{ maxWidth: 420, padding: 32, textAlign: 'center' }}>
+      <div className="om-modal-card om-modal-card--sheet" style={{ maxWidth: 420, textAlign: 'center' }}>
+        <div className="om-modal-body" style={{ padding: '32px 28px 8px' }}>
         <div style={{
           display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
           width: 84, height: 84, marginBottom: 20, borderRadius: '50%',
@@ -79,21 +80,7 @@ export function SubscribeModal({ onClose, onSubscribe, onRestore, isPurchasing }
         </div>
         <div style={{ fontSize: 10, color: '#94a3b8', marginBottom: 16 }}>{t('subscribe.autoRenew')}</div>
 
-        <button type="button" className="om-cta" onClick={onSubscribe} disabled={isPurchasing} style={{
-          width: '100%', padding: '16px 0',
-          borderRadius: 999, fontSize: 12, letterSpacing: '0.15em', minHeight: 48,
-          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginBottom: 12,
-        }}>
-          {isPurchasing ? <Loader2 size={14} style={{ animation: 'spin 1s linear infinite' }} /> : <Unlock size={14} />}
-          {isPurchasing ? t('subscribe.processing') : t('subscribe.cta')}
-        </button>
-        <button type="button" className="om-glass-btn" onClick={onClose} disabled={isPurchasing} style={{
-          width: '100%', padding: '12px 0',
-          borderRadius: 999, fontSize: 12, letterSpacing: '0.1em', minHeight: 44,
-          fontWeight: 400, background: 'transparent', border: 'none',
-        }}>{t('subscribe.later')}</button>
-
-        <div style={{ marginTop: 24, paddingTop: 16, borderTop: '1px solid rgba(220,210,216,0.28)' }}>
+        <div style={{ paddingTop: 8, borderTop: '1px solid rgba(220,210,216,0.28)' }}>
           <button type="button" className="om-glass-btn" onClick={onRestore} disabled={isPurchasing} style={{
             background: 'none', border: 'none', color: '#64748b', fontSize: 11,
             display: 'inline-flex', alignItems: 'center', gap: 6, padding: '8px 16px', borderRadius: 999, minHeight: 44,
@@ -113,9 +100,25 @@ export function SubscribeModal({ onClose, onSubscribe, onRestore, isPurchasing }
           >
             {t('subscribe.manage')}
           </button>
-          <p style={{ fontSize: 10, color: '#94a3b8', lineHeight: 1.6, marginTop: 12 }}>
+          <p style={{ fontSize: 10, color: '#94a3b8', lineHeight: 1.6, marginTop: 12, paddingBottom: 8 }}>
             {t('subscribe.subscriptionNote')}
           </p>
+        </div>
+        </div>
+        <div className="om-modal-footer">
+          <button type="button" className="om-cta" onClick={onSubscribe} disabled={isPurchasing} style={{
+            width: '100%', padding: '16px 0',
+            borderRadius: 999, fontSize: 12, letterSpacing: '0.15em', minHeight: 48,
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginBottom: 8,
+          }}>
+            {isPurchasing ? <Loader2 size={14} style={{ animation: 'spin 1s linear infinite' }} /> : <Unlock size={14} />}
+            {isPurchasing ? t('subscribe.processing') : t('subscribe.cta')}
+          </button>
+          <button type="button" className="om-glass-btn" onClick={onClose} disabled={isPurchasing} style={{
+            width: '100%', padding: '12px 0',
+            borderRadius: 999, fontSize: 12, letterSpacing: '0.1em', minHeight: 44,
+            fontWeight: 400, background: 'transparent', border: 'none',
+          }}>{t('subscribe.later')}</button>
         </div>
       </div>
     </div>

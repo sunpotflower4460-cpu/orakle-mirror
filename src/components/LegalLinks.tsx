@@ -26,6 +26,7 @@ export function LegalLinks({ style }: LegalLinksProps) {
     <div style={{ display: 'flex', justifyContent: 'center', gap: 20, flexWrap: 'wrap', ...style }}>
       {showTerms && (
         <button
+          type="button"
           onClick={() => openExternalUrl(TERMS_URL)}
           style={{ background: 'none', border: 'none', padding: '8px 4px', minHeight: 44, fontSize: 11, color: '#94a3b8', textDecoration: 'underline', cursor: 'pointer' }}
         >
@@ -34,6 +35,7 @@ export function LegalLinks({ style }: LegalLinksProps) {
       )}
       {showPrivacy && (
         <button
+          type="button"
           onClick={() => openExternalUrl(PRIVACY_URL)}
           style={{ background: 'none', border: 'none', padding: '8px 4px', minHeight: 44, fontSize: 11, color: '#94a3b8', textDecoration: 'underline', cursor: 'pointer' }}
         >
@@ -42,6 +44,7 @@ export function LegalLinks({ style }: LegalLinksProps) {
       )}
       {showSupport && (
         <button
+          type="button"
           onClick={() => openExternalUrl(supportHref)}
           style={{ background: 'none', border: 'none', padding: '8px 4px', minHeight: 44, fontSize: 11, color: '#94a3b8', textDecoration: 'underline', cursor: 'pointer' }}
         >

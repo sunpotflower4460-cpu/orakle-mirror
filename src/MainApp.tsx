@@ -934,7 +934,12 @@ export function MainApp() {
               <div key={room.id} className="room-row" aria-current={isActive ? 'true' : undefined}
                 role="button" tabIndex={0}
                 onClick={() => { setActiveRoomId(room.id); setSidebarOpen(false); setAppView('oracle'); setError(null); }}
-                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { setActiveRoomId(room.id); setSidebarOpen(false); setAppView('oracle'); setError(null); } }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    setActiveRoomId(room.id); setSidebarOpen(false); setAppView('oracle'); setError(null);
+                  }
+                }}
                 style={{
                   width: '100%', textAlign: 'left', padding: '12px', borderRadius: 14, minHeight: 48,
                   cursor: 'pointer', border: 'none', marginBottom: 4, transition: 'all 0.2s',
@@ -1120,7 +1125,7 @@ export function MainApp() {
                         }}>
                         <span style={{ color: px.accent }}>{px.icon}</span>
                         <span style={{ fontSize: 11, letterSpacing: '0.28em', textTransform: 'uppercase', fontWeight: 600, color: px.accent, whiteSpace: 'nowrap' }}>{px.name}</span>
-                        <span style={{ fontSize: 11, color: '#7f8998', letterSpacing: '0.06em' }}>{t(`persona.${px.id}.title`)}</span>
+                        <span style={{ fontSize: 11, color: '#7f8998', letterSpacing: '0.06em', textAlign: 'center' }}>{t(`persona.${px.id}.title`)}</span>
                       </button>
                     );
                   })}

@@ -23,6 +23,7 @@ export interface DrawnCardViewProps {
 }
 
 export function DrawnCardView({ card, index, accent, border, soft }: DrawnCardViewProps) {
+  const t = useT();
   const [imageFailed, setImageFailed] = React.useState(false);
   const hasImage = Boolean(card.image) && !imageFailed;
 
@@ -61,7 +62,7 @@ export function DrawnCardView({ card, index, accent, border, soft }: DrawnCardVi
           />
         ) : (
           <div
-            aria-label={`${card.name} のカード画像枠`}
+            aria-label={t('a11y.cardFrame', { name: card.name })}
             style={{
               width: '74%',
               height: '80%',

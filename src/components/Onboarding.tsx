@@ -34,7 +34,10 @@ export function Onboarding({ onComplete }: OnboardingProps) {
   const { t } = useLocale();
   const [step, setStep] = useState(0);
   const [selectedPersona, setSelectedPersona] = useState<PersonaId>('lumina');
-  const dialogRef = useDialogChrome(() => onComplete());
+  // Escape は誤スキップさせず、2ページ目以降だけ戻る。明示スキップはボタンに残す。
+  const dialogRef = useDialogChrome(() => {
+    setStep(s => (s > 0 ? s - 1 : s));
+  });
 
   const accent = PERSONAS[selectedPersona].accent;
   const isLast = step === TOTAL_STEPS - 1;
@@ -72,16 +75,16 @@ export function Onboarding({ onComplete }: OnboardingProps) {
         background: 'linear-gradient(140deg, rgba(255,255,255,0.76), rgba(255,246,251,0.68), rgba(240,246,255,0.56))',
         maxWidth: 440, width: '100%', maxHeight: '100%', minHeight: 0,
         borderRadius: 38, boxShadow: 'var(--om-shadow-soft)', border: '1px solid rgba(214,224,245,0.38)',
-        overflowY: 'auto', overscrollBehavior: 'contain', padding: 32, display: 'flex', flexDirection: 'column',
+        overflow: 'hidden', overscrollBehavior: 'contain', padding: 32, display: 'flex', flexDirection: 'column',
         animation: 'modalReveal 0.45s cubic-bezier(0.16,1,0.3,1)'
       }}>
         {/* 言語切替(タイトルの時点で日本語／英語を選べる) */}
-        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 12 }}>
+        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 12, flexShrink: 0 }}>
           <LanguageToggle />
         </div>
 
         {/* Step content(切替時に、鏡に像が結ぶように現れる) */}
-        <div className="onboarding-step" key={step} style={{ flex: 1, animation: 'stepReveal 0.5s cubic-bezier(0.16,1,0.3,1)', minHeight: 280, display: 'flex', flexDirection: 'column' }}>
+        <div className="onboarding-step" key={step} style={{ flex: 1, minHeight: 0, overflowY: 'auto', animation: 'stepReveal 0.5s cubic-bezier(0.16,1,0.3,1)', display: 'flex', flexDirection: 'column' }}>
           {step === 0 && (
             <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flex: 1, gap: 0 }}>
               <div style={{ marginBottom: 12 }}>
@@ -114,7 +117,7 @@ export function Onboarding({ onComplete }: OnboardingProps) {
                       }}>
                       <span style={{ color: px.accent }}>{px.icon}</span>
                       <span style={{ fontSize: 10, letterSpacing: '0.22em', textTransform: 'uppercase', fontWeight: 600, color: px.accent, whiteSpace: 'nowrap' }}>{px.name}</span>
-                      <span style={{ fontSize: 10, color: '#7f8998', whiteSpace: 'nowrap', letterSpacing: '0.04em' }}>{t(`persona.${px.id}.title`)}</span>
+                      <span style={{ fontSize: 10, color: '#7f8998', letterSpacing: '0.04em', textAlign: 'center' }}>{t(`persona.${px.id}.title`)}</span>
                     </button>
                   );
                 })}
@@ -165,8 +168,8 @@ export function Onboarding({ onComplete }: OnboardingProps) {
         </div>
 
         {/* Progress dots */}
-        <div role="presentation" aria-label={t('onboarding.progress', { current: step + 1, total: TOTAL_STEPS })}
-          style={{ display: 'flex', gap: 8, justifyContent: 'center', margin: '22px 0' }}>
+        <div role="status" aria-label={t('onboarding.progress', { current: step + 1, total: TOTAL_STEPS })}
+          style={{ display: 'flex', gap: 8, justifyContent: 'center', margin: '22px 0', flexShrink: 0 }}>
           {Array.from({ length: TOTAL_STEPS }, (_, i) => (
             <span key={i} style={{
               width: i === step ? 14 : 10,
@@ -185,7 +188,7 @@ export function Onboarding({ onComplete }: OnboardingProps) {
         </div>
 
         {/* Navigation */}
-        <div className="onboarding-nav" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+        <div className="onboarding-nav" style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
           {step > 0 ? (
             <button type="button" className="onboarding-secondary om-glass-btn" onClick={back} aria-label={t('onboarding.back')} style={{
               minWidth: 44, minHeight: 58, padding: '0 20px',

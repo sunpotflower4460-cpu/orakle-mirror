@@ -56,7 +56,7 @@ export function ReadingHistory({ onBack }: ReadingHistoryProps) {
         onClick={onBack}
         style={{
           alignSelf: 'flex-start',
-          minHeight: 42,
+            minHeight: 44,
           padding: '0 14px 0 10px',
           borderRadius: 999,
           border: '1px solid rgba(210,219,236,0.42)',
@@ -99,7 +99,7 @@ export function ReadingHistory({ onBack }: ReadingHistoryProps) {
                     <p style={{ margin: 0, color: '#d77894', fontSize: 11, letterSpacing: '0.12em', fontWeight: 800 }}>{dateFormatter.format(new Date(reading.createdAt))}</p>
                     <h3 style={{ margin: '6px 0 0', color: '#263044', fontSize: 15, lineHeight: 1.5, letterSpacing: '0.08em', fontWeight: 700 }}>{deckName} · {t(spread.nameKey)}</h3>
                   </div>
-                  <button type="button" aria-label={t('a11y.sr.historyDelete')} onClick={() => handleDelete(reading.id)} style={{ width: 38, height: 38, borderRadius: 14, border: '1px solid rgba(210,219,236,0.44)', background: 'rgba(255,255,255,0.82)', color: '#d77894', cursor: 'pointer', display: 'grid', placeItems: 'center' }}>
+                  <button type="button" className="om-icon-btn" aria-label={t('a11y.sr.historyDelete')} onClick={() => handleDelete(reading.id)} style={{ width: 44, height: 44, minWidth: 44, minHeight: 44, borderRadius: 14, border: '1px solid rgba(210,219,236,0.44)', background: 'rgba(255,255,255,0.82)', color: '#d77894', cursor: 'pointer', display: 'grid', placeItems: 'center' }}>
                     <Trash2 size={15} strokeWidth={1.7} />
                   </button>
                 </div>
