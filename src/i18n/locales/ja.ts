@@ -34,6 +34,7 @@ export const ja = {
   // サイドバー / サブスクリプション
   'sidebar.title': 'アーカイブ',
   'sidebar.empty': 'まだ対話がありません',
+  'sidebar.untitledRoom': '無題の対話',
   'sidebar.emptyHint': 'あなたと鏡の対話は、\nここに静かに記録されていきます。',
   'subscription.title': 'サブスクリプション',
   'subscription.unlimited': '無限の導き（解放済）',
@@ -57,6 +58,11 @@ export const ja = {
 
   // エラー
   'error.connection': '天との接続でエラーが発生しました',
+  'error.rateLimited': '今、あまりに多くの問いが鏡に投げかけられています。少し休んでから再び訪れてください。',
+  'error.bodyTooLarge': '問いが長すぎるようです。少し言葉を整えてから再び投げかけてください。',
+  'error.misconfigured': '神託サーバーへの接続設定が不完全です。',
+  'error.path': '神託の経路が乱れています。アプリを再起動して再び試してください。',
+  'error.emptyResponse': '神託の声が届きませんでした。少し時間をおいてから再び問いかけてください。',
 
   // 共有
   'share.text': '純粋な鏡を通じて、内なる声を聞く。',
@@ -80,6 +86,8 @@ export const ja = {
   'subscribe.purchaseFailed': '購入処理に失敗しました',
   'subscribe.restoreFailed': '復元処理に失敗しました',
   'subscribe.subscriptionNote': '購入確定時にApple IDへ請求されます。現在の期間終了の24時間前までに自動更新をオフにしない限り、1か月ごとに自動更新されます。更新料金は期間終了前24時間以内に請求されます。解約・管理はApp Storeのアカウント設定から行えます。',
+  'subscribe.manage': 'サブスクリプションを管理',
+  'subscribe.offeringsUnavailable': '購入できる商品を確認できませんでした',
 
   // ヘルプモーダル
   'help.title': 'ミラーガイド',
@@ -138,7 +146,7 @@ export const ja = {
   'guidance.bannerAriaLabel': 'アプリからのご案内',
   'guidance.bannerNotice': '※ 以下は鏡からのメッセージではなく、アプリからのご案内です',
   'guidance.life.headline': 'ひとりで抱えなくて大丈夫です。話せる窓口があります。',
-  'guidance.life.detail': '緊急の危険がある場合は、今いる地域の緊急窓口に連絡してください。\n日本では、よりそいホットライン、いのちの電話、こころの健康相談統一ダイヤルなどの相談先があります。\n相談窓口の電話番号や受付時間は変わることがあるため、アプリ実装時・リリース前に公式情報で必ず再確認してください。',
+  'guidance.life.detail': '緊急の危険がある場合は、今いる地域の緊急窓口に連絡してください。\n日本では、よりそいホットライン、いのちの電話、こころの健康相談統一ダイヤルなどの相談先があります。電話番号や受付時間は変わることがあるため、最新の公式情報をご確認ください。',
   'guidance.medical.headline': '体や心のことは、医療の専門家との対話も大切に。',
   'guidance.medical.detail': '症状や服薬、診断に関わるご判断は、かかりつけの医師や、最寄りの医療機関にご相談ください。',
   'guidance.legal.headline': '法的な判断は、弁護士など専門家への相談もご検討ください。',

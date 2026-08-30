@@ -1,6 +1,6 @@
 import React from 'react';
-import { Browser } from '../lib/capacitorMocks';
 import { TERMS_URL, PRIVACY_URL, SUPPORT_URL, SUPPORT_EMAIL, isLegalUrlPlaceholder } from '../lib/env';
+import { openExternalUrl } from '../lib/openExternal';
 import { useT } from '../i18n';
 
 interface LegalLinksProps {
@@ -20,17 +20,13 @@ export function LegalLinks({ style }: LegalLinksProps) {
 
   if (!showTerms && !showPrivacy && !showSupport) return null;
 
-  const openLink = (url: string) => {
-    Browser.open({ url }).catch(() => window.open(url, '_blank', 'noopener,noreferrer'));
-  };
-
   const supportHref = SUPPORT_URL.trim() || `mailto:${SUPPORT_EMAIL.trim()}`;
 
   return (
     <div style={{ display: 'flex', justifyContent: 'center', gap: 20, flexWrap: 'wrap', ...style }}>
       {showTerms && (
         <button
-          onClick={() => openLink(TERMS_URL)}
+          onClick={() => openExternalUrl(TERMS_URL)}
           style={{ background: 'none', border: 'none', padding: 0, fontSize: 11, color: '#94a3b8', textDecoration: 'underline', cursor: 'pointer' }}
         >
           {t('help.terms')}
@@ -38,7 +34,7 @@ export function LegalLinks({ style }: LegalLinksProps) {
       )}
       {showPrivacy && (
         <button
-          onClick={() => openLink(PRIVACY_URL)}
+          onClick={() => openExternalUrl(PRIVACY_URL)}
           style={{ background: 'none', border: 'none', padding: 0, fontSize: 11, color: '#94a3b8', textDecoration: 'underline', cursor: 'pointer' }}
         >
           {t('help.privacy')}
@@ -46,7 +42,7 @@ export function LegalLinks({ style }: LegalLinksProps) {
       )}
       {showSupport && (
         <button
-          onClick={() => openLink(supportHref)}
+          onClick={() => openExternalUrl(supportHref)}
           style={{ background: 'none', border: 'none', padding: 0, fontSize: 11, color: '#94a3b8', textDecoration: 'underline', cursor: 'pointer' }}
         >
           {t('help.support')}

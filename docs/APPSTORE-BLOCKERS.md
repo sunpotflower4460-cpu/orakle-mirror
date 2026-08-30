@@ -15,9 +15,12 @@ and must be completed by a human before App Store submission.
 
 ## RevenueCat
 
+- **Code status**: Configure, purchase, restore, and entitlement refresh at
+  startup / foreground resume are implemented. Expired subscriptions clear
+  premium when RevenueCat reports no active `premium` entitlement.
 - **Action required**: Create a RevenueCat project, add the iOS app, create the
   `premium` entitlement and a monthly subscription product, then add the Public SDK key
-  to `VITE_REVENUECAT_IOS_API_KEY` in `.env.local` / Cloudflare secrets.
+  to `VITE_REVENUECAT_IOS_API_KEY` in `.env.local` / the release build environment.
 
 ## Legal URLs
 

@@ -201,6 +201,19 @@ check(
   'Document the RevenueCat iOS public SDK key in .env.example',
 );
 
+section('\nUser-facing copy readiness');
+const jaLocale = readText('src/i18n/locales/ja.ts') ?? '';
+check(
+  'Guidance copy has no developer release-checklist wording',
+  !jaLocale.includes('アプリ実装時') && !jaLocale.includes('リリース前に公式情報'),
+  'Remove developer-facing release notes from user-visible guidance strings',
+);
+check(
+  'Share sheet does not advertise an unowned marketing domain',
+  !mainAppTxt.includes('oraclemirror.app'),
+  'Do not share a domain that is not a published production site',
+);
+
 // ── 6. npm run typecheck ───────────────────────────────────────────────────────
 section('\nBuild/typecheck readiness');
 console.log('\n  ⏳  Running npm run typecheck…');

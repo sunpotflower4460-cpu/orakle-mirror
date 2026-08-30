@@ -34,6 +34,7 @@ export const en: Record<keyof typeof ja, string> = {
   // Sidebar / subscription
   'sidebar.title': 'Archive',
   'sidebar.empty': 'No reflections yet',
+  'sidebar.untitledRoom': 'Untitled conversation',
   'sidebar.emptyHint': 'Your conversations with the mirror\nwill be quietly recorded here.',
   'subscription.title': 'Subscription',
   'subscription.unlimited': 'Infinite guidance (unlocked)',
@@ -57,6 +58,11 @@ export const en: Record<keyof typeof ja, string> = {
 
   // Error
   'error.connection': 'A disturbance interrupted the connection',
+  'error.rateLimited': 'Too many questions are reaching the mirror just now. Please rest a little, then return.',
+  'error.bodyTooLarge': 'The question seems too long. Please gather the words a little, then offer them again.',
+  'error.misconfigured': 'The path to the oracle could not be found.',
+  'error.path': 'The oracle path is unsettled. Please restart the app and try again.',
+  'error.emptyResponse': 'The oracle’s voice did not arrive. Please wait a moment, then ask again.',
 
   // Share
   'share.text': 'Through a pure mirror, hear your inner voice.',
@@ -80,6 +86,8 @@ export const en: Record<keyof typeof ja, string> = {
   'subscribe.purchaseFailed': 'The purchase could not be completed',
   'subscribe.restoreFailed': 'The restore could not be completed',
   'subscribe.subscriptionNote': 'Your Apple ID is charged when the purchase is confirmed. The subscription renews each month unless auto-renew is turned off at least 24 hours before the current period ends. The renewal charge is made within 24 hours before the period ends. You can manage or cancel the subscription in your App Store account settings.',
+  'subscribe.manage': 'Manage subscription',
+  'subscribe.offeringsUnavailable': 'The subscription product could not be found',
 
   // Help modal
   'help.title': 'Mirror Guide',

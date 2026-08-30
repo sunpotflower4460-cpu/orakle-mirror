@@ -6,7 +6,7 @@
 - AI responses
 - Local conversation history
 - Daily usage count
-- Subscription entitlement status
+- Subscription entitlement status (refreshed from RevenueCat / Apple IAP; cached locally)
 - App language setting
 
 ## Storage
@@ -59,7 +59,7 @@ Required implementation notes for review:
 - Apple / StoreKit
 - RevenueCat
 - Cloudflare Workers
-- Google Gemini API
+- OpenAI (via the BFF; prompts are sent only to generate an oracle reply)
 - ANU Quantum Numbers (quantum RNG for card draws, via BFF; byte count only)
 
 ## Not Collected

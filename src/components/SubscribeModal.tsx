@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Loader2, Lock, Unlock, RefreshCw } from 'lucide-react';
 import { Purchases } from '../lib/capacitorMocks';
 import { FREE_LIMIT } from '../lib/constants';
+import { APP_STORE_MANAGE_SUBSCRIPTIONS_URL } from '../lib/premium';
+import { openExternalUrl } from '../lib/openExternal';
 import { LegalLinks } from './LegalLinks';
 import { useT } from '../i18n';
 
@@ -95,6 +97,16 @@ export function SubscribeModal({ onClose, onSubscribe, onRestore, isPurchasing }
           </button>
 
           <LegalLinks style={{ marginTop: 12 }} />
+          <button
+            type="button"
+            onClick={() => openExternalUrl(APP_STORE_MANAGE_SUBSCRIPTIONS_URL)}
+            style={{
+              background: 'none', border: 'none', padding: 0, marginTop: 12,
+              fontSize: 11, color: '#94a3b8', textDecoration: 'underline', cursor: 'pointer',
+            }}
+          >
+            {t('subscribe.manage')}
+          </button>
           <p style={{ fontSize: 10, color: '#94a3b8', lineHeight: 1.6, marginTop: 12 }}>
             {t('subscribe.subscriptionNote')}
           </p>

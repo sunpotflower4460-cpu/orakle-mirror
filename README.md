@@ -19,8 +19,8 @@
 
 ### 部分実装・実サービス設定待ち
 
-- Phase 6 RevenueCat: iOS実プラグイン、configure、Offering取得、購入、復元、`premium` entitlement判定までコード結線済み
-- 残り: RevenueCat / App Store Connectの商品設定、Public SDK key、起動時entitlement再同期、失効・解約反映、Sandbox実機確認
+- Phase 6 RevenueCat: iOS実プラグイン、configure、Offering取得、購入、復元、`premium` entitlement判定、起動時およびフォアグラウンド復帰時の再同期までコード結線済み
+- 残り: RevenueCat / App Store Connectの商品設定、Public SDK key、Sandbox実機確認
 
 ### 現在の主フェーズ
 

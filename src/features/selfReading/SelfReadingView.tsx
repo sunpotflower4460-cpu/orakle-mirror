@@ -56,7 +56,14 @@ export function SelfReadingView({ onBack }: SelfReadingViewProps) {
     },
   ], [userCards]);
 
-  const selectedDeck = deckOptions.find(deck => deck.id === selectedDeckId) ?? deckOptions[0];
+  const pickerDecks = useMemo(
+    () => deckOptions.filter(deck => deck.ready || deck.id === 'userCards'),
+    [deckOptions],
+  );
+
+  const selectedDeck = pickerDecks.find(deck => deck.id === selectedDeckId)
+    ?? pickerDecks[0]
+    ?? DECKS[0];
   const selectedSpread = SPREADS.find(spread => spread.id === selectedSpreadId) ?? SPREADS[0];
   const spreadCardCount = selectedSpread.positionKeys.length;
   const hasEnoughCards = selectedDeck.cards.length >= spreadCardCount;
@@ -156,7 +163,7 @@ export function SelfReadingView({ onBack }: SelfReadingViewProps) {
 
         {step === 'setup' ? (
           <>
-            <DeckPicker decks={deckOptions} selectedDeckId={selectedDeckId} selectedSpreadCount={spreadCardCount} onSelectDeck={setSelectedDeckId} />
+            <DeckPicker decks={pickerDecks} selectedDeckId={selectedDeckId} selectedSpreadCount={spreadCardCount} onSelectDeck={setSelectedDeckId} />
             <SpreadPicker selectedSpreadId={selectedSpreadId} onSelectSpread={setSelectedSpreadId} />
             <QuestionInput value={question} onChange={setQuestion} />
 
@@ -235,7 +242,12 @@ export function SelfReadingView({ onBack }: SelfReadingViewProps) {
               </button>
               {!canDraw && (
                 <p style={{ color: '#8b95a5', fontSize: 12, lineHeight: 1.8, letterSpacing: '0.04em', textAlign: 'center' }}>
-                  {deckMessage || (selectedDeck.ready && !hasEnoughCards ? t('sr.deck.notEnoughForSpread') : t('sr.drawPreparing'))}
+                  {deckMessage
+                    || (selectedDeck.id === 'userCards' && selectedDeck.cards.length === 0
+                      ? t('selfReading.deck.userCards.empty')
+                      : selectedDeck.ready && !hasEnoughCards
+                        ? t('sr.deck.notEnoughForSpread')
+                        : t('sr.drawPreparing'))}
                 </p>
               )}
             </div>

@@ -18,6 +18,7 @@ This document records the remaining App Store blockers and clearly separates hum
 - Native iOS uses `@revenuecat/purchases-capacitor`; Web uses the mock implementation.
 - `Purchases.configure()` is called when `VITE_REVENUECAT_IOS_API_KEY` is present.
 - Offering retrieval, monthly package purchase, purchase restore, and `premium` entitlement checks are wired.
+- Entitlement state is refreshed at startup and when the app returns to the foreground. Expired / refunded / canceled subscriptions clear premium once RevenueCat reports no active `premium` entitlement (network failures keep the last cached value).
 
 ### Human action required
 
@@ -28,10 +29,9 @@ This document records the remaining App Store blockers and clearly separates hum
 - Configure the matching product in App Store Connect.
 - Test purchase, cancellation/expiry, and restore with a Sandbox account on a real device or Simulator.
 
-### Code follow-up before release
+### Remaining code note
 
-- Refresh RevenueCat customer/entitlement state at app startup instead of relying only on the local `app_is_premium` cache.
-- Confirm that expired, refunded, or canceled subscriptions remove premium access on the next app activation.
+- Sandbox purchase / expiry / restore still requires a human on a real device or Simulator after RevenueCat and App Store Connect products exist.
 
 ---
 

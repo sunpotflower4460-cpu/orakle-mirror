@@ -4,6 +4,7 @@ import type { OracleCard, SelfReadingDeck } from '../types';
 // Deck 2 content is intentionally empty.
 // Add exactly 24 OracleCard entries here when final text is ready.
 // Do not modify ORACLE_CARDS; keep safety copy free of medical/legal/financial/self-harm or deterministic claims.
+// 未完成デッキは App Store Guideline 2.1（未完成コンテンツ）回避のため UI に出さない。
 export const DECK_24_CARDS: readonly OracleCard[] = [];
 
 // Deck 3 content is intentionally empty.
