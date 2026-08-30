@@ -30,6 +30,7 @@ export const ja = {
   'a11y.sr.historyOpen': '保存した履歴を開く',
   'a11y.sr.historyBack': '自分で引く設定へ戻る',
   'a11y.sr.historyDelete': '保存したリーディングを削除',
+  'a11y.cardFrame': '{name}のカード画像枠',
 
   // サイドバー / サブスクリプション
   'sidebar.title': 'アーカイブ',

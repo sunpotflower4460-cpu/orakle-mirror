@@ -1,9 +1,11 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { ArrowRight, ArrowLeft } from 'lucide-react';
 import { PERSONAS } from '../constants/personas';
 import { MODES } from '../constants/modes';
 import { OracleOrb } from './OracleOrb';
-import { LOCALES, useLocale } from '../i18n';
+import { LanguageToggle } from './LanguageToggle';
+import { useLocale } from '../i18n';
+import { useDialogChrome } from '../lib/useDialogChrome';
 import type { Mode, PersonaId } from '../types';
 
 interface OnboardingProps {
@@ -29,18 +31,16 @@ function MultiLine({ text }: { text: string }) {
 }
 
 export function Onboarding({ onComplete }: OnboardingProps) {
-  const { locale, setLocale, t } = useLocale();
+  const { t } = useLocale();
   const [step, setStep] = useState(0);
   const [selectedPersona, setSelectedPersona] = useState<PersonaId>('lumina');
+  // Escape は誤スキップさせず、2ページ目以降だけ戻る。明示スキップはボタンに残す。
+  const dialogRef = useDialogChrome(() => {
+    setStep(s => (s > 0 ? s - 1 : s));
+  });
 
   const accent = PERSONAS[selectedPersona].accent;
   const isLast = step === TOTAL_STEPS - 1;
-
-  useEffect(() => {
-    const handleEsc = (e: KeyboardEvent) => { if (e.key === 'Escape') onComplete(); };
-    document.addEventListener('keydown', handleEsc);
-    return () => document.removeEventListener('keydown', handleEsc);
-  }, [onComplete]);
 
   const next = () => setStep(s => Math.min(s + 1, TOTAL_STEPS - 1));
   const back = () => setStep(s => Math.max(s - 1, 0));
@@ -50,7 +50,14 @@ export function Onboarding({ onComplete }: OnboardingProps) {
   const headingStyle: React.CSSProperties = { fontSize: 30, fontWeight: 400, color: '#202d48', letterSpacing: '0.13em', margin: 0, lineHeight: 1.5 };
 
   return (
-    <div className="onboarding-overlay" role="dialog" aria-modal="true" aria-labelledby={titleId} style={{
+    <div
+      ref={dialogRef}
+      className="onboarding-overlay"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby={titleId}
+      tabIndex={-1}
+      style={{
       position: 'fixed', inset: 0, zIndex: 1100,
       background: `
         radial-gradient(circle at 15% 22%, rgba(255,255,255,0.70), transparent 30%),
@@ -61,36 +68,23 @@ export function Onboarding({ onComplete }: OnboardingProps) {
       backdropFilter: 'blur(4px)', WebkitBackdropFilter: 'blur(4px)',
       display: 'flex', alignItems: 'center', justifyContent: 'center',
       padding: '16px', paddingTop: 'calc(16px + var(--sat))', paddingBottom: 'calc(16px + var(--sab))',
+      overflow: 'hidden', overscrollBehavior: 'contain', outline: 'none',
       animation: 'fadeIn 0.3s ease'
     }}>
       <div className="onboarding-card" style={{
         background: 'linear-gradient(140deg, rgba(255,255,255,0.76), rgba(255,246,251,0.68), rgba(240,246,255,0.56))',
-        maxWidth: 440, width: '100%', maxHeight: '100%',
+        maxWidth: 440, width: '100%', maxHeight: '100%', minHeight: 0,
         borderRadius: 38, boxShadow: 'var(--om-shadow-soft)', border: '1px solid rgba(214,224,245,0.38)',
-        overflowY: 'auto', padding: 32, display: 'flex', flexDirection: 'column',
+        overflow: 'hidden', overscrollBehavior: 'contain', padding: 32, display: 'flex', flexDirection: 'column',
         animation: 'modalReveal 0.45s cubic-bezier(0.16,1,0.3,1)'
       }}>
         {/* 言語切替(タイトルの時点で日本語／英語を選べる) */}
-        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 12 }}>
-          <div role="group" aria-label={t('help.language')} style={{
-            display: 'flex', gap: 3,
-            alignItems: 'center',
-            background: 'rgba(255,255,255,0.52)', borderRadius: 16, padding: '6px 8px',
-            border: '1px solid rgba(210,220,238,0.42)'
-          }}>
-            {LOCALES.map(loc => (
-              <button key={loc} onClick={() => setLocale(loc)} aria-pressed={locale === loc} style={{
-                padding: '6px 16px', borderRadius: 999, border: 'none', cursor: 'pointer',
-                fontSize: 12, fontWeight: 600, transition: 'all 0.25s',
-                background: locale === loc ? 'linear-gradient(130deg, rgba(250,214,228,0.92), rgba(232,240,255,0.86))' : 'transparent',
-                color: locale === loc ? '#20304b' : '#7e8da7'
-              }}>{t(`language.${loc}`)}</button>
-            ))}
-          </div>
+        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 12, flexShrink: 0 }}>
+          <LanguageToggle />
         </div>
 
         {/* Step content(切替時に、鏡に像が結ぶように現れる) */}
-        <div className="onboarding-step" key={step} style={{ flex: 1, animation: 'stepReveal 0.5s cubic-bezier(0.16,1,0.3,1)', minHeight: 280, display: 'flex', flexDirection: 'column' }}>
+        <div className="onboarding-step" key={step} style={{ flex: 1, minHeight: 0, overflowY: 'auto', animation: 'stepReveal 0.5s cubic-bezier(0.16,1,0.3,1)', display: 'flex', flexDirection: 'column' }}>
           {step === 0 && (
             <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flex: 1, gap: 0 }}>
               <div style={{ marginBottom: 12 }}>
@@ -110,7 +104,7 @@ export function Onboarding({ onComplete }: OnboardingProps) {
                 {Object.values(PERSONAS).map(px => {
                   const active = selectedPersona === px.id;
                   return (
-                    <button key={px.id} className="onboarding-persona-card" onClick={() => setSelectedPersona(px.id)} aria-pressed={active} aria-label={t('a11y.selectPersona', { name: px.name })}
+                    <button type="button" key={px.id} className="onboarding-persona-card" onClick={() => setSelectedPersona(px.id)} aria-pressed={active} aria-label={t('a11y.selectPersona', { name: px.name })}
                       style={{
                         flex: '1 1 0', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8,
                         padding: '20px 8px 18px', borderRadius: 22, cursor: 'pointer',
@@ -123,7 +117,7 @@ export function Onboarding({ onComplete }: OnboardingProps) {
                       }}>
                       <span style={{ color: px.accent }}>{px.icon}</span>
                       <span style={{ fontSize: 10, letterSpacing: '0.22em', textTransform: 'uppercase', fontWeight: 600, color: px.accent, whiteSpace: 'nowrap' }}>{px.name}</span>
-                      <span style={{ fontSize: 10, color: '#7f8998', whiteSpace: 'nowrap', letterSpacing: '0.04em' }}>{t(`persona.${px.id}.title`)}</span>
+                      <span style={{ fontSize: 10, color: '#7f8998', letterSpacing: '0.04em', textAlign: 'center' }}>{t(`persona.${px.id}.title`)}</span>
                     </button>
                   );
                 })}
@@ -151,16 +145,17 @@ export function Onboarding({ onComplete }: OnboardingProps) {
 
           {step === 3 && (
             <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flex: 1, gap: 10 }}>
-              <div style={{ position: 'relative', width: 96, height: 96, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 16 }}>
-                <div style={{ position: 'absolute', inset: -24, background: `radial-gradient(circle, ${accent}22 0%, transparent 70%)`, animation: 'pulse 3s ease-in-out infinite', borderRadius: '50%' }} />
+              <div style={{ position: 'relative', width: 96, height: 108, display: 'flex', alignItems: 'flex-start', justifyContent: 'center', marginBottom: 16 }}>
+                <div style={{ position: 'absolute', inset: -20, top: -16, bottom: 8, background: `radial-gradient(circle, ${accent}22 0%, transparent 70%)`, animation: 'pulse 3s ease-in-out infinite', borderRadius: '50%' }} />
                 <div style={{
                   width: 96, height: 96, borderRadius: '50%',
-                  background: 'radial-gradient(circle, rgba(255,255,255,0.80), rgba(255,238,244,0.40))',
-                  border: '1px solid rgba(200,212,224,0.42)',
-                  boxShadow: `0 0 44px ${accent}28, inset 0 1px 0 rgba(255,255,255,0.84)`,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative'
+                  background: 'radial-gradient(circle at 32% 26%, rgba(255,255,255,0.96), rgba(255,243,248,0.72) 42%, rgba(233,242,255,0.50) 100%)',
+                  border: '0.5px solid rgba(255,255,255,0.72)',
+                  boxShadow: `0 0 44px ${accent}28, inset 0 1px 0 rgba(255,255,255,0.94), inset 0 -14px 22px ${accent}18`,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', overflow: 'hidden'
                 }}>
-                  <span style={{ position: 'relative', color: accent, display: 'flex' }}>{PERSONAS[selectedPersona].icon}</span>
+                  <div aria-hidden="true" style={{ position: 'absolute', left: '14%', top: '12%', width: '32%', height: '20%', borderRadius: 999, background: 'linear-gradient(180deg, rgba(255,255,255,0.78), rgba(255,255,255,0.08))', transform: 'rotate(-24deg)' }} />
+                  <span style={{ position: 'relative', color: accent, display: 'flex', zIndex: 1 }}>{PERSONAS[selectedPersona].icon}</span>
                 </div>
               </div>
               <h2 className="onboarding-heading" id={titleId} style={headingStyle}>{t('onboarding.ready.title')}</h2>
@@ -173,8 +168,8 @@ export function Onboarding({ onComplete }: OnboardingProps) {
         </div>
 
         {/* Progress dots */}
-        <div role="presentation" aria-label={t('onboarding.progress', { current: step + 1, total: TOTAL_STEPS })}
-          style={{ display: 'flex', gap: 8, justifyContent: 'center', margin: '22px 0' }}>
+        <div role="status" aria-label={t('onboarding.progress', { current: step + 1, total: TOTAL_STEPS })}
+          style={{ display: 'flex', gap: 8, justifyContent: 'center', margin: '22px 0', flexShrink: 0 }}>
           {Array.from({ length: TOTAL_STEPS }, (_, i) => (
             <span key={i} style={{
               width: i === step ? 14 : 10,
@@ -193,32 +188,27 @@ export function Onboarding({ onComplete }: OnboardingProps) {
         </div>
 
         {/* Navigation */}
-        <div className="onboarding-nav" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+        <div className="onboarding-nav" style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
           {step > 0 ? (
-            <button className="onboarding-secondary" onClick={back} aria-label={t('onboarding.back')} style={{
+            <button type="button" className="onboarding-secondary om-glass-btn" onClick={back} aria-label={t('onboarding.back')} style={{
               minWidth: 44, minHeight: 58, padding: '0 20px',
-              background: 'rgba(255,255,255,0.60)', color: '#6f7a8b',
-              border: '1px solid rgba(210,200,210,0.35)', borderRadius: 999, cursor: 'pointer', fontSize: 12, fontWeight: 600,
+              borderRadius: 999, fontSize: 12, fontWeight: 600,
               display: 'flex', alignItems: 'center', gap: 6
             }}><ArrowLeft size={14} /> {t('onboarding.back')}</button>
           ) : (
-            <button className="onboarding-secondary" onClick={() => onComplete()} style={{
+            <button type="button" className="onboarding-secondary om-glass-btn" onClick={() => onComplete()} style={{
               minHeight: 58, padding: '0 20px',
-              background: 'rgba(255,255,255,0.60)', color: '#6f7a8b',
-              border: '1px solid rgba(210,200,210,0.35)', borderRadius: 999, cursor: 'pointer', fontSize: 11, fontWeight: 600, letterSpacing: '0.1em'
+              borderRadius: 999, fontSize: 11, fontWeight: 600, letterSpacing: '0.1em'
             }}>{t('onboarding.skip')}</button>
           )}
 
           <div className="onboarding-nav-spacer" style={{ flex: 1 }} />
 
-          <button className="onboarding-primary" onClick={isLast ? () => onComplete(selectedPersona) : next} style={{
+          <button type="button" className="onboarding-primary om-cta" onClick={isLast ? () => onComplete(selectedPersona) : next} style={{
             minHeight: 66, padding: '0 30px',
-            background: 'linear-gradient(135deg, #0b1430, #101e46 56%, #162953)', color: '#fff',
-            border: 'none', borderRadius: 999, cursor: 'pointer', fontSize: 11, fontWeight: 700,
+            borderRadius: 999, fontSize: 11,
             letterSpacing: '0.2em', textTransform: 'uppercase',
             display: 'flex', alignItems: 'center', gap: 8,
-            boxShadow: '0 20px 50px rgba(10,16,36,0.28), inset 0 1px 0 rgba(219,233,255,0.42)',
-            animation: 'pulse 2.8s ease-in-out infinite'
           }}>
             {isLast ? t('onboarding.begin') : t('onboarding.next')}
             {!isLast && <ArrowRight size={14} />}

@@ -30,6 +30,7 @@ export const en: Record<keyof typeof ja, string> = {
   'a11y.sr.historyOpen': 'Open saved readings',
   'a11y.sr.historyBack': 'Return to Self Reading setup',
   'a11y.sr.historyDelete': 'Delete saved reading',
+  'a11y.cardFrame': 'Card frame for {name}',
 
   // Sidebar / subscription
   'sidebar.title': 'Archive',

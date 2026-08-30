@@ -1,11 +1,13 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { X, RefreshCw } from 'lucide-react';
 import { MODES } from '../constants/modes';
 import { PERSONAS } from '../constants/personas';
 import { APP_STORE_MANAGE_SUBSCRIPTIONS_URL } from '../lib/premium';
 import { openExternalUrl } from '../lib/openExternal';
+import { useDialogChrome } from '../lib/useDialogChrome';
 import { LegalLinks } from './LegalLinks';
-import { LOCALES, useLocale } from '../i18n';
+import { LanguageToggle } from './LanguageToggle';
+import { useLocale } from '../i18n';
 import type { Mode } from '../types';
 
 interface HelpModalProps {
@@ -16,118 +18,114 @@ interface HelpModalProps {
 }
 
 export function HelpModal({ onClose, onDeleteAllHistory, onRestore, isPurchasing }: HelpModalProps) {
-  const { locale, setLocale, t } = useLocale();
-
-  useEffect(() => {
-    const handleEsc = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
-    document.addEventListener('keydown', handleEsc);
-    return () => document.removeEventListener('keydown', handleEsc);
-  }, [onClose]);
+  const { t } = useLocale();
+  const dialogRef = useDialogChrome(onClose, !isPurchasing);
 
   return (
-    <div role="dialog" aria-modal="true" aria-labelledby="helpTitle" style={{
-      position: 'fixed', inset: 0, zIndex: 400,
-      background: 'rgba(255,255,255,0.75)', backdropFilter: 'blur(8px)',
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
-      padding: '16px', paddingTop: 'calc(16px + var(--sat))', paddingBottom: 'calc(16px + var(--sab))',
-      animation: 'fadeIn 0.2s ease'
-    }} onClick={e => e.target === e.currentTarget && onClose()}>
-      <div style={{
-        background: '#fff', maxWidth: 420, width: '100%', maxHeight: '100%',
-        borderRadius: 28, boxShadow: '0 32px 80px rgba(0,0,0,0.12)',
-        border: '1px solid #f1f5f9', overflowY: 'auto', padding: 28,
-        animation: 'modalReveal 0.4s cubic-bezier(0.16,1,0.3,1)'
-      }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20, paddingBottom: 14, borderBottom: '1px solid #f8fafc' }}>
-          <h2 id="helpTitle" style={{ fontSize: 11, letterSpacing: '0.4em', fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', margin: 0 }}>{t('help.title')}</h2>
-          <button aria-label={t('a11y.close')} onClick={onClose} style={{ minWidth: 44, minHeight: 44, background: 'none', border: 'none', cursor: 'pointer', color: '#cbd5e1', display: 'flex', alignItems: 'center', justifyContent: 'flex-end' }}><X size={18}/></button>
+    <div
+      ref={dialogRef}
+      className="om-modal-overlay"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="helpTitle"
+      tabIndex={-1}
+      style={{
+        zIndex: 400,
+        background: 'rgba(255,252,253,0.62)',
+        backdropFilter: 'blur(12px)',
+        WebkitBackdropFilter: 'blur(12px)',
+        outline: 'none',
+      }}
+      onClick={e => {
+        if (e.target === e.currentTarget && !isPurchasing) onClose();
+      }}
+    >
+      <div className="om-modal-card om-modal-card--sheet" style={{ maxWidth: 420 }}>
+        <div className="om-modal-header" style={{ flexDirection: 'column', alignItems: 'stretch', gap: 12 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
+            <h2 id="helpTitle" style={{ fontSize: 11, letterSpacing: '0.4em', fontWeight: 800, color: '#8994a6', textTransform: 'uppercase', margin: 0 }}>{t('help.title')}</h2>
+            <button type="button" className="om-icon-btn" aria-label={t('a11y.close')} onClick={onClose} disabled={isPurchasing} style={{ color: '#9ca6b4', flexShrink: 0 }}><X size={18}/></button>
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'center' }}>
+            <LanguageToggle />
+          </div>
         </div>
-        <section style={{ marginBottom: 24 }}>
-          <div style={{ fontSize: 10, letterSpacing: '0.35em', fontWeight: 800, color: '#cbd5e1', textTransform: 'uppercase', marginBottom: 14 }}>{t('help.channelsTitle')}</div>
-          {Object.values(MODES).map((m: Mode) => (
-            <div key={m.id} style={{ marginBottom: 12, paddingLeft: 12, borderLeft: '2px solid #f1f5f9' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, fontWeight: 700, color: '#334155', marginBottom: 3 }}>{m.icon} {t(`mode.${m.id}.name`)}</div>
-              <p style={{ fontSize: 12, color: '#64748b', lineHeight: 1.7 }}>{t(`mode.${m.id}.guidance`)}</p>
-            </div>
-          ))}
-        </section>
-        <section style={{ marginBottom: 24 }}>
-          <div style={{ fontSize: 10, letterSpacing: '0.35em', fontWeight: 800, color: '#cbd5e1', textTransform: 'uppercase', marginBottom: 14 }}>{t('help.oraclesTitle')}</div>
-          {Object.values(PERSONAS).map(px => (
-            <div key={px.id} style={{ marginBottom: 12, paddingLeft: 12, borderLeft: `2px solid ${px.accent}40` }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, fontWeight: 700, color: px.accent, marginBottom: 3 }}>{px.icon} {px.name} <span style={{ color: '#94a3b8', fontWeight: 400 }}>— {t(`persona.${px.id}.title`)}</span></div>
-              <p style={{ fontSize: 12, color: '#64748b', lineHeight: 1.7 }}>{t(`persona.${px.id}.guidance`)}</p>
-            </div>
-          ))}
-        </section>
-        <div style={{ marginTop: 24, padding: 16, background: '#f8fafc', borderRadius: 12, fontSize: 11, color: '#64748b', lineHeight: 1.6 }}>
-          <strong>{t('help.disclaimerTitle')}</strong><br/>
-          {t('help.disclaimerBody')}<br/><br/>
-          {t('help.disclaimerNote')}
+        <div className="om-modal-body" style={{ padding: '20px 28px 8px' }}>
+          <section style={{ marginBottom: 24 }}>
+            <div style={{ fontSize: 10, letterSpacing: '0.35em', fontWeight: 800, color: '#aab2bf', textTransform: 'uppercase', marginBottom: 14 }}>{t('help.channelsTitle')}</div>
+            {Object.values(MODES).map((m: Mode) => (
+              <div key={m.id} style={{ marginBottom: 12, paddingLeft: 12, borderLeft: '2px solid rgba(220,210,216,0.40)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, fontWeight: 700, color: '#334155', marginBottom: 3 }}>{m.icon} {t(`mode.${m.id}.name`)}</div>
+                <p style={{ fontSize: 12, color: '#64748b', lineHeight: 1.7 }}>{t(`mode.${m.id}.guidance`)}</p>
+              </div>
+            ))}
+          </section>
+          <section style={{ marginBottom: 24 }}>
+            <div style={{ fontSize: 10, letterSpacing: '0.35em', fontWeight: 800, color: '#aab2bf', textTransform: 'uppercase', marginBottom: 14 }}>{t('help.oraclesTitle')}</div>
+            {Object.values(PERSONAS).map(px => (
+              <div key={px.id} style={{ marginBottom: 12, paddingLeft: 12, borderLeft: `2px solid ${px.accent}40` }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, fontWeight: 700, color: px.accent, marginBottom: 3 }}>{px.icon} {px.name} <span style={{ color: '#94a3b8', fontWeight: 400 }}>— {t(`persona.${px.id}.title`)}</span></div>
+                <p style={{ fontSize: 12, color: '#64748b', lineHeight: 1.7 }}>{t(`persona.${px.id}.guidance`)}</p>
+              </div>
+            ))}
+          </section>
+          <div style={{ marginTop: 8, padding: 16, background: 'rgba(255,250,252,0.72)', borderRadius: 16, border: '1px solid rgba(220,210,216,0.32)', fontSize: 11, color: '#64748b', lineHeight: 1.6 }}>
+            <strong>{t('help.disclaimerTitle')}</strong><br/>
+            {t('help.disclaimerBody')}<br/><br/>
+            {t('help.disclaimerNote')}
+          </div>
+
+          <LegalLinks style={{ marginTop: 24 }} />
+
+          <div style={{ marginTop: 16, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
+            <button
+              type="button"
+              onClick={() => { void onRestore(); }}
+              disabled={isPurchasing}
+              className="om-glass-btn"
+              style={{
+                background: 'none', border: 'none', color: '#64748b', fontSize: 11,
+                cursor: isPurchasing ? 'not-allowed' : 'pointer',
+                display: 'inline-flex', alignItems: 'center', gap: 6, padding: '8px 16px',
+                minHeight: 44, borderRadius: 999,
+              }}
+            >
+              <RefreshCw size={12} />
+              {t('subscribe.restore')}
+            </button>
+            <button
+              type="button"
+              onClick={() => openExternalUrl(APP_STORE_MANAGE_SUBSCRIPTIONS_URL)}
+              style={{
+                background: 'none', border: 'none', padding: '8px 12px', minHeight: 44,
+                fontSize: 11, color: '#94a3b8', textDecoration: 'underline', cursor: 'pointer',
+              }}
+            >
+              {t('subscribe.manage')}
+            </button>
+          </div>
+
+          <div style={{ marginTop: 24, paddingTop: 16, borderTop: '1px solid rgba(220,210,216,0.28)', textAlign: 'center', paddingBottom: 8 }}>
+            <button type="button" onClick={() => {
+              if (window.confirm(t('help.deleteAllHistoryConfirm'))) {
+                onDeleteAllHistory();
+                onClose();
+              }
+            }} style={{
+              background: 'none', border: '1px solid rgba(254,226,226,0.90)', color: '#ef4444',
+              borderRadius: 999, padding: '8px 20px', minHeight: 44, fontSize: 11, cursor: 'pointer', letterSpacing: '0.05em'
+            }}>
+              {t('help.deleteAllHistory')}
+            </button>
+          </div>
         </div>
 
-        {/* 言語切替 */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginTop: 24 }}>
-          <span style={{ fontSize: 10, letterSpacing: '0.2em', color: '#cbd5e1', textTransform: 'uppercase', fontWeight: 700 }}>{t('help.language')}</span>
-          {LOCALES.map(loc => (
-            <button key={loc} onClick={() => setLocale(loc)} aria-pressed={locale === loc} style={{
-              padding: '6px 14px', borderRadius: 999, minHeight: 36, cursor: 'pointer', fontSize: 11, fontWeight: 700,
-              border: 'none', transition: 'all 0.2s',
-              background: locale === loc ? '#0f172a' : '#f1f5f9',
-              color: locale === loc ? '#fff' : '#94a3b8'
-            }}>{t(`language.${loc}`)}</button>
-          ))}
+        <div className="om-modal-footer">
+          <button type="button" className="om-cta" onClick={onClose} disabled={isPurchasing} style={{
+            width: '100%', padding: '14px 0',
+            borderRadius: 999, fontSize: 11, letterSpacing: '0.25em', textTransform: 'uppercase',
+          }}>{t('help.back')}</button>
         </div>
-
-        {/* App Store審査必須要件：プライバシーポリシーと利用規約への安全なリンク */}
-        <LegalLinks style={{ marginTop: 24 }} />
-
-        <div style={{ marginTop: 16, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
-          <button
-            type="button"
-            onClick={() => { void onRestore(); }}
-            disabled={isPurchasing}
-            style={{
-              background: 'none', border: 'none', color: '#64748b', fontSize: 11,
-              cursor: isPurchasing ? 'not-allowed' : 'pointer',
-              display: 'inline-flex', alignItems: 'center', gap: 6, padding: '8px 16px',
-            }}
-          >
-            <RefreshCw size={12} />
-            {t('subscribe.restore')}
-          </button>
-          <button
-            type="button"
-            onClick={() => openExternalUrl(APP_STORE_MANAGE_SUBSCRIPTIONS_URL)}
-            style={{
-              background: 'none', border: 'none', padding: 0,
-              fontSize: 11, color: '#94a3b8', textDecoration: 'underline', cursor: 'pointer',
-            }}
-          >
-            {t('subscribe.manage')}
-          </button>
-        </div>
-
-        {/* データ管理：全履歴削除 */}
-        <div style={{ marginTop: 24, paddingTop: 16, borderTop: '1px solid #f8fafc', textAlign: 'center' }}>
-          <button onClick={() => {
-            if (window.confirm(t('help.deleteAllHistoryConfirm'))) {
-              onDeleteAllHistory();
-              onClose();
-            }
-          }} style={{
-            background: 'none', border: '1px solid #fee2e2', color: '#ef4444',
-            borderRadius: 999, padding: '8px 20px', fontSize: 11, cursor: 'pointer', letterSpacing: '0.05em'
-          }}>
-            {t('help.deleteAllHistory')}
-          </button>
-        </div>
-
-        <button onClick={onClose} style={{
-          width: '100%', padding: '14px 0', background: '#0f172a', color: '#fff', minHeight: 48,
-          borderRadius: 999, fontSize: 11, letterSpacing: '0.25em', textTransform: 'uppercase',
-          fontWeight: 700, cursor: 'pointer', border: 'none', marginTop: 24
-        }}>{t('help.back')}</button>
       </div>
     </div>
   );

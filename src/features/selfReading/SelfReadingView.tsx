@@ -120,161 +120,171 @@ export function SelfReadingView({ onBack }: SelfReadingViewProps) {
     await saveSelfReading(reading);
   };
 
+  const drawHint = !canDraw
+    ? (deckMessage
+      || (selectedDeck.id === 'userCards' && selectedDeck.cards.length === 0
+        ? t('selfReading.deck.userCards.empty')
+        : selectedDeck.ready && !hasEnoughCards
+          ? t('sr.deck.notEnoughForSpread')
+          : t('sr.drawPreparing')))
+    : null;
+
   return (
-    <div style={{ flex: 1, overflowY: 'auto', padding: 'calc(18px + var(--sat)) calc(18px + var(--sar)) calc(28px + var(--sab)) calc(18px + var(--sal))' }}>
-      <div style={{ maxWidth: 660, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 22 }}>
-        <button
-          type="button"
-          aria-label={t('a11y.sr.back')}
-          onClick={onBack}
-          style={{
-            alignSelf: 'flex-start',
-            minHeight: 44,
-            padding: '0 16px 0 12px',
-            borderRadius: 999,
-            border: '1px solid rgba(210,219,236,0.42)',
-            background: 'rgba(255,255,255,0.76)',
-            color: '#7f8998',
-            display: 'flex',
-            alignItems: 'center',
-            gap: 6,
-            cursor: 'pointer',
-            boxShadow: 'var(--om-shadow-soft)',
-            fontSize: 12,
-            letterSpacing: '0.08em',
-          }}
-        >
-          <ChevronLeft size={16} strokeWidth={1.6} />
-          {t('sr.back')}
-        </button>
-
-        <div style={{
-          borderRadius: 32,
-          border: '1px solid rgba(210,219,236,0.42)',
-          background: 'linear-gradient(150deg, rgba(255,255,255,0.86), rgba(255,247,251,0.76), rgba(244,249,255,0.68))',
-          boxShadow: 'var(--om-shadow-card)',
-          padding: '30px 22px',
-          textAlign: 'center',
-        }}>
-          <div style={{ color: '#d77894', fontSize: 12, marginBottom: 12 }}>✦</div>
-          <h1 style={{ margin: 0, fontSize: 22, letterSpacing: '0.18em', color: '#263044', fontWeight: 500 }}>{t('sr.home.title')}</h1>
-          <p style={{ margin: '14px auto 0', maxWidth: 430, color: '#7f8998', fontSize: 13, lineHeight: 1.9, letterSpacing: '0.04em' }}>{t('sr.home.body')}</p>
-        </div>
-
-        {step === 'setup' ? (
-          <>
-            <DeckPicker decks={pickerDecks} selectedDeckId={selectedDeckId} selectedSpreadCount={spreadCardCount} onSelectDeck={setSelectedDeckId} />
-            <SpreadPicker selectedSpreadId={selectedSpreadId} onSelectSpread={setSelectedSpreadId} />
-            <QuestionInput value={question} onChange={setQuestion} />
-
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 10 }}>
-              <button
-                type="button"
-                aria-label={t('a11y.sr.createOpen')}
-                onClick={() => setStep('creator')}
-                style={{
-                  minHeight: 46,
-                  borderRadius: 18,
-                  border: '1px solid rgba(210,219,236,0.46)',
-                  background: 'rgba(255,255,255,0.70)',
-                  color: '#7f8998',
-                  fontSize: 12,
-                  fontWeight: 700,
-                  letterSpacing: '0.10em',
-                  cursor: 'pointer',
-                  boxShadow: 'var(--om-shadow-soft)',
-                }}
-              >
-                {t('sr.create.open')}
-              </button>
-              <button
-                type="button"
-                aria-label={t('a11y.sr.historyOpen')}
-                onClick={() => setStep('history')}
-                style={{
-                  minHeight: 46,
-                  borderRadius: 18,
-                  border: '1px solid rgba(210,219,236,0.46)',
-                  background: 'rgba(255,255,255,0.70)',
-                  color: '#7f8998',
-                  fontSize: 12,
-                  fontWeight: 700,
-                  letterSpacing: '0.10em',
-                  cursor: 'pointer',
-                  boxShadow: 'var(--om-shadow-soft)',
-                }}
-              >
-                {t('sr.history.open')}
-              </button>
-            </div>
-
-            <div style={{
-              borderRadius: 24,
+    <div style={{
+      flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden',
+      paddingTop: 'calc(18px + var(--sat))',
+      paddingLeft: 'calc(18px + var(--sal))',
+      paddingRight: 'calc(18px + var(--sar))',
+    }}>
+      <div style={{
+        flex: 1, minHeight: 0, overflowY: 'auto',
+        paddingBottom: step === 'setup' ? 12 : 'calc(28px + var(--sab))',
+      }}>
+        <div style={{ maxWidth: 660, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 22 }}>
+          <button
+            type="button"
+            aria-label={t('a11y.sr.back')}
+            onClick={onBack}
+            style={{
+              alignSelf: 'flex-start',
+              minHeight: 44,
+              padding: '0 16px 0 12px',
+              borderRadius: 999,
               border: '1px solid rgba(210,219,236,0.42)',
-              background: 'rgba(255,250,252,0.76)',
-              boxShadow: 'var(--om-shadow-soft)',
-              padding: 16,
+              background: 'rgba(255,255,255,0.76)',
+              color: '#7f8998',
               display: 'flex',
-              flexDirection: 'column',
-              gap: 10,
-            }}>
-              <button
-                type="button"
-                disabled={!canDraw}
-                onClick={handleDraw}
-                style={{
-                  width: '100%',
-                  minHeight: 52,
-                  borderRadius: 18,
-                  border: 'none',
-                  background: canDraw
-                    ? 'linear-gradient(135deg, #263044, #465a8a)'
-                    : 'linear-gradient(135deg, rgba(13,19,40,0.42), rgba(20,28,56,0.34))',
-                  color: 'rgba(255,255,255,0.9)',
-                  fontSize: 12,
-                  fontWeight: 700,
-                  letterSpacing: '0.16em',
-                  cursor: canDraw ? 'pointer' : 'not-allowed',
-                  boxShadow: canDraw ? '0 14px 28px rgba(38,48,68,0.16)' : 'none',
-                }}
-              >
-                {t('sr.draw')}
-              </button>
-              {!canDraw && (
-                <p style={{ color: '#8b95a5', fontSize: 12, lineHeight: 1.8, letterSpacing: '0.04em', textAlign: 'center' }}>
-                  {deckMessage
-                    || (selectedDeck.id === 'userCards' && selectedDeck.cards.length === 0
-                      ? t('selfReading.deck.userCards.empty')
-                      : selectedDeck.ready && !hasEnoughCards
-                        ? t('sr.deck.notEnoughForSpread')
-                        : t('sr.drawPreparing'))}
-                </p>
-              )}
-            </div>
-          </>
-        ) : step === 'history' ? (
-          <ReadingHistory onBack={() => setStep('setup')} />
-        ) : step === 'creator' ? (
-          <CardCreator
-            onBack={() => {
-              void refreshUserCards();
-              setStep('setup');
+              alignItems: 'center',
+              gap: 6,
+              cursor: 'pointer',
+              boxShadow: 'var(--om-shadow-soft)',
+              fontSize: 12,
+              letterSpacing: '0.08em',
             }}
-            onUserCardsChange={setUserCards}
-          />
-        ) : step === 'drawing' ? (
-          <DrawStage cards={drawnCards} spread={selectedSpread} onComplete={handleDrawComplete} />
-        ) : (
-          <ReadingResult
-            cards={drawnCards}
-            spread={selectedSpread}
-            question={question}
-            onSaveReading={handleSaveReading}
-            onDrawAgain={handleDrawAgain}
-            onChangeSetup={handleChangeSetup}
-          />
-        )}
+          >
+            <ChevronLeft size={16} strokeWidth={1.6} />
+            {t('sr.back')}
+          </button>
+
+          {step === 'setup' && (
+            <div style={{
+              borderRadius: 32,
+              border: '1px solid rgba(210,219,236,0.42)',
+              background: 'linear-gradient(150deg, rgba(255,255,255,0.86), rgba(255,247,251,0.76), rgba(244,249,255,0.68))',
+              boxShadow: 'var(--om-shadow-card)',
+              padding: '30px 22px',
+              textAlign: 'center',
+            }}>
+              <div className="om-star-divider om-star-divider--sm" aria-hidden="true" style={{ marginBottom: 12 }}>
+                <span>✦</span>
+              </div>
+              <h1 style={{ margin: 0, fontSize: 22, letterSpacing: '0.18em', color: '#263044', fontWeight: 500 }}>{t('sr.home.title')}</h1>
+              <p style={{ margin: '14px auto 0', maxWidth: 430, color: '#7f8998', fontSize: 13, lineHeight: 1.9, letterSpacing: '0.04em' }}>{t('sr.home.body')}</p>
+            </div>
+          )}
+
+          {step === 'setup' ? (
+            <>
+              <DeckPicker decks={pickerDecks} selectedDeckId={selectedDeckId} selectedSpreadCount={spreadCardCount} onSelectDeck={setSelectedDeckId} />
+              <SpreadPicker selectedSpreadId={selectedSpreadId} onSelectSpread={setSelectedSpreadId} />
+              <QuestionInput value={question} onChange={setQuestion} />
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 10 }}>
+                <button
+                  type="button"
+                  aria-label={t('a11y.sr.createOpen')}
+                  onClick={() => setStep('creator')}
+                  style={{
+                    minHeight: 48,
+                    borderRadius: 18,
+                    border: '1px solid rgba(210,219,236,0.46)',
+                    background: 'rgba(255,255,255,0.70)',
+                    color: '#7f8998',
+                    fontSize: 12,
+                    fontWeight: 700,
+                    letterSpacing: '0.10em',
+                    cursor: 'pointer',
+                    boxShadow: 'var(--om-shadow-soft)',
+                  }}
+                >
+                  {t('sr.create.open')}
+                </button>
+                <button
+                  type="button"
+                  aria-label={t('a11y.sr.historyOpen')}
+                  onClick={() => setStep('history')}
+                  style={{
+                    minHeight: 48,
+                    borderRadius: 18,
+                    border: '1px solid rgba(210,219,236,0.46)',
+                    background: 'rgba(255,255,255,0.70)',
+                    color: '#7f8998',
+                    fontSize: 12,
+                    fontWeight: 700,
+                    letterSpacing: '0.10em',
+                    cursor: 'pointer',
+                    boxShadow: 'var(--om-shadow-soft)',
+                  }}
+                >
+                  {t('sr.history.open')}
+                </button>
+              </div>
+            </>
+          ) : step === 'history' ? (
+            <ReadingHistory onBack={() => setStep('setup')} />
+          ) : step === 'creator' ? (
+            <CardCreator
+              onBack={() => {
+                void refreshUserCards();
+                setStep('setup');
+              }}
+              onUserCardsChange={setUserCards}
+            />
+          ) : step === 'drawing' ? (
+            <DrawStage cards={drawnCards} spread={selectedSpread} onComplete={handleDrawComplete} />
+          ) : (
+            <ReadingResult
+              cards={drawnCards}
+              spread={selectedSpread}
+              question={question}
+              onSaveReading={handleSaveReading}
+              onDrawAgain={handleDrawAgain}
+              onChangeSetup={handleChangeSetup}
+            />
+          )}
+        </div>
       </div>
+
+      {step === 'setup' && (
+        <div style={{
+          flexShrink: 0, maxWidth: 660, width: '100%', margin: '0 auto',
+          padding: '10px 0 calc(16px + var(--sab))',
+          borderTop: '1px solid rgba(220,210,216,0.28)',
+          background: 'linear-gradient(180deg, rgba(255,252,253,0.55), rgba(255,250,252,0.96))',
+        }}>
+          <button
+            type="button"
+            disabled={!canDraw}
+            onClick={handleDraw}
+            className="om-cta"
+            style={{
+              width: '100%',
+              minHeight: 52,
+              borderRadius: 18,
+              fontSize: 12,
+              letterSpacing: '0.16em',
+              opacity: canDraw ? 1 : 0.55,
+            }}
+          >
+            {t('sr.draw')}
+          </button>
+          {drawHint && (
+            <p style={{ color: '#8b95a5', fontSize: 12, lineHeight: 1.8, letterSpacing: '0.04em', textAlign: 'center', margin: '8px 0 0' }}>
+              {drawHint}
+            </p>
+          )}
+        </div>
+      )}
     </div>
   );
 }

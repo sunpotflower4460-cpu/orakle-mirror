@@ -83,7 +83,7 @@ export function CardCreator({ onBack, onUserCardsChange }: CardCreatorProps) {
         onClick={onBack}
         style={{
           alignSelf: 'flex-start',
-          minHeight: 42,
+            minHeight: 44,
           padding: '0 14px 0 10px',
           borderRadius: 999,
           border: '1px solid rgba(210,219,236,0.42)',
@@ -115,7 +115,7 @@ export function CardCreator({ onBack, onUserCardsChange }: CardCreatorProps) {
             value={name}
             onChange={event => setName(event.target.value)}
             placeholder={t('sr.create.namePlaceholder')}
-            style={{ minHeight: 46, border: '1px solid rgba(210,219,236,0.48)', borderRadius: 18, background: 'rgba(255,255,255,0.74)', padding: '0 14px', color: '#263044', outline: 'none' }}
+            style={{ minHeight: 48, border: '1px solid rgba(210,219,236,0.48)', borderRadius: 18, background: 'rgba(255,255,255,0.74)', padding: '0 14px', color: '#263044', outline: 'none' }}
           />
         </label>
 
@@ -153,7 +153,7 @@ export function CardCreator({ onBack, onUserCardsChange }: CardCreatorProps) {
                   <h4 style={{ margin: 0, color: '#263044', fontSize: 14, lineHeight: 1.5, letterSpacing: '0.08em', fontWeight: 700 }}>{card.name}</h4>
                   <p style={{ margin: '6px 0 0', color: '#64748b', fontSize: 12, lineHeight: 1.8, letterSpacing: '0.04em' }}>{card.meaning}</p>
                 </div>
-                <button type="button" aria-label={t('a11y.sr.createDelete')} onClick={() => handleDelete(card.id)} style={{ width: 38, height: 38, borderRadius: 14, border: '1px solid rgba(210,219,236,0.44)', background: 'rgba(255,255,255,0.82)', color: '#d77894', cursor: 'pointer', display: 'grid', placeItems: 'center' }}>
+                <button type="button" className="om-icon-btn" aria-label={t('a11y.sr.createDelete')} onClick={() => handleDelete(card.id)} style={{ width: 44, height: 44, minWidth: 44, minHeight: 44, borderRadius: 14, border: '1px solid rgba(210,219,236,0.44)', background: 'rgba(255,255,255,0.82)', color: '#d77894', cursor: 'pointer', display: 'grid', placeItems: 'center' }}>
                   <Trash2 size={15} strokeWidth={1.7} />
                 </button>
               </article>
