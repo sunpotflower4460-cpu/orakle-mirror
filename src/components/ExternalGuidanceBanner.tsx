@@ -16,10 +16,10 @@ export const ExternalGuidanceBanner: React.FC<Props> = ({ matches }) => {
       style={{
         marginTop: 12,
         padding: '14px 18px',
-        background: 'rgba(248,250,252,0.97)',
+        background: 'rgba(255,250,252,0.90)',
         borderRadius: 16,
-        border: '1px solid rgba(203,213,225,0.6)',
-        boxShadow: '0 2px 12px rgba(0,0,0,0.04)',
+        border: '1px solid rgba(217,164,181,0.28)',
+        boxShadow: 'var(--om-shadow-soft)',
       }}
     >
       <p style={{

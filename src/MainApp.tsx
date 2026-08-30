@@ -889,7 +889,7 @@ export function MainApp() {
       }}>
         <div style={{ paddingTop: 'calc(22px + var(--sat))', paddingLeft: 'calc(18px + var(--sal))', paddingRight: 18, paddingBottom: 14, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0, opacity: sidebarOpen ? 1 : 0, transition: 'opacity 0.3s ease 0.12s' }}>
           <span style={{ fontSize: 18, letterSpacing: '0.16em', fontWeight: 500, color: '#263044', whiteSpace: 'nowrap' }}>{t('sidebar.title')}</span>
-          <button aria-label={t('a11y.newRoom')} onClick={handleNewRoom} style={{ minWidth: 52, minHeight: 52, background: 'rgba(255,255,255,0.78)', border: '1px solid rgba(220,210,216,0.35)', cursor: 'pointer', color: '#8a94a6', display: 'flex', alignItems: 'center', justifyContent: 'center', marginRight: -4, borderRadius: 16, boxShadow: 'var(--om-shadow-soft)' }}>
+              <button className="om-icon-btn" aria-label={t('a11y.newRoom')} onClick={handleNewRoom} style={{ minWidth: 52, minHeight: 52, background: 'rgba(255,255,255,0.78)', border: '1px solid rgba(220,210,216,0.35)', color: '#8a94a6', marginRight: -4, borderRadius: 16, boxShadow: 'var(--om-shadow-soft)' }}>
             <Plus size={18} strokeWidth={1.5}/>
           </button>
         </div>
@@ -945,8 +945,8 @@ export function MainApp() {
                 <span style={{ fontSize: 13, color: isActive ? '#374151' : '#64748b', fontWeight: isActive ? 600 : 400, overflow: 'hidden', textOverflow: 'ellipsis', flex: 1, whiteSpace: 'nowrap' }}>
                   {room.title || t('sidebar.untitledRoom')}
                 </span>
-                <button className="room-del" aria-label={t('a11y.deleteRoom')} onClick={e => handleDeleteRoom(room.id, e)}
-                  style={{ minWidth: 36, minHeight: 36, background: 'none', border: 'none', cursor: 'pointer', color: '#cbd5e1', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginRight: -6 }}>
+                  <button className="room-del om-icon-btn" aria-label={t('a11y.deleteRoom')} onClick={e => handleDeleteRoom(room.id, e)}
+                    style={{ color: '#cbd5e1', flexShrink: 0, marginRight: -6 }}>
                   <Trash2 size={13}/>
                 </button>
               </div>
@@ -957,10 +957,8 @@ export function MainApp() {
         {/* サイドバー下部：サブスクリプション導線 */}
         <div style={{ padding: '16px', paddingLeft: 'calc(16px + var(--sal))', borderTop: '1px solid rgba(220,210,216,0.30)', background: 'rgba(255,250,252,0.86)', paddingBottom: 'calc(16px + var(--sab))', flexShrink: 0, opacity: sidebarOpen ? 1 : 0, transition: 'opacity 0.3s ease 0.12s' }}>
           {/* 小星ライン区切り */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, marginBottom: 16 }}>
-            <div style={{ height: 1, width: 48, background: 'rgba(215,120,148,0.22)' }}/>
-            <span style={{ color: '#d77894', fontSize: 10 }}>✦</span>
-            <div style={{ height: 1, width: 48, background: 'rgba(215,120,148,0.22)' }}/>
+          <div className="om-star-divider om-star-divider--sm" aria-hidden="true" style={{ marginBottom: 16 }}>
+            <span>✦</span>
           </div>
           <div style={{ fontSize: 10, letterSpacing: '0.22em', color: '#8994a6', textTransform: 'uppercase', marginBottom: 12, fontWeight: 600 }}>{t('subscription.title')}</div>
           {isPremium ? (
@@ -973,14 +971,10 @@ export function MainApp() {
                 <span>{t('subscription.remainingToday')}</span>
                 <span style={{ fontWeight: 700, color: typeof remainingDisplay === 'number' && remainingDisplay > 0 ? '#263044' : '#f43f5e' }}>{t('subscription.remainingCount', { count: remainingDisplay })}</span>
               </div>
-              <button onClick={() => setShowSubscribeModal(true)} style={{
+              <button className="om-cta" onClick={() => setShowSubscribeModal(true)} style={{
                 width: '100%', padding: '14px 0',
-                background: 'linear-gradient(135deg, #0b1532, #111f46 56%, #162a54)',
-                color: '#fff',
-                borderRadius: 16, fontSize: 11, fontWeight: 700, cursor: 'pointer', border: 'none',
+                borderRadius: 16, fontSize: 11, cursor: 'pointer',
                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-                boxShadow: '0 16px 38px rgba(10,16,36,0.24), inset 0 1px 0 rgba(219,233,255,0.42)',
-                letterSpacing: '0.12em'
               }}>
                 <KeyRound size={12} /> {t('subscription.unlockPremium')}
               </button>
@@ -1004,8 +998,8 @@ export function MainApp() {
           <div className="app-header-inner">
           <div className="app-header-top" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div className="app-header-brand" style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
-              <button aria-label={t('a11y.menu')} aria-expanded={sidebarOpen} onClick={() => setSidebarOpen(v => !v)}
-                style={{ minWidth: 52, minHeight: 52, background: 'rgba(255,255,255,0.72)', border: '1px solid rgba(210,218,226,0.42)', cursor: 'pointer', color: '#8792a2', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 16, flexShrink: 0, boxShadow: 'var(--om-shadow-soft)' }}>
+              <button className="om-icon-btn" aria-label={t('a11y.menu')} aria-expanded={sidebarOpen} onClick={() => setSidebarOpen(v => !v)}
+                style={{ minWidth: 52, minHeight: 52, background: 'rgba(255,255,255,0.72)', border: '1px solid rgba(210,218,226,0.42)', color: '#8792a2', borderRadius: 16, flexShrink: 0, boxShadow: 'var(--om-shadow-soft)' }}>
                 <Menu size={18} strokeWidth={1.5}/>
               </button>
               <div style={{ whiteSpace: 'nowrap' }}>
@@ -1016,7 +1010,7 @@ export function MainApp() {
               </div>
             </div>
 
-            <div className="app-header-actions" style={{ display: 'flex', alignItems: 'center', gap: 0, flexShrink: 0 }}>
+            <div className="app-header-actions" style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
               {Object.values(PERSONAS).map(px => (
                 <button key={px.id} className="persona-chip" onClick={() => setPersona(px)} title={px.name} aria-label={t('a11y.switchPersona', { name: px.name })} aria-pressed={persona.id === px.id}
                   style={{
@@ -1029,12 +1023,12 @@ export function MainApp() {
                   }}>{px.icon}</button>
               ))}
               <div style={{ width: 1, height: 16, background: 'rgba(160,170,185,0.22)', margin: '0 8px', flexShrink: 0 }}/>
-              <button className="header-icon-btn" aria-label={t('a11y.help')} onClick={() => setShowHelp(true)}
-                style={{ minWidth: 42, minHeight: 42, background: 'none', border: '1px solid rgba(220,210,216,0.38)', cursor: 'pointer', color: '#9ca6b4', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 12, flexShrink: 0 }}>
+              <button className="header-icon-btn om-icon-btn" aria-label={t('a11y.help')} onClick={() => setShowHelp(true)}
+                style={{ border: '1px solid rgba(220,210,216,0.38)', color: '#9ca6b4', borderRadius: 12, flexShrink: 0 }}>
                 <HelpCircle size={16} strokeWidth={1.5}/>
               </button>
-              <button className="header-icon-btn" aria-label={t('a11y.share')} onClick={handleShareApp}
-                style={{ minWidth: 42, minHeight: 42, background: 'none', border: '1px solid rgba(220,210,216,0.38)', cursor: 'pointer', color: '#9ca6b4', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 12, flexShrink: 0 }}>
+              <button className="header-icon-btn om-icon-btn" aria-label={t('a11y.share')} onClick={handleShareApp}
+                style={{ border: '1px solid rgba(220,210,216,0.38)', color: '#9ca6b4', borderRadius: 12, flexShrink: 0 }}>
                 <Share2 size={16} strokeWidth={1.5}/>
               </button>
             </div>
@@ -1056,7 +1050,7 @@ export function MainApp() {
               left: activeModeIndex <= 0 ? 5 : '50%',
               background: 'linear-gradient(130deg, #0c1633, #102044 58%, #172c58)',
               borderRadius: 16,
-              boxShadow: '0 14px 36px rgba(10,16,36,0.24), inset 0 1px 0 rgba(214,230,255,0.38)',
+              boxShadow: 'var(--om-cta-shadow)',
               animation: 'iridescentShift 4.4s ease-in-out infinite',
               transition: 'left 0.35s cubic-bezier(0.16,1,0.3,1)'
             }} />
@@ -1097,10 +1091,8 @@ export function MainApp() {
                   </div>
 
                   {/* Ornament line + star */}
-                  <div style={{ marginTop: 30, display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <div style={{ height: 1, width: 64, background: 'rgba(215,120,148,0.28)' }}/>
-                    <span style={{ color: '#d77894', fontSize: 11, lineHeight: 1 }}>✦</span>
-                    <div style={{ height: 1, width: 64, background: 'rgba(215,120,148,0.28)' }}/>
+                  <div className="om-star-divider" aria-hidden="true" style={{ marginTop: 30 }}>
+                    <span>✦</span>
                   </div>
                 </div>
 
@@ -1118,10 +1110,10 @@ export function MainApp() {
                           animation: `fadeIn 0.7s cubic-bezier(0.16,1,0.3,1) ${0.5 + pi * 0.1}s both`,
                           background: 'rgba(255,255,255,0.84)',
                           boxShadow: isSelected
-                            ? `var(--om-shadow-card), 0 0 42px rgba(215,120,148,0.08)`
+                            ? `var(--om-shadow-card), 0 0 34px ${px.accent}18`
                             : 'var(--om-shadow-card)',
                           border: isSelected
-                            ? `1px solid rgba(215,120,148,0.50)`
+                            ? `1px solid ${px.border}`
                             : '1px solid rgba(220,210,220,0.32)',
                           transition: 'all 0.35s'
                         }}>
@@ -1180,7 +1172,7 @@ export function MainApp() {
 
               {isLoading && inFlightRoomId === activeRoomId && (!streaming || streaming.target === '') && (
                 <div aria-busy="true" style={{ display: 'flex', justifyContent: 'flex-start', animation: 'oracleReveal 0.6s cubic-bezier(0.16,1,0.3,1)' }}>
-                  <div style={{ padding: '20px 26px', background: 'rgba(255,255,255,0.95)', borderRadius: 24, border: `1px solid ${p.border}`, display: 'flex', alignItems: 'center', gap: 14, boxShadow: `0 8px 32px ${p.accent}12` }}>
+                  <div style={{ padding: '20px 26px', background: 'rgba(255,255,255,0.95)', borderRadius: 24, border: `1px solid ${p.border}`, display: 'flex', alignItems: 'center', gap: 14, boxShadow: 'var(--om-shadow-card)' }}>
                     <div style={{ display: 'flex', gap: 5 }} aria-hidden="true">
                       {[0, 1, 2].map(i => (
                         <span key={i} style={{ width: 6, height: 6, borderRadius: 999, background: p.accent, animation: `breathe 1.4s ease-in-out ${i * 0.18}s infinite` }} />
@@ -1195,7 +1187,7 @@ export function MainApp() {
                 <div role="alert" style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 16px', background: '#fff1f2', borderRadius: 16, border: '1px solid #fecdd3', animation: 'fadeIn 0.3s ease' }}>
                   <AlertCircle size={16} style={{ color: '#f43f5e', flexShrink: 0 }}/>
                   <span style={{ fontSize: 13, color: '#be123c', flex: 1 }}>{error}</span>
-                  <button aria-label={t('a11y.closeError')} onClick={() => setError(null)} style={{ minWidth: 32, minHeight: 32, background: 'none', border: 'none', cursor: 'pointer', color: '#fca5a5', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={14}/></button>
+                  <button className="om-icon-btn" aria-label={t('a11y.closeError')} onClick={() => setError(null)} style={{ color: '#fca5a5' }}><X size={14}/></button>
                 </div>
               )}
               <div ref={messagesEndRef}/>
@@ -1260,15 +1252,15 @@ export function MainApp() {
                 handleSend();
               }} 
               disabled={isLoading || (!isLocked && !input.trim())} 
-              className="send-btn"
+              className={isLoading || (!isLocked && !input.trim()) ? 'send-btn' : 'send-btn om-cta'}
               style={{
-                width: 52, height: 52, borderRadius: 999, border: 'none', display: 'flex',
+                width: 52, height: 52, borderRadius: 999, display: 'flex',
                 alignItems: 'center', justifyContent: 'center', flexShrink: 0,
                 cursor: isLoading || (!isLocked && !input.trim()) ? 'not-allowed' : 'pointer',
-                background: isLoading || (!isLocked && !input.trim()) ? 'rgba(248,233,238,0.86)' : 'linear-gradient(135deg, #0c1736, #12254d)',
-                color: isLoading || (!isLocked && !input.trim()) ? '#c97890' : '#fff',
-                transition: 'background 0.3s, color 0.3s',
-                boxShadow: isLoading || (!isLocked && !input.trim()) ? 'none' : '0 16px 38px rgba(10,16,36,0.24), inset 0 1px 0 rgba(219,233,255,0.40)'
+                background: isLoading || (!isLocked && !input.trim()) ? 'rgba(248,233,238,0.86)' : undefined,
+                color: isLoading || (!isLocked && !input.trim()) ? '#c97890' : undefined,
+                boxShadow: isLoading || (!isLocked && !input.trim()) ? 'none' : undefined,
+                border: 'none',
               }}>
               {isLoading
                 ? <Loader2 size={18} style={{ animation: 'spin 1s linear infinite' }}/>

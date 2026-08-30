@@ -48,7 +48,7 @@ export function DrawnCardView({ card, index, accent, border, soft }: DrawnCardVi
           alignItems: 'center',
           justifyContent: 'center',
           overflow: 'hidden',
-          boxShadow: `0 10px 24px ${accent}10`,
+          boxShadow: 'var(--om-shadow-card)',
         }}
       >
         {hasImage ? (
@@ -120,7 +120,7 @@ export const OracleBubble = React.memo(function OracleBubble({ msg, idx, copiedI
       </div>
       <div className="oracle-bubble oracle-bubble-card" style={{
         position: 'relative', padding: '24px 28px', background: 'rgba(255,255,255,0.95)', backdropFilter: 'blur(8px)',
-        borderRadius: 24, border: `1px solid ${msgPersona.border}`, boxShadow: '0 8px 32px rgba(0,0,0,0.03)',
+        borderRadius: 24, border: `1px solid ${msgPersona.border}`, boxShadow: 'var(--om-shadow-card)',
         opacity: isRegen ? 0.4 : 1, transition: 'opacity 0.4s'
       }}>
         {isRegen && (

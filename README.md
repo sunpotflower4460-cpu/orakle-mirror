@@ -113,7 +113,10 @@ npm run appstore:check
     ├── MainApp.tsx
     ├── components/
     │   ├── ExternalGuidanceBanner.tsx
+    │   ├── HelpModal.tsx
+    │   ├── LanguageToggle.tsx
     │   ├── OracleBubble.tsx
+    │   ├── OracleOrb.tsx
     │   ├── StreamingBubble.tsx
     │   └── SubscribeModal.tsx
     ├── constants/

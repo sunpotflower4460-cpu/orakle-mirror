@@ -27,7 +27,7 @@ export function LegalLinks({ style }: LegalLinksProps) {
       {showTerms && (
         <button
           onClick={() => openExternalUrl(TERMS_URL)}
-          style={{ background: 'none', border: 'none', padding: 0, fontSize: 11, color: '#94a3b8', textDecoration: 'underline', cursor: 'pointer' }}
+          style={{ background: 'none', border: 'none', padding: '8px 4px', minHeight: 44, fontSize: 11, color: '#94a3b8', textDecoration: 'underline', cursor: 'pointer' }}
         >
           {t('help.terms')}
         </button>
@@ -35,7 +35,7 @@ export function LegalLinks({ style }: LegalLinksProps) {
       {showPrivacy && (
         <button
           onClick={() => openExternalUrl(PRIVACY_URL)}
-          style={{ background: 'none', border: 'none', padding: 0, fontSize: 11, color: '#94a3b8', textDecoration: 'underline', cursor: 'pointer' }}
+          style={{ background: 'none', border: 'none', padding: '8px 4px', minHeight: 44, fontSize: 11, color: '#94a3b8', textDecoration: 'underline', cursor: 'pointer' }}
         >
           {t('help.privacy')}
         </button>
@@ -43,7 +43,7 @@ export function LegalLinks({ style }: LegalLinksProps) {
       {showSupport && (
         <button
           onClick={() => openExternalUrl(supportHref)}
-          style={{ background: 'none', border: 'none', padding: 0, fontSize: 11, color: '#94a3b8', textDecoration: 'underline', cursor: 'pointer' }}
+          style={{ background: 'none', border: 'none', padding: '8px 4px', minHeight: 44, fontSize: 11, color: '#94a3b8', textDecoration: 'underline', cursor: 'pointer' }}
         >
           {t('help.support')}
         </button>

@@ -3,7 +3,8 @@ import { ArrowRight, ArrowLeft } from 'lucide-react';
 import { PERSONAS } from '../constants/personas';
 import { MODES } from '../constants/modes';
 import { OracleOrb } from './OracleOrb';
-import { LOCALES, useLocale } from '../i18n';
+import { LanguageToggle } from './LanguageToggle';
+import { useLocale } from '../i18n';
 import type { Mode, PersonaId } from '../types';
 
 interface OnboardingProps {
@@ -29,7 +30,7 @@ function MultiLine({ text }: { text: string }) {
 }
 
 export function Onboarding({ onComplete }: OnboardingProps) {
-  const { locale, setLocale, t } = useLocale();
+  const { t } = useLocale();
   const [step, setStep] = useState(0);
   const [selectedPersona, setSelectedPersona] = useState<PersonaId>('lumina');
 
@@ -72,21 +73,7 @@ export function Onboarding({ onComplete }: OnboardingProps) {
       }}>
         {/* 言語切替(タイトルの時点で日本語／英語を選べる) */}
         <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 12 }}>
-          <div role="group" aria-label={t('help.language')} style={{
-            display: 'flex', gap: 3,
-            alignItems: 'center',
-            background: 'rgba(255,255,255,0.52)', borderRadius: 16, padding: '6px 8px',
-            border: '1px solid rgba(210,220,238,0.42)'
-          }}>
-            {LOCALES.map(loc => (
-              <button key={loc} onClick={() => setLocale(loc)} aria-pressed={locale === loc} style={{
-                padding: '6px 16px', borderRadius: 999, border: 'none', cursor: 'pointer',
-                fontSize: 12, fontWeight: 600, transition: 'all 0.25s',
-                background: locale === loc ? 'linear-gradient(130deg, rgba(250,214,228,0.92), rgba(232,240,255,0.86))' : 'transparent',
-                color: locale === loc ? '#20304b' : '#7e8da7'
-              }}>{t(`language.${loc}`)}</button>
-            ))}
-          </div>
+          <LanguageToggle />
         </div>
 
         {/* Step content(切替時に、鏡に像が結ぶように現れる) */}
@@ -151,16 +138,17 @@ export function Onboarding({ onComplete }: OnboardingProps) {
 
           {step === 3 && (
             <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flex: 1, gap: 10 }}>
-              <div style={{ position: 'relative', width: 96, height: 96, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 16 }}>
-                <div style={{ position: 'absolute', inset: -24, background: `radial-gradient(circle, ${accent}22 0%, transparent 70%)`, animation: 'pulse 3s ease-in-out infinite', borderRadius: '50%' }} />
+              <div style={{ position: 'relative', width: 96, height: 108, display: 'flex', alignItems: 'flex-start', justifyContent: 'center', marginBottom: 16 }}>
+                <div style={{ position: 'absolute', inset: -20, top: -16, bottom: 8, background: `radial-gradient(circle, ${accent}22 0%, transparent 70%)`, animation: 'pulse 3s ease-in-out infinite', borderRadius: '50%' }} />
                 <div style={{
                   width: 96, height: 96, borderRadius: '50%',
-                  background: 'radial-gradient(circle, rgba(255,255,255,0.80), rgba(255,238,244,0.40))',
-                  border: '1px solid rgba(200,212,224,0.42)',
-                  boxShadow: `0 0 44px ${accent}28, inset 0 1px 0 rgba(255,255,255,0.84)`,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative'
+                  background: 'radial-gradient(circle at 32% 26%, rgba(255,255,255,0.96), rgba(255,243,248,0.72) 42%, rgba(233,242,255,0.50) 100%)',
+                  border: '0.5px solid rgba(255,255,255,0.72)',
+                  boxShadow: `0 0 44px ${accent}28, inset 0 1px 0 rgba(255,255,255,0.94), inset 0 -14px 22px ${accent}18`,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', overflow: 'hidden'
                 }}>
-                  <span style={{ position: 'relative', color: accent, display: 'flex' }}>{PERSONAS[selectedPersona].icon}</span>
+                  <div aria-hidden="true" style={{ position: 'absolute', left: '14%', top: '12%', width: '32%', height: '20%', borderRadius: 999, background: 'linear-gradient(180deg, rgba(255,255,255,0.78), rgba(255,255,255,0.08))', transform: 'rotate(-24deg)' }} />
+                  <span style={{ position: 'relative', color: accent, display: 'flex', zIndex: 1 }}>{PERSONAS[selectedPersona].icon}</span>
                 </div>
               </div>
               <h2 className="onboarding-heading" id={titleId} style={headingStyle}>{t('onboarding.ready.title')}</h2>
@@ -195,29 +183,25 @@ export function Onboarding({ onComplete }: OnboardingProps) {
         {/* Navigation */}
         <div className="onboarding-nav" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           {step > 0 ? (
-            <button className="onboarding-secondary" onClick={back} aria-label={t('onboarding.back')} style={{
+            <button className="onboarding-secondary om-glass-btn" onClick={back} aria-label={t('onboarding.back')} style={{
               minWidth: 44, minHeight: 58, padding: '0 20px',
-              background: 'rgba(255,255,255,0.60)', color: '#6f7a8b',
-              border: '1px solid rgba(210,200,210,0.35)', borderRadius: 999, cursor: 'pointer', fontSize: 12, fontWeight: 600,
+              borderRadius: 999, fontSize: 12, fontWeight: 600,
               display: 'flex', alignItems: 'center', gap: 6
             }}><ArrowLeft size={14} /> {t('onboarding.back')}</button>
           ) : (
-            <button className="onboarding-secondary" onClick={() => onComplete()} style={{
+            <button className="onboarding-secondary om-glass-btn" onClick={() => onComplete()} style={{
               minHeight: 58, padding: '0 20px',
-              background: 'rgba(255,255,255,0.60)', color: '#6f7a8b',
-              border: '1px solid rgba(210,200,210,0.35)', borderRadius: 999, cursor: 'pointer', fontSize: 11, fontWeight: 600, letterSpacing: '0.1em'
+              borderRadius: 999, fontSize: 11, fontWeight: 600, letterSpacing: '0.1em'
             }}>{t('onboarding.skip')}</button>
           )}
 
           <div className="onboarding-nav-spacer" style={{ flex: 1 }} />
 
-          <button className="onboarding-primary" onClick={isLast ? () => onComplete(selectedPersona) : next} style={{
+          <button className="onboarding-primary om-cta" onClick={isLast ? () => onComplete(selectedPersona) : next} style={{
             minHeight: 66, padding: '0 30px',
-            background: 'linear-gradient(135deg, #0b1430, #101e46 56%, #162953)', color: '#fff',
-            border: 'none', borderRadius: 999, cursor: 'pointer', fontSize: 11, fontWeight: 700,
+            borderRadius: 999, fontSize: 11,
             letterSpacing: '0.2em', textTransform: 'uppercase',
             display: 'flex', alignItems: 'center', gap: 8,
-            boxShadow: '0 20px 50px rgba(10,16,36,0.28), inset 0 1px 0 rgba(219,233,255,0.42)',
             animation: 'pulse 2.8s ease-in-out infinite'
           }}>
             {isLast ? t('onboarding.begin') : t('onboarding.next')}

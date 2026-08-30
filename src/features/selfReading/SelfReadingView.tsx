@@ -156,7 +156,9 @@ export function SelfReadingView({ onBack }: SelfReadingViewProps) {
           padding: '30px 22px',
           textAlign: 'center',
         }}>
-          <div style={{ color: '#d77894', fontSize: 12, marginBottom: 12 }}>✦</div>
+          <div className="om-star-divider om-star-divider--sm" aria-hidden="true" style={{ marginBottom: 12 }}>
+            <span>✦</span>
+          </div>
           <h1 style={{ margin: 0, fontSize: 22, letterSpacing: '0.18em', color: '#263044', fontWeight: 500 }}>{t('sr.home.title')}</h1>
           <p style={{ margin: '14px auto 0', maxWidth: 430, color: '#7f8998', fontSize: 13, lineHeight: 1.9, letterSpacing: '0.04em' }}>{t('sr.home.body')}</p>
         </div>
@@ -222,20 +224,14 @@ export function SelfReadingView({ onBack }: SelfReadingViewProps) {
                 type="button"
                 disabled={!canDraw}
                 onClick={handleDraw}
+                className="om-cta"
                 style={{
                   width: '100%',
                   minHeight: 52,
                   borderRadius: 18,
-                  border: 'none',
-                  background: canDraw
-                    ? 'linear-gradient(135deg, #263044, #465a8a)'
-                    : 'linear-gradient(135deg, rgba(13,19,40,0.42), rgba(20,28,56,0.34))',
-                  color: 'rgba(255,255,255,0.9)',
                   fontSize: 12,
-                  fontWeight: 700,
                   letterSpacing: '0.16em',
-                  cursor: canDraw ? 'pointer' : 'not-allowed',
-                  boxShadow: canDraw ? '0 14px 28px rgba(38,48,68,0.16)' : 'none',
+                  opacity: canDraw ? 1 : 0.55,
                 }}
               >
                 {t('sr.draw')}

@@ -39,20 +39,32 @@ export function SubscribeModal({ onClose, onSubscribe, onRestore, isPurchasing }
   }, [t]);
 
   return (
-    <div role="dialog" aria-modal="true" aria-labelledby="subscribeTitle" style={{
-      position: 'fixed', inset: 0, zIndex: 1000,
-      background: 'rgba(15, 23, 42, 0.92)', backdropFilter: 'blur(8px)',
-      display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px',
-      paddingTop: 'calc(16px + var(--sat))', paddingBottom: 'calc(16px + var(--sab))',
-      animation: 'fadeIn 0.3s ease'
-    }} onClick={e => {
-      if (e.target === e.currentTarget && !isPurchasing) onClose();
-    }}>
-      <div style={{ background: '#fff', padding: 32, borderRadius: 28, maxWidth: 420, width: '100%', maxHeight: '100%', overflowY: 'auto', boxShadow: '0 32px 80px rgba(0,0,0,0.4)', textAlign: 'center', animation: 'modalReveal 0.4s cubic-bezier(0.16,1,0.3,1)' }}>
-        <div style={{ display: 'inline-flex', padding: 16, background: '#f8fafc', borderRadius: '50%', marginBottom: 20 }}>
-          <Lock size={32} color="#64748b" />
+    <div
+      className="om-modal-overlay"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="subscribeTitle"
+      style={{
+        zIndex: 1000,
+        background: 'rgba(28, 24, 36, 0.46)',
+        backdropFilter: 'blur(14px)',
+        WebkitBackdropFilter: 'blur(14px)',
+      }}
+      onClick={e => {
+        if (e.target === e.currentTarget && !isPurchasing) onClose();
+      }}
+    >
+      <div className="om-modal-card" style={{ maxWidth: 420, padding: 32, textAlign: 'center' }}>
+        <div style={{
+          display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+          width: 84, height: 84, marginBottom: 20, borderRadius: '50%',
+          background: 'radial-gradient(circle at 32% 26%, rgba(255,255,255,0.96), rgba(255,243,248,0.72) 42%, rgba(233,242,255,0.50) 100%)',
+          border: '0.5px solid rgba(255,255,255,0.72)',
+          boxShadow: 'var(--om-glow-rose), inset 0 1px 0 rgba(255,255,255,0.94), inset 0 -14px 22px rgba(217,111,140,0.14)',
+        }}>
+          <Lock size={28} color="rgba(39,59,106,0.82)" strokeWidth={1.4} />
         </div>
-        <h2 id="subscribeTitle" style={{ fontSize: 18, color: '#0f172a', margin: '0 0 12px 0', letterSpacing: '0.1em' }}>
+        <h2 id="subscribeTitle" style={{ fontSize: 18, color: '#20304b', margin: '0 0 12px 0', letterSpacing: '0.1em', fontWeight: 500 }}>
           {t('subscribe.title').split('\n').map((line, i, arr) => (
             <React.Fragment key={i}>{line}{i < arr.length - 1 && <br/>}</React.Fragment>
           ))}
@@ -63,34 +75,29 @@ export function SubscribeModal({ onClose, onSubscribe, onRestore, isPurchasing }
           ))}
         </p>
 
-        {/* App Store審査対応: 価格表示 */}
         <div style={{ fontSize: 14, fontWeight: 700, color: '#334155', marginBottom: 8 }}>
           {t('subscribe.monthly', { price })}
         </div>
         <div style={{ fontSize: 10, color: '#94a3b8', marginBottom: 16 }}>{t('subscribe.autoRenew')}</div>
 
-        <button onClick={onSubscribe} disabled={isPurchasing} style={{
-          width: '100%', padding: '16px 0', background: 'linear-gradient(135deg, #0f172a 0%, #334155 100%)', color: '#fff',
+        <button className="om-cta" onClick={onSubscribe} disabled={isPurchasing} style={{
+          width: '100%', padding: '16px 0',
           borderRadius: 999, fontSize: 12, letterSpacing: '0.15em', minHeight: 48,
-          fontWeight: 700, cursor: isPurchasing ? 'not-allowed' : 'pointer', border: 'none', 
-          boxShadow: isPurchasing ? 'none' : '0 8px 24px rgba(15,23,42,0.25)', opacity: isPurchasing ? 0.7 : 1,
-          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginBottom: 12, transition: 'opacity 0.2s'
+          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginBottom: 12,
         }}>
           {isPurchasing ? <Loader2 size={14} style={{ animation: 'spin 1s linear infinite' }} /> : <Unlock size={14} />}
           {isPurchasing ? t('subscribe.processing') : t('subscribe.cta')}
         </button>
-        <button onClick={onClose} disabled={isPurchasing} style={{
-          width: '100%', padding: '12px 0', background: 'transparent', color: '#94a3b8',
+        <button className="om-glass-btn" onClick={onClose} disabled={isPurchasing} style={{
+          width: '100%', padding: '12px 0',
           borderRadius: 999, fontSize: 12, letterSpacing: '0.1em', minHeight: 44,
-          fontWeight: 400, cursor: isPurchasing ? 'not-allowed' : 'pointer', border: 'none'
+          fontWeight: 400, background: 'transparent', border: 'none',
         }}>{t('subscribe.later')}</button>
-        
-        {/* App Store審査必須要件：リストア（復元）ボタン */}
-        <div style={{ marginTop: 24, paddingTop: 16, borderTop: '1px solid #f1f5f9' }}>
-          <button onClick={onRestore} disabled={isPurchasing} style={{
-            background: 'none', border: 'none', color: '#64748b', fontSize: 11, 
-            cursor: isPurchasing ? 'not-allowed' : 'pointer',
-            display: 'inline-flex', alignItems: 'center', gap: 6, padding: '8px 16px', borderRadius: 999
+
+        <div style={{ marginTop: 24, paddingTop: 16, borderTop: '1px solid rgba(220,210,216,0.28)' }}>
+          <button className="om-glass-btn" onClick={onRestore} disabled={isPurchasing} style={{
+            background: 'none', border: 'none', color: '#64748b', fontSize: 11,
+            display: 'inline-flex', alignItems: 'center', gap: 6, padding: '8px 16px', borderRadius: 999, minHeight: 44,
           }}>
             {isPurchasing ? <Loader2 size={12} style={{ animation: 'spin 1s linear infinite' }} /> : <RefreshCw size={12} />}
             {t('subscribe.restore')}
@@ -101,7 +108,7 @@ export function SubscribeModal({ onClose, onSubscribe, onRestore, isPurchasing }
             type="button"
             onClick={() => openExternalUrl(APP_STORE_MANAGE_SUBSCRIPTIONS_URL)}
             style={{
-              background: 'none', border: 'none', padding: 0, marginTop: 12,
+              background: 'none', border: 'none', padding: '8px 12px', marginTop: 4, minHeight: 44,
               fontSize: 11, color: '#94a3b8', textDecoration: 'underline', cursor: 'pointer',
             }}
           >

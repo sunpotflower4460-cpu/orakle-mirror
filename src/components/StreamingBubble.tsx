@@ -96,7 +96,7 @@ export function StreamingBubble({ target, done, reduceMotion, persona, mode, dra
       </div>
       <div className="oracle-bubble oracle-bubble-card" style={{
         position: 'relative', padding: '24px 28px', background: 'rgba(255,255,255,0.95)', backdropFilter: 'blur(8px)',
-        borderRadius: 24, border: `1px solid ${persona.border}`, boxShadow: '0 8px 32px rgba(0,0,0,0.03)'
+        borderRadius: 24, border: `1px solid ${persona.border}`, boxShadow: 'var(--om-shadow-card)'
       }}>
         {drawnCards && drawnCards.length > 0 && (
           <div style={{ marginBottom: 22, padding: '15px 15px 0', background: `linear-gradient(to bottom right, #ffffff, ${persona.soft})`, borderRadius: 22, border: `1px solid ${persona.border}` }}>
