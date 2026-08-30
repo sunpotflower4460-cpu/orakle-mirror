@@ -66,7 +66,7 @@ window.__oracleMirrorDiagnostics
 | 言語トグルの発光カプセル | `src/components/LanguageToggle.tsx` | Onboarding / Help で溝の中を滑る共通トグル。Help では sticky header に固定し、フッター CTA と重ならない | P2 | 実施済み |
 | ダイアログの背面操作漏れ | `src/lib/useDialogChrome.ts` | Tab 循環をコンテナ自身からも引き戻す。背面 inert + body スクロールロック。購入中は Escape / オーバーレイ閉じを抑止 | P1 | 実施済み |
 | Self Reading の「引く」が iPhone 幅で画面外 | `src/features/selfReading/SelfReadingView.tsx` | セットアップはシート型。本文スクロール、引く CTA は常時画面下 | P1 | 実施済み |
-| オンボーディングが下端シートで上が空く | `src/styles/globals.ts` `.onboarding-overlay` | iPhone ではカードを画面いっぱいに伸ばし、言語トグルをステータスバー直下へ。ナビは横並び | P1 | 実施済み |
+| オンボーディングが下端シートで上が空く | `src/styles/globals.ts` `.onboarding-overlay` | 全サイズでカードを画面の高さに合わせる。言語は上、オーブ/本文はヘッダー〜フッター間の中央、ナビは下。文字は clamp | P1 | 実施済み |
 | safe-area 差分 | `src/styles/globals.ts`, `src/MainApp.tsx`, `capacitor.config.ts` | 実機値を見て不足分のみ調整 | P0 | 不要 |
 | 中央オーブの統一（Onboarding/Home/Sidebar） | `src/components/OracleOrb.tsx`, `src/components/Onboarding.tsx`, `src/MainApp.tsx` | 既存表現を共通化し、グロウ / ハイライト / 鏡像反射 / 白エッジ / 控えめな虹揺れを追加 | P0 | 不要 |
 | 影の純度調整（カード / ヘッダー / ペルソナチップ） | `src/MainApp.tsx`, `src/components/Onboarding.tsx`, `src/styles/globals.ts` | `--om-shadow-soft` / `--om-shadow-card` ベースへ寄せ、黒影を増やさない | P0 | 不要 |
