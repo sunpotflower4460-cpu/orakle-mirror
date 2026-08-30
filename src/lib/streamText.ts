@@ -21,20 +21,23 @@ export function trailingPartialLen(s: string, tag: string): number {
 /**
  * ストリーム途中の raw から「表示してよい最終本文」を返す。タグは絶対に表示しない。
  * 累積で返す(呼び出し側はこれを表示ターゲットにする)。
+ * extractTag と同様、タグ名は大文字小文字を区別しない。
  */
 export function extractFinalForDisplay(raw: string): string {
-  const openIdx = raw.indexOf(OPEN_TAG);
+  const lower = raw.toLowerCase();
+  const openIdx = lower.indexOf(OPEN_TAG);
   if (openIdx !== -1) {
     const content = raw.slice(openIdx + OPEN_TAG.length);
-    const closeIdx = content.indexOf(CLOSE_TAG);
+    const contentLower = content.toLowerCase();
+    const closeIdx = contentLower.indexOf(CLOSE_TAG);
     if (closeIdx !== -1) return content.slice(0, closeIdx);
     // 閉じタグがまだ揃っていない。末尾の部分 '</final>' を表示しないよう削る。
-    const k = trailingPartialLen(content, CLOSE_TAG);
+    const k = trailingPartialLen(contentLower, CLOSE_TAG);
     return k > 0 ? content.slice(0, content.length - k) : content;
   }
   // 開始タグがまだ揃っていない。先頭が '<' か、末尾が '<final>' の部分なら確定まで待つ。
   const lead = raw.replace(/^\s+/, '');
-  if (lead.startsWith('<') || trailingPartialLen(raw, OPEN_TAG) > 0) return '';
+  if (lead.startsWith('<') || trailingPartialLen(lower, OPEN_TAG) > 0) return '';
   // タグが全く無いモデル出力 → 全体をそのまま(extractTag のフォールバックと同義)。
   return raw;
 }

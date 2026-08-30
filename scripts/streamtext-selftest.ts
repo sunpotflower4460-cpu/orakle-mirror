@@ -62,5 +62,13 @@ console.log('streamText self-test');
   check('open tag forming shows nothing', extractFinalForDisplay('<fin') === '');
 }
 
+// 5. 大文字小文字を区別しない(extractTag と同じ)
+{
+  console.log('• case-insensitive <FINAL> tags');
+  check('uppercase open/close', extractFinalForDisplay('<FINAL>本文</FINAL>') === '本文');
+  check('mixed case', extractFinalForDisplay('<Final>本文</Final>') === '本文');
+  check('partial close is case-insensitive', extractFinalForDisplay('<FINAL>本文</FI') === '本文');
+}
+
 if (failures > 0) { console.error(`\n${failures} check(s) failed`); process.exit(1); }
 console.log('\nall checks passed');
