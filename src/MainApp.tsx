@@ -884,6 +884,7 @@ export function MainApp() {
         borderRadius: '0 28px 28px 0',
         transition: 'width 0.3s cubic-bezier(0.16,1,0.3,1)',
         overflow: 'hidden',
+        pointerEvents: sidebarOpen ? 'auto' : 'none',
         boxShadow: sidebarOpen ? 'var(--om-shadow-soft)' : 'none',
         display: 'flex', flexDirection: 'column'
       }}>
@@ -972,7 +973,7 @@ export function MainApp() {
                 <span style={{ fontWeight: 700, color: typeof remainingDisplay === 'number' && remainingDisplay > 0 ? '#263044' : '#f43f5e' }}>{t('subscription.remainingCount', { count: remainingDisplay })}</span>
               </div>
               <button className="om-cta" onClick={() => setShowSubscribeModal(true)} style={{
-                width: '100%', padding: '14px 0',
+                width: '100%', padding: '14px 0', minHeight: 48,
                 borderRadius: 16, fontSize: 11, cursor: 'pointer',
                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
               }}>
@@ -1244,6 +1245,7 @@ export function MainApp() {
               isLocked 状態でもタップ可能にし、onClick イベント側でガード（モーダルを開く処理）を発火させる。
             */}
             <button aria-label={t('a11y.send')}
+              type="button"
               onClick={() => {
                 if (isLocked) {
                   setShowSubscribeModal(true);
@@ -1254,11 +1256,11 @@ export function MainApp() {
               disabled={isLoading || (!isLocked && !input.trim())} 
               className={isLoading || (!isLocked && !input.trim()) ? 'send-btn' : 'send-btn om-cta'}
               style={{
-                width: 52, height: 52, borderRadius: 999, display: 'flex',
+                width: 52, height: 52, minHeight: 52, borderRadius: 999, display: 'flex',
                 alignItems: 'center', justifyContent: 'center', flexShrink: 0,
                 cursor: isLoading || (!isLocked && !input.trim()) ? 'not-allowed' : 'pointer',
-                background: isLoading || (!isLocked && !input.trim()) ? 'rgba(248,233,238,0.86)' : undefined,
-                color: isLoading || (!isLocked && !input.trim()) ? '#c97890' : undefined,
+                background: isLoading || (!isLocked && !input.trim()) ? 'rgba(13,19,40,0.08)' : undefined,
+                color: isLoading || (!isLocked && !input.trim()) ? '#8a94a6' : undefined,
                 boxShadow: isLoading || (!isLocked && !input.trim()) ? 'none' : undefined,
                 border: 'none',
               }}>

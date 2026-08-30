@@ -1,10 +1,11 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { ArrowRight, ArrowLeft } from 'lucide-react';
 import { PERSONAS } from '../constants/personas';
 import { MODES } from '../constants/modes';
 import { OracleOrb } from './OracleOrb';
 import { LanguageToggle } from './LanguageToggle';
 import { useLocale } from '../i18n';
+import { useDialogChrome } from '../lib/useDialogChrome';
 import type { Mode, PersonaId } from '../types';
 
 interface OnboardingProps {
@@ -33,15 +34,10 @@ export function Onboarding({ onComplete }: OnboardingProps) {
   const { t } = useLocale();
   const [step, setStep] = useState(0);
   const [selectedPersona, setSelectedPersona] = useState<PersonaId>('lumina');
+  const dialogRef = useDialogChrome(() => onComplete());
 
   const accent = PERSONAS[selectedPersona].accent;
   const isLast = step === TOTAL_STEPS - 1;
-
-  useEffect(() => {
-    const handleEsc = (e: KeyboardEvent) => { if (e.key === 'Escape') onComplete(); };
-    document.addEventListener('keydown', handleEsc);
-    return () => document.removeEventListener('keydown', handleEsc);
-  }, [onComplete]);
 
   const next = () => setStep(s => Math.min(s + 1, TOTAL_STEPS - 1));
   const back = () => setStep(s => Math.max(s - 1, 0));
@@ -51,7 +47,14 @@ export function Onboarding({ onComplete }: OnboardingProps) {
   const headingStyle: React.CSSProperties = { fontSize: 30, fontWeight: 400, color: '#202d48', letterSpacing: '0.13em', margin: 0, lineHeight: 1.5 };
 
   return (
-    <div className="onboarding-overlay" role="dialog" aria-modal="true" aria-labelledby={titleId} style={{
+    <div
+      ref={dialogRef}
+      className="onboarding-overlay"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby={titleId}
+      tabIndex={-1}
+      style={{
       position: 'fixed', inset: 0, zIndex: 1100,
       background: `
         radial-gradient(circle at 15% 22%, rgba(255,255,255,0.70), transparent 30%),
@@ -62,13 +65,14 @@ export function Onboarding({ onComplete }: OnboardingProps) {
       backdropFilter: 'blur(4px)', WebkitBackdropFilter: 'blur(4px)',
       display: 'flex', alignItems: 'center', justifyContent: 'center',
       padding: '16px', paddingTop: 'calc(16px + var(--sat))', paddingBottom: 'calc(16px + var(--sab))',
+      overflow: 'hidden', overscrollBehavior: 'contain', outline: 'none',
       animation: 'fadeIn 0.3s ease'
     }}>
       <div className="onboarding-card" style={{
         background: 'linear-gradient(140deg, rgba(255,255,255,0.76), rgba(255,246,251,0.68), rgba(240,246,255,0.56))',
-        maxWidth: 440, width: '100%', maxHeight: '100%',
+        maxWidth: 440, width: '100%', maxHeight: '100%', minHeight: 0,
         borderRadius: 38, boxShadow: 'var(--om-shadow-soft)', border: '1px solid rgba(214,224,245,0.38)',
-        overflowY: 'auto', padding: 32, display: 'flex', flexDirection: 'column',
+        overflowY: 'auto', overscrollBehavior: 'contain', padding: 32, display: 'flex', flexDirection: 'column',
         animation: 'modalReveal 0.45s cubic-bezier(0.16,1,0.3,1)'
       }}>
         {/* 言語切替(タイトルの時点で日本語／英語を選べる) */}
@@ -97,7 +101,7 @@ export function Onboarding({ onComplete }: OnboardingProps) {
                 {Object.values(PERSONAS).map(px => {
                   const active = selectedPersona === px.id;
                   return (
-                    <button key={px.id} className="onboarding-persona-card" onClick={() => setSelectedPersona(px.id)} aria-pressed={active} aria-label={t('a11y.selectPersona', { name: px.name })}
+                    <button type="button" key={px.id} className="onboarding-persona-card" onClick={() => setSelectedPersona(px.id)} aria-pressed={active} aria-label={t('a11y.selectPersona', { name: px.name })}
                       style={{
                         flex: '1 1 0', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8,
                         padding: '20px 8px 18px', borderRadius: 22, cursor: 'pointer',
@@ -183,13 +187,13 @@ export function Onboarding({ onComplete }: OnboardingProps) {
         {/* Navigation */}
         <div className="onboarding-nav" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           {step > 0 ? (
-            <button className="onboarding-secondary om-glass-btn" onClick={back} aria-label={t('onboarding.back')} style={{
+            <button type="button" className="onboarding-secondary om-glass-btn" onClick={back} aria-label={t('onboarding.back')} style={{
               minWidth: 44, minHeight: 58, padding: '0 20px',
               borderRadius: 999, fontSize: 12, fontWeight: 600,
               display: 'flex', alignItems: 'center', gap: 6
             }}><ArrowLeft size={14} /> {t('onboarding.back')}</button>
           ) : (
-            <button className="onboarding-secondary om-glass-btn" onClick={() => onComplete()} style={{
+            <button type="button" className="onboarding-secondary om-glass-btn" onClick={() => onComplete()} style={{
               minHeight: 58, padding: '0 20px',
               borderRadius: 999, fontSize: 11, fontWeight: 600, letterSpacing: '0.1em'
             }}>{t('onboarding.skip')}</button>
@@ -197,7 +201,7 @@ export function Onboarding({ onComplete }: OnboardingProps) {
 
           <div className="onboarding-nav-spacer" style={{ flex: 1 }} />
 
-          <button className="onboarding-primary om-cta" onClick={isLast ? () => onComplete(selectedPersona) : next} style={{
+          <button type="button" className="onboarding-primary om-cta" onClick={isLast ? () => onComplete(selectedPersona) : next} style={{
             minHeight: 66, padding: '0 30px',
             borderRadius: 999, fontSize: 11,
             letterSpacing: '0.2em', textTransform: 'uppercase',

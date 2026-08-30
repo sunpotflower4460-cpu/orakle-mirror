@@ -197,6 +197,7 @@ export const GLOBAL_STYLES: string = `
     letter-spacing: 0.12em;
     font-weight: 700;
     cursor: pointer;
+    min-height: 48px;
     transition: transform 0.2s cubic-bezier(0.16,1,0.3,1), box-shadow 0.25s ease, filter 0.25s ease, opacity 0.2s ease;
   }
   .om-cta:hover:not(:disabled) { filter: brightness(1.06); }
@@ -274,7 +275,7 @@ export const GLOBAL_STYLES: string = `
     z-index: 1;
     flex: 1 1 0;
     min-width: 72px;
-    min-height: 36px;
+    min-height: 44px;
     padding: 6px 16px;
     border: none;
     background: transparent;
@@ -295,17 +296,49 @@ export const GLOBAL_STYLES: string = `
     padding: 16px;
     padding-top: calc(16px + var(--sat));
     padding-bottom: calc(16px + var(--sab));
+    overflow: hidden;
+    overscroll-behavior: contain;
     animation: fadeIn 0.3s ease;
   }
   .om-modal-card {
     width: 100%;
     max-height: 100%;
+    min-height: 0;
     overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
     border-radius: 32px;
     background: linear-gradient(140deg, rgba(255,255,255,0.92), rgba(255,246,251,0.86), rgba(240,246,255,0.78));
     border: 1px solid rgba(214,224,245,0.42);
     box-shadow: var(--om-shadow-modal);
     animation: modalReveal 0.4s cubic-bezier(0.16,1,0.3,1);
+  }
+  .om-modal-card--sheet {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .om-modal-body {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+  .om-modal-header {
+    flex: 0 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 22px 20px 14px 28px;
+    border-bottom: 1px solid rgba(220,210,216,0.28);
+    background: linear-gradient(180deg, rgba(255,252,253,0.96), rgba(255,250,252,0.88));
+  }
+  .om-modal-footer {
+    flex: 0 0 auto;
+    padding: 14px 28px 24px;
+    border-top: 1px solid rgba(220,210,216,0.28);
+    background: linear-gradient(180deg, rgba(255,252,253,0.55), rgba(255,250,252,0.96));
   }
 
   .header-icon-btn:hover { background: rgba(255,255,255,0.78) !important; color: #5f6b7a !important; }
