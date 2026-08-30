@@ -202,7 +202,6 @@ export function Onboarding({ onComplete }: OnboardingProps) {
             borderRadius: 999, fontSize: 11,
             letterSpacing: '0.2em', textTransform: 'uppercase',
             display: 'flex', alignItems: 'center', gap: 8,
-            animation: 'pulse 2.8s ease-in-out infinite'
           }}>
             {isLast ? t('onboarding.begin') : t('onboarding.next')}
             {!isLast && <ArrowRight size={14} />}
