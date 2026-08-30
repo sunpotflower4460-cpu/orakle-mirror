@@ -18,12 +18,60 @@ function oracleError(key: MessageKey): OracleError {
   return err;
 }
 
+/** 部屋削除など、呼び出し側が意図して中断した。リトライせず UI にも出さない。 */
+export class OracleCancelledError extends Error {
+  readonly cancelled = true as const;
+  readonly fatal = true as const;
+  constructor() {
+    super('cancelled');
+    this.name = 'OracleCancelledError';
+  }
+}
+
+export function isOracleCancelled(error: unknown): boolean {
+  return error instanceof OracleCancelledError
+    || (Boolean(error) && typeof error === 'object' && (error as { cancelled?: unknown }).cancelled === true);
+}
+
+function isAbortError(error: unknown): boolean {
+  return (error instanceof DOMException || error instanceof Error) && error.name === 'AbortError';
+}
+
 export function getOracleErrorMessage(error: unknown, t: TFunction): string {
+  if (isOracleCancelled(error)) return '';
   if (error && typeof error === 'object' && 'oracleErrorKey' in error) {
     const key = (error as { oracleErrorKey: unknown }).oracleErrorKey;
     if (typeof key === 'string') return t(key as MessageKey);
   }
   return t('error.connection');
+}
+
+// QRNG は 1.5s。LLM は数秒〜十数秒が通常。ハングでスピナーが永続しないよう 1 試行 45s。
+const ORACLE_FETCH_TIMEOUT_MS = 45_000;
+
+async function fetchOraclePost(body: unknown, parentSignal?: AbortSignal): Promise<Response> {
+  if (parentSignal?.aborted) throw new OracleCancelledError();
+
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), ORACLE_FETCH_TIMEOUT_MS);
+  const onParentAbort = (): void => { controller.abort(); };
+  parentSignal?.addEventListener('abort', onParentAbort);
+
+  try {
+    return await fetch(BACKEND_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+      signal: controller.signal,
+    });
+  } catch (e) {
+    if (parentSignal?.aborted) throw new OracleCancelledError();
+    if (isAbortError(e)) throw new Error('timeout');
+    throw e;
+  } finally {
+    clearTimeout(timer);
+    parentSignal?.removeEventListener('abort', onParentAbort);
+  }
 }
 
 type Stage = 'reception' | 'discernment';
@@ -59,13 +107,16 @@ function normalizeBackendErrorCode(code: unknown): BackendErrorCode {
  * @param messages 4 層プロンプトの ChatMessage 配列
  * @param sampling temperature / topP / maxOutputTokens
  * @param stage BFF が Stage 別 instruction を選ぶための識別子
+ * @param signal 部屋削除などで中断するための AbortSignal
  * @returns BFF の生テキスト、または正規化済みエラーコード
  * @throws FatalError 接続設定不備 or 通信失敗
+ * @throws OracleCancelledError 呼び出し側が中断したとき
  */
 export async function callLLMWithSampling(
   messages: ChatMessage[],
   sampling: SamplingParams,
   stage: Stage,
+  signal?: AbortSignal,
 ): Promise<BackendResult> {
   if (!BACKEND_URL || isBackendUrlPlaceholder()) {
     if (!IS_PROD) {
@@ -86,11 +137,8 @@ export async function callLLMWithSampling(
 
   for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
     try {
-      const res = await fetch(BACKEND_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messages, sampling, stage }),
-      });
+      if (signal?.aborted) throw new OracleCancelledError();
+      const res = await fetchOraclePost({ messages, sampling, stage }, signal);
 
       if (res.ok) {
         const data = await res.json() as { text?: string };
@@ -113,8 +161,13 @@ export async function callLLMWithSampling(
       lastCode = code;
       lastError = new Error(message);
     } catch (e: unknown) {
+      if (e instanceof OracleCancelledError) throw e;
       const err = e as FatalError;
       if (err?.fatal) throw err;
+      // タイムアウトはハング回復が目的。45s 待ったあとに同じ長さの再試行はしない。
+      if (e instanceof Error && e.message === 'timeout') {
+        throw oracleError('error.timeout');
+      }
       lastCode = 'UPSTREAM_ERROR';
       lastError = err instanceof Error ? err : new Error(String(e));
     }
@@ -196,9 +249,10 @@ const DISCERNMENT_SAMPLING: SamplingParams = {
 export const fetchOracleTwoStage = async (
   receptionMsgs: ChatMessage[],
   discernmentBuilder: (raw: string) => ChatMessage[],
+  signal?: AbortSignal,
 ): Promise<TwoStageResult> => {
   const t1Start = Date.now();
-  const rawResponse = await callLLMWithSampling(receptionMsgs, RECEPTION_SAMPLING, 'reception');
+  const rawResponse = await callLLMWithSampling(receptionMsgs, RECEPTION_SAMPLING, 'reception', signal);
   if ('error' in rawResponse) {
     throw oracleError(errorKeyForCode(rawResponse.error));
   }
@@ -211,7 +265,7 @@ export const fetchOracleTwoStage = async (
 
   const t2Start = Date.now();
   const discernmentMsgs = discernmentBuilder(raw);
-  const finalResponse = await callLLMWithSampling(discernmentMsgs, DISCERNMENT_SAMPLING, 'discernment');
+  const finalResponse = await callLLMWithSampling(discernmentMsgs, DISCERNMENT_SAMPLING, 'discernment', signal);
   if ('error' in finalResponse) {
     throw oracleError(errorKeyForCode(finalResponse.error));
   }
@@ -247,6 +301,7 @@ async function callLLMStreaming(
   sampling: SamplingParams,
   stage: Stage,
   onText: OnDisplayText,
+  signal?: AbortSignal,
 ): Promise<BackendResult> {
   if (!BACKEND_URL || isBackendUrlPlaceholder()) {
     return { error: 'SERVER_MISCONFIGURED' };
@@ -254,12 +309,12 @@ async function callLLMStreaming(
 
   let res: Response;
   try {
-    res = await fetch(BACKEND_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ messages, sampling, stage, stream: true }),
-    });
+    res = await fetchOraclePost({ messages, sampling, stage, stream: true }, signal);
   } catch (e) {
+    if (e instanceof OracleCancelledError) throw e;
+    if (e instanceof Error && e.message === 'timeout') {
+      throw oracleError('error.timeout');
+    }
     return { error: 'UPSTREAM_ERROR', message: e instanceof Error ? e.message : 'network error' };
   }
 
@@ -290,44 +345,57 @@ async function callLLMStreaming(
     }
   };
 
+  const consumeEvent = (rawEvent: string): void => {
+    let evName = 'message';
+    let dataStr = '';
+    for (const line of rawEvent.split('\n')) {
+      const l = line.trimStart();
+      if (l.startsWith('event:')) evName = l.slice(6).trim();
+      else if (l.startsWith('data:')) dataStr += l.slice(5).trim();
+    }
+    if (!dataStr) return;
+
+    let payload: { text?: unknown; code?: unknown };
+    try {
+      payload = JSON.parse(dataStr);
+    } catch {
+      return;
+    }
+
+    if (evName === 'delta' && typeof payload.text === 'string') {
+      raw += payload.text;
+      update();
+    } else if (evName === 'done') {
+      doneText = typeof payload.text === 'string' ? payload.text : raw;
+    } else if (evName === 'error') {
+      streamError = { error: normalizeBackendErrorCode(payload.code) };
+    }
+  };
+
+  const drainBuffer = (): void => {
+    let sep: number;
+    while ((sep = buffer.indexOf('\n\n')) !== -1) {
+      const rawEvent = buffer.slice(0, sep);
+      buffer = buffer.slice(sep + 2);
+      consumeEvent(rawEvent);
+    }
+  };
+
   try {
     for (;;) {
+      if (signal?.aborted) throw new OracleCancelledError();
       const { done, value } = await reader.read();
       if (done) break;
       buffer += decoder.decode(value, { stream: true });
-
-      let sep: number;
-      while ((sep = buffer.indexOf('\n\n')) !== -1) {
-        const rawEvent = buffer.slice(0, sep);
-        buffer = buffer.slice(sep + 2);
-
-        let evName = 'message';
-        let dataStr = '';
-        for (const line of rawEvent.split('\n')) {
-          const l = line.trimStart();
-          if (l.startsWith('event:')) evName = l.slice(6).trim();
-          else if (l.startsWith('data:')) dataStr += l.slice(5).trim();
-        }
-        if (!dataStr) continue;
-
-        let payload: { text?: unknown; code?: unknown };
-        try {
-          payload = JSON.parse(dataStr);
-        } catch {
-          continue;
-        }
-
-        if (evName === 'delta' && typeof payload.text === 'string') {
-          raw += payload.text;
-          update();
-        } else if (evName === 'done') {
-          doneText = typeof payload.text === 'string' ? payload.text : raw;
-        } else if (evName === 'error') {
-          streamError = { error: normalizeBackendErrorCode(payload.code) };
-        }
-      }
+      drainBuffer();
     }
+    buffer += decoder.decode();
+    drainBuffer();
+    if (buffer.trim()) consumeEvent(buffer);
   } catch (e) {
+    if (e instanceof OracleCancelledError) throw e;
+    if (signal?.aborted) throw new OracleCancelledError();
+    if (isAbortError(e)) throw oracleError('error.timeout');
     return { error: 'UPSTREAM_ERROR', message: e instanceof Error ? e.message : 'stream read error' };
   }
 
@@ -355,9 +423,10 @@ export const fetchOracleTwoStageStreaming = async (
   receptionMsgs: ChatMessage[],
   discernmentBuilder: (raw: string) => ChatMessage[],
   onText: OnDisplayText,
+  signal?: AbortSignal,
 ): Promise<TwoStageResult> => {
   const t1Start = Date.now();
-  const rawResponse = await callLLMWithSampling(receptionMsgs, RECEPTION_SAMPLING, 'reception');
+  const rawResponse = await callLLMWithSampling(receptionMsgs, RECEPTION_SAMPLING, 'reception', signal);
   if ('error' in rawResponse) {
     throw oracleError(errorKeyForCode(rawResponse.error));
   }
@@ -372,12 +441,12 @@ export const fetchOracleTwoStageStreaming = async (
   const discernmentMsgs = discernmentBuilder(raw);
 
   let finalText: string;
-  const streamed = await callLLMStreaming(discernmentMsgs, DISCERNMENT_SAMPLING, 'discernment', onText);
+  const streamed = await callLLMStreaming(discernmentMsgs, DISCERNMENT_SAMPLING, 'discernment', onText, signal);
   if ('text' in streamed) {
     finalText = streamed.text;
   } else {
     // ストリーム失敗 → Stage 2 を非ストリームでやり直す(必ず答えが出る)。
-    const finalResponse = await callLLMWithSampling(discernmentMsgs, DISCERNMENT_SAMPLING, 'discernment');
+    const finalResponse = await callLLMWithSampling(discernmentMsgs, DISCERNMENT_SAMPLING, 'discernment', signal);
     if ('error' in finalResponse) {
       throw oracleError(errorKeyForCode(finalResponse.error));
     }

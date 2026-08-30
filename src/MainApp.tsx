@@ -18,7 +18,7 @@ import { getAudioContext, playMagicSound } from './lib/audio';
 import { IS_PROD, USE_JS_KEYBOARD_PADDING } from './lib/env';
 import { safeStartTransition } from './lib/react-compat';
 import { Preferences, Share, Purchases, SplashScreen, Keyboard, StatusBar } from './lib/capacitorMocks';
-import { fetchOracleTwoStage, fetchOracleTwoStageStreaming, getOracleErrorMessage } from './lib/api';
+import { fetchOracleTwoStage, fetchOracleTwoStageStreaming, getOracleErrorMessage, isOracleCancelled } from './lib/api';
 import { Toast } from './components/Toast';
 import { StreamingBubble } from './components/StreamingBubble';
 import { SubscribeModal } from './components/SubscribeModal';
@@ -36,7 +36,30 @@ import {
   syncPremiumEntitlement,
 } from './lib/premium';
 import { useT } from './i18n';
-import type { Storage, OracleCard, Message, PersonaId, Mode, Persona } from './types';
+import type { Storage, OracleCard, Message, PersonaId, Mode, Persona, Room } from './types';
+
+function isPersonaId(value: unknown): value is PersonaId {
+  return value === 'lumina' || value === 'zenith' || value === 'archivist';
+}
+
+function roomMessages(room: Room | undefined): Message[] {
+  return Array.isArray(room?.messages) ? room.messages : [];
+}
+
+function normalizeStorage(candidate: { rooms: Record<string, unknown>; roomOrder: unknown[] }): Storage {
+  const rooms: Storage['rooms'] = {};
+  for (const [id, value] of Object.entries(candidate.rooms)) {
+    if (!value || typeof value !== 'object' || Array.isArray(value)) continue;
+    const room = value as Record<string, unknown>;
+    rooms[id] = {
+      title: typeof room.title === 'string' ? room.title : '',
+      personaId: isPersonaId(room.personaId) ? room.personaId : 'lumina',
+      messages: Array.isArray(room.messages) ? room.messages as Message[] : [],
+    };
+  }
+  const roomOrder = candidate.roomOrder.filter((id): id is string => typeof id === 'string' && rooms[id] !== undefined);
+  return { rooms, roomOrder };
+}
 
 // ─── Main App ─────────────────────────────────────────────────────────────────
 // Phase L-3c: ストリーミング中の(まだ保存していない)応答の表示状態。
@@ -102,6 +125,10 @@ export function MainApp() {
 
   const regenIdRef = useRef(regenId);
   useLayoutEffect(() => { regenIdRef.current = regenId; }, [regenId]);
+
+  const oracleAbortRef = useRef<AbortController | null>(null);
+  const inFlightRoomIdRef = useRef<string | null>(null);
+  const [inFlightRoomId, setInFlightRoomId] = useState<string | null>(null);
 
   const textareaRef    = useRef<HTMLTextAreaElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -224,7 +251,7 @@ export function MainApp() {
       // 失効・返金・解約はストアを正とし、ローカルキャッシュだけに依存しない。
       await configurePurchases();
 
-      let parsedStorage = { rooms: {}, roomOrder: [] };
+      let parsedStorage: Storage = { rooms: {}, roomOrder: [] };
       let premiumStatus = false;
       let todayCount = 0;
       let hasOnboarded = true;
@@ -243,7 +270,7 @@ export function MainApp() {
             !Array.isArray((candidate as Record<string, unknown>).rooms) &&
             Array.isArray((candidate as Record<string, unknown>).roomOrder)
           ) {
-            parsedStorage = candidate as typeof parsedStorage;
+            parsedStorage = normalizeStorage(candidate as { rooms: Record<string, unknown>; roomOrder: unknown[] });
           }
         }
 
@@ -421,6 +448,13 @@ export function MainApp() {
     el.style.height = Math.min(el.scrollHeight, 120) + 'px';
   }, [input]);
 
+  useEffect(() => {
+    setStreaming((s) => {
+      if (!s) return s;
+      if (appView !== 'oracle' || activeRoomId !== s.roomId) return null;
+      return s;
+    });
+  }, [activeRoomId, appView]);
   // Q-3: サイドバーを Escape で閉じられるようにする（モーダル群と同じ作法）。
   // 開いているときだけ listener を張り、cleanup で必ず外す。
   useEffect(() => {
@@ -429,6 +463,10 @@ export function MainApp() {
     document.addEventListener('keydown', handleEsc);
     return () => document.removeEventListener('keydown', handleEsc);
   }, [sidebarOpen]);
+
+  useEffect(() => {
+    return () => { oracleAbortRef.current?.abort(); };
+  }, []);
 
   const copiedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => {
@@ -482,10 +520,15 @@ export function MainApp() {
     const targetRoomId = activeRoomId || genId();
     const isNewRoom = !activeRoomId;
     const userMsg: Message = { id: genId(), role: 'user', text };
-    
-    const currentMessages = activeRoomId && currentStorage.rooms[activeRoomId]
-      ? currentStorage.rooms[activeRoomId].messages
-      : [];
+
+    const abort = new AbortController();
+    oracleAbortRef.current = abort;
+    inFlightRoomIdRef.current = targetRoomId;
+    setInFlightRoomId(targetRoomId);
+
+    const currentMessages = roomMessages(
+      activeRoomId ? currentStorage.rooms[activeRoomId] : undefined,
+    );
 
     // Phase L-2: カード抽選(QRNG)を UI 更新より前に起動し、setStorage の描画と取得を
     // オーバーラップさせる(数百 ms を隠す)。Stage 1 プロンプトにはカード名が必要なため
@@ -508,7 +551,7 @@ export function MainApp() {
 
       newRooms[targetRoomId] = {
         ...(newRooms[targetRoomId] || { title: text.slice(0, 20), personaId: persona.id }),
-        messages: [...(newRooms[targetRoomId]?.messages || []), userMsg]
+        messages: [...roomMessages(newRooms[targetRoomId]), userMsg]
       };
 
       return {
@@ -523,6 +566,7 @@ export function MainApp() {
     // Phase 4.16 / L-2: 先行起動したカード抽選(QRNG)をここで受ける。UI 更新中に裏で
     // 取得が進むため体感負荷はほぼなく、失敗時は crypto で確定する（必ず引ける）。
     const { cards: drawnCards } = await drawPromise;
+    if (abort.signal.aborted) return;
 
     const receptionMsgs = buildReceptionMessages(persona, mode, drawnCards, currentMessages, userMsg.text);
 
@@ -546,6 +590,7 @@ export function MainApp() {
         receptionMsgs,
         (raw) => buildDiscernmentMessages(persona, raw),
         (displaySoFar) => setStreaming((s) => (s ? { ...s, target: displaySoFar } : s)),
+        abort.signal,
       );
       if (import.meta.env.DEV) {
         console.log('[Oracle Mirror] raw transmission:', result.raw);
@@ -561,32 +606,39 @@ export function MainApp() {
       // 打ち終えたら onFinished → streaming を消して OracleBubble へ差し替える(同じ位置・同じ本文)。
       const aiMsg: Message  = { id: aiMsgId, role: 'model', text: result.final, personaId: persona.id, modeId: mode.id, drawnCards, keywords };
 
+      let saved = false;
       setStorage(prev => {
         const room = prev.rooms[targetRoomId];
         if (!room) return prev;
+        saved = true;
         return {
           ...prev,
           rooms: {
             ...prev.rooms,
             [targetRoomId]: {
               ...room,
-              messages: [...room.messages, aiMsg]
+              messages: [...roomMessages(room), aiMsg]
             }
           }
         };
       });
       setStreaming((s) => (s ? { ...s, target: result.final, done: true } : s));
 
-      playMagicSound();
-      incrementUsage();
+      if (saved) {
+        playMagicSound();
+        incrementUsage();
+      }
 
     } catch (e: unknown) {
       setStreaming(null);
+      if (isOracleCancelled(e)) {
+        return;
+      }
       setError(getOracleErrorMessage(e, t));
       setStorage(prev => {
         const room = prev.rooms[targetRoomId];
         if (!room) return prev;
-        const msgs = room.messages.filter(m => m.id !== userMsg.id);
+        const msgs = roomMessages(room).filter(m => m.id !== userMsg.id);
         if (msgs.length === 0 && isNewRoom) {
           const newRooms = { ...prev.rooms };
           delete newRooms[targetRoomId];
@@ -604,10 +656,19 @@ export function MainApp() {
           }
         };
       });
-      if (isNewRoom) setActiveRoomId(null);
-      setInput(text);
+      if (isNewRoom) {
+        setActiveRoomId(current => current === targetRoomId ? null : current);
+      }
+      setInput(prev => prev.trim() === '' ? text : prev);
     }
-    finally { setIsLoading(false); }
+    finally {
+      if (oracleAbortRef.current === abort) oracleAbortRef.current = null;
+      if (inFlightRoomIdRef.current === targetRoomId) {
+        inFlightRoomIdRef.current = null;
+        setInFlightRoomId(null);
+      }
+      setIsLoading(false);
+    }
   }, [input, activeRoomId, persona, mode, incrementUsage, t]);
 
   const handleSwitch = useCallback(async (msgIdx: number, targetPersonaId: PersonaId): Promise<void> => {
@@ -620,7 +681,7 @@ export function MainApp() {
     const currentStorage = storageRef.current;
     const currentRoom = currentStorage.rooms[activeRoomId];
     if (!currentRoom) return;
-    const currentMessages = currentRoom.messages || [];
+    const currentMessages = roomMessages(currentRoom);
 
     const targetMsg = currentMessages[msgIdx];
     if (!targetMsg || targetMsg.role !== 'model') return;
@@ -657,10 +718,16 @@ export function MainApp() {
       userTextToRegenerate
     );
 
+    const abort = new AbortController();
+    oracleAbortRef.current = abort;
+    inFlightRoomIdRef.current = activeRoomId;
+    setInFlightRoomId(activeRoomId);
+
     try {
       const result = await fetchOracleTwoStage(
         receptionMsgs,
         (raw) => buildDiscernmentMessages(targetPersona, raw),
+        abort.signal,
       );
       const aiText = result.final;
       if (import.meta.env.DEV) {
@@ -671,10 +738,12 @@ export function MainApp() {
         });
       }
       
+      let saved = false;
       setStorage(prev => {
         const room = prev.rooms[activeRoomId];
         if (!room) return prev;
-        const updated = room.messages.map((m, i) =>
+        saved = true;
+        const updated = roomMessages(room).map((m, i) =>
           i === msgIdx ? { ...m, text: aiText, personaId: targetPersonaId } : m
         );
         return {
@@ -686,22 +755,40 @@ export function MainApp() {
         };
       });
 
-      playMagicSound();
-      incrementUsage();
+      if (saved) {
+        playMagicSound();
+        incrementUsage();
+      }
 
-    } catch (e: unknown) { setError(getOracleErrorMessage(e, t)); }
-    finally { setRegenId(null); }
+    } catch (e: unknown) {
+      if (!isOracleCancelled(e)) setError(getOracleErrorMessage(e, t));
+    } finally {
+      if (oracleAbortRef.current === abort) oracleAbortRef.current = null;
+      if (inFlightRoomIdRef.current === activeRoomId) {
+        inFlightRoomIdRef.current = null;
+        setInFlightRoomId(null);
+      }
+      setRegenId(null);
+    }
 
   }, [activeRoomId, incrementUsage, showToast, t]);
 
+  const abortInFlightForRoom = useCallback((roomId?: string): void => {
+    if (roomId && inFlightRoomIdRef.current && inFlightRoomIdRef.current !== roomId) return;
+    oracleAbortRef.current?.abort();
+    setStreaming(null);
+  }, []);
+
   const handleDeleteAllHistory = useCallback((): void => {
+    abortInFlightForRoom();
     setStorage({ rooms: {}, roomOrder: [] });
     setActiveRoomId(null);
     setError(null);
-  }, []);
+  }, [abortInFlightForRoom]);
 
   const handleDeleteRoom = useCallback((roomId: string, e: React.MouseEvent<HTMLButtonElement>): void => {
     e.stopPropagation();
+    abortInFlightForRoom(roomId);
     setStorage(prev => {
       const rooms = { ...prev.rooms };
       delete rooms[roomId];
@@ -711,7 +798,7 @@ export function MainApp() {
       setActiveRoomId(null);
       setError(null);
     }
-  }, [activeRoomId]);
+  }, [activeRoomId, abortInFlightForRoom]);
 
   const handleNewRoom = useCallback(() => {
     setActiveRoomId(null); setSidebarOpen(false); setAppView('oracle'); setError(null); setInput('');
@@ -992,7 +1079,7 @@ export function MainApp() {
 
         <div className="chat-scroll-area" style={{ flex: 1, overflowY: 'auto', padding: '24px calc(18px + var(--sar)) 24px calc(18px + var(--sal))' }}>
           <div style={{ maxWidth: 660, margin: '0 auto' }}>
-            {messages.length === 0 && !isLoading && (
+            {messages.length === 0 && !(isLoading && inFlightRoomId === activeRoomId) && (
               <div className="empty-state" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', paddingTop: 48, paddingBottom: 32, gap: 0 }}>
 
                 {/* ── Hero logo area ──────────────────────────────── */}
@@ -1091,7 +1178,7 @@ export function MainApp() {
                 </div>
               )}
 
-              {isLoading && (!streaming || streaming.target === '') && (
+              {isLoading && inFlightRoomId === activeRoomId && (!streaming || streaming.target === '') && (
                 <div aria-busy="true" style={{ display: 'flex', justifyContent: 'flex-start', animation: 'oracleReveal 0.6s cubic-bezier(0.16,1,0.3,1)' }}>
                   <div style={{ padding: '20px 26px', background: 'rgba(255,255,255,0.95)', borderRadius: 24, border: `1px solid ${p.border}`, display: 'flex', alignItems: 'center', gap: 14, boxShadow: `0 8px 32px ${p.accent}12` }}>
                     <div style={{ display: 'flex', gap: 5 }} aria-hidden="true">
@@ -1114,7 +1201,7 @@ export function MainApp() {
               <div ref={messagesEndRef}/>
               
               <div className="sr-only" aria-live="polite" aria-atomic="true">
-                {isLoading ? t('status.receiving') : (messages.length > 0 && messages[messages.length - 1].role === 'model' ? t('status.received') : '')}
+                {isLoading && inFlightRoomId === activeRoomId ? t('status.receiving') : (messages.length > 0 && messages[messages.length - 1].role === 'model' ? t('status.received') : '')}
               </div>
             </div>
           </div>

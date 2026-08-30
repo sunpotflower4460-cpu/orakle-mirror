@@ -63,6 +63,7 @@ export const en: Record<keyof typeof ja, string> = {
   'error.misconfigured': 'The path to the oracle could not be found.',
   'error.path': 'The oracle path is unsettled. Please restart the app and try again.',
   'error.emptyResponse': 'The oracle’s voice did not arrive. Please wait a moment, then ask again.',
+  'error.timeout': 'The connection has been silent for too long. Please wait a moment, then ask again.',
 
   // Share
   'share.text': 'Through a pure mirror, hear your inner voice.',
