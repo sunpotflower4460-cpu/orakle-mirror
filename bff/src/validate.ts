@@ -42,29 +42,29 @@ function isSamplingParams(v: unknown): v is SamplingParams {
 
 export function validateRequest(parsed: unknown): { ok: true; data: OracleRequest } | { ok: false; error: ValidationError } {
   if (typeof parsed !== 'object' || parsed === null) {
-    return { ok: false, error: { code: 'INVALID_BODY', message: 'Body must be a JSON object.' } };
+    return { ok: false, error: { code: 'INVALID_REQUEST', message: 'Body must be a JSON object.' } };
   }
   const req = parsed as Record<string, unknown>;
 
   if (!Array.isArray(req.messages) || req.messages.length === 0) {
-    return { ok: false, error: { code: 'INVALID_MESSAGES', message: 'messages must be a non-empty array.' } };
+    return { ok: false, error: { code: 'INVALID_REQUEST', message: 'messages must be a non-empty array.' } };
   }
   if (req.messages.length > 64) {
-    return { ok: false, error: { code: 'TOO_MANY_MESSAGES', message: 'messages must contain at most 64 entries.' } };
+    return { ok: false, error: { code: 'INVALID_REQUEST', message: 'messages must contain at most 64 entries.' } };
   }
   for (const m of req.messages) {
     if (!isChatMessage(m)) {
-      return { ok: false, error: { code: 'INVALID_MESSAGE_SHAPE', message: 'Each message must have role and content.' } };
+      return { ok: false, error: { code: 'INVALID_REQUEST', message: 'Each message must have role and content.' } };
     }
   }
 
   const totalChars = (req.messages as ChatMessage[]).reduce((sum, m) => sum + m.content.length, 0);
   if (totalChars > MAX_TOTAL_CONTENT_CHARS) {
-    return { ok: false, error: { code: 'CONTENT_TOO_LONG', message: 'Total content length exceeds limit.' } };
+    return { ok: false, error: { code: 'BODY_TOO_LARGE', message: 'Total content length exceeds limit.' } };
   }
 
   if (!isSamplingParams(req.sampling)) {
-    return { ok: false, error: { code: 'INVALID_SAMPLING', message: 'Invalid sampling params.' } };
+    return { ok: false, error: { code: 'INVALID_REQUEST', message: 'Invalid sampling params.' } };
   }
 
   if (!isStage(req.stage)) {
@@ -73,7 +73,7 @@ export function validateRequest(parsed: unknown): { ok: true; data: OracleReques
 
   // Phase L-3a: stream は任意の boolean。未指定/不正型は拒否、欠落は false 扱い(非ストリーム)。
   if (req.stream !== undefined && typeof req.stream !== 'boolean') {
-    return { ok: false, error: { code: 'INVALID_STREAM', message: 'stream must be a boolean.' } };
+    return { ok: false, error: { code: 'INVALID_REQUEST', message: 'stream must be a boolean.' } };
   }
 
   return {

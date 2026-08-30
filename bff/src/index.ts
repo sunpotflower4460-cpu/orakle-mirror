@@ -58,8 +58,9 @@ export default {
       if (!result.ok) {
         // 詳細・キーは出さない。フロントが crypto フォールバックへ切れる形に正規化する。
         console.error('QRNG fetch failed', { status: result.status, code: result.code });
+        const status = result.status === 504 ? 504 : result.status >= 500 ? 502 : result.status;
         return jsonResponse(
-          result.status >= 500 ? 502 : result.status,
+          status,
           { error: { code: 'UPSTREAM_ERROR', message: 'QRNG provider unavailable' } },
           corsHeaders,
         );
@@ -90,9 +91,21 @@ export default {
       );
     }
 
-    // Content-Type 検証
+    // レート制限は body を読む前に行う。不正 JSON で検証をすり抜けて CPU を焼く経路を閉じる。
+    const clientIp = getClientIp(request);
+    const rate = checkRateLimit(clientIp);
+    if (!rate.allowed) {
+      return jsonResponse(
+        429,
+        { error: { code: 'RATE_LIMITED', message: `Too many requests (${rate.reason})` } },
+        corsHeaders,
+      );
+    }
+
+    // Content-Type 検証(パラメータを除いた media type が application/json であること)
     const contentType = request.headers.get('Content-Type') ?? '';
-    if (!contentType.includes('application/json')) {
+    const mediaType = contentType.split(';')[0].trim().toLowerCase();
+    if (mediaType !== 'application/json') {
       return jsonResponse(
         415,
         { error: { code: 'UNSUPPORTED_MEDIA_TYPE', message: 'Content-Type must be application/json' } },
@@ -135,17 +148,6 @@ export default {
       return jsonResponse(400, { error: validated.error }, corsHeaders);
     }
 
-    // レート制限
-    const clientIp = getClientIp(request);
-    const rate = checkRateLimit(clientIp);
-    if (!rate.allowed) {
-      return jsonResponse(
-        429,
-        { error: { code: 'RATE_LIMITED', message: `Too many requests (${rate.reason})` } },
-        corsHeaders,
-      );
-    }
-
     // 環境変数チェック(早期失敗)
     if (!env.OPENAI_API_KEY) {
       console.error('OPENAI_API_KEY is not configured');
@@ -165,10 +167,16 @@ export default {
     if (validated.data.stream === true && provider.callStream) {
       const callStream = provider.callStream.bind(provider);
       const encoder = new TextEncoder();
+      const abort = new AbortController();
       const stream = new ReadableStream<Uint8Array>({
         async start(controller) {
           const sse = (event: string, data: unknown): void => {
-            controller.enqueue(encoder.encode(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`));
+            if (abort.signal.aborted) return;
+            try {
+              controller.enqueue(encoder.encode(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`));
+            } catch {
+              abort.abort();
+            }
           };
           try {
             const streamResult = await callStream(
@@ -177,7 +185,9 @@ export default {
               validated.data.stage,
               env,
               (delta) => sse('delta', { text: delta }),
+              abort.signal,
             );
+            if (abort.signal.aborted) return;
             if (streamResult.ok) {
               // 全文を done で送る。フロントは increments で表示しつつ、確定は done の全文を使う。
               sse('done', { text: streamResult.text });
@@ -186,11 +196,15 @@ export default {
               sse('error', { code: 'UPSTREAM_ERROR', message: '天との接続が途切れました。少し時間をおいてから再び問いかけてください。' });
             }
           } catch (e) {
+            if (abort.signal.aborted) return;
             console.error('Provider stream crashed', e);
             sse('error', { code: 'UPSTREAM_ERROR', message: '天との接続が途切れました。少し時間をおいてから再び問いかけてください。' });
           } finally {
-            controller.close();
+            try { controller.close(); } catch { /* already closed by client cancel */ }
           }
+        },
+        cancel() {
+          abort.abort();
         },
       });
       return new Response(stream, {
@@ -209,11 +223,11 @@ export default {
       console.error('Provider call failed', { provider: provider.name, status: result.status, code: result.code, message: result.message });
       // クライアントには詳細を返さない(セキュリティ)
       return jsonResponse(
-        result.status >= 500 ? 502 : result.status,
+        502,
         {
           error: {
             // プロバイダ固有のエラーコード（OPENAI_*, GEMINI_*, NO_OUTPUT_TEXT 等）はすべて UPSTREAM_ERROR に正規化する。
-            // フロントが期待する BackendErrorCode 集合に含まれない値は外部に出さない。
+            // HTTP ステータスも 401/404/429 を漏らさず 502 に揃える(BFF 自身の 429 はレート制限経路のみ)。
             code: 'UPSTREAM_ERROR',
             message: '天との接続が途切れました。少し時間をおいてから再び問いかけてください。',
           },
