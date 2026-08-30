@@ -27,7 +27,7 @@ Use this checklist for Self Reading beta stabilization before App Review readine
 
 - [ ] Run on an iOS simulator or device and repeat the 1 / 2 / 3 card draw checks.
 - [ ] Confirm the shuffle / deal / flip animation completes and cards remain visible.
-- [ ] Enable Reduce Motion and confirm the draw flow still reaches the result view.
+- [ ] Enable Reduce Motion and confirm the draw flow still reaches the result view (DrawStage times out to result if `animationend` never fires).
 - [ ] Confirm custom cards remain local-only after app restart.
 
 ## Offline / Privacy

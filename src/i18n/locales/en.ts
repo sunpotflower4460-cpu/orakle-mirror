@@ -191,6 +191,7 @@ export const en: Record<keyof typeof ja, string> = {
   'sr.create.savedCards': 'Saved cards',
   'sr.create.noCards': 'No custom cards yet.',
   'sr.create.delete': 'Delete',
+  'sr.create.deleteFailed': 'Could not delete',
   'sr.history.open': 'Saved readings',
   'sr.history.title': 'Saved readings',
   'sr.history.empty': 'No saved readings yet.',

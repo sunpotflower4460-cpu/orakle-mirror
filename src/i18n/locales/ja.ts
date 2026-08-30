@@ -191,6 +191,7 @@ export const ja = {
   'sr.create.savedCards': '保存したカード',
   'sr.create.noCards': 'まだ自作カードはありません。',
   'sr.create.delete': '削除',
+  'sr.create.deleteFailed': '削除できませんでした',
   'sr.history.open': '保存した履歴',
   'sr.history.title': '保存した履歴',
   'sr.history.empty': '保存したリーディングはまだありません。',

@@ -65,6 +65,26 @@ export function DrawStage({ cards, spread, onComplete }: DrawStageProps) {
   const t = useT();
   const spreadClass = `sr-spread-${spread.id}`;
   const hasCards = cards.length > 0;
+  const onCompleteRef = React.useRef(onComplete);
+  onCompleteRef.current = onComplete;
+  const finishedRef = React.useRef(false);
+
+  const finish = React.useCallback(() => {
+    if (finishedRef.current) return;
+    finishedRef.current = true;
+    onCompleteRef.current?.();
+  }, []);
+
+  // animationend が来ない WebView / reduced-motion でも結果へ進める。
+  // 完了フェードは 2.9s 開始 + 0.42s。少し余裕を見て 3.5s。
+  React.useEffect(() => {
+    if (!hasCards) {
+      finishedRef.current = false;
+      return;
+    }
+    const id = window.setTimeout(finish, 3500);
+    return () => clearTimeout(id);
+  }, [hasCards, finish]);
 
   return (
     <section className="sr-draw-stage" aria-label={t('a11y.sr.drawStage')}>
@@ -113,7 +133,7 @@ export function DrawStage({ cards, spread, onComplete }: DrawStageProps) {
             <div
               className="sr-complete"
               onAnimationEnd={event => {
-                if (event.currentTarget === event.target) onComplete?.();
+                if (event.currentTarget === event.target) finish();
               }}
               style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}
             >

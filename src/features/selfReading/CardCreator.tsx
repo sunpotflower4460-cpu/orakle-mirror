@@ -71,7 +71,7 @@ export function CardCreator({ onBack, onUserCardsChange }: CardCreatorProps) {
       setUserCards(store.userCards);
       onUserCardsChange?.(store.userCards);
     } catch {
-      setMessage(t('sr.create.saveFailed'));
+      setMessage(t('sr.create.deleteFailed'));
     }
   };
 
