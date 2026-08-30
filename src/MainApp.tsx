@@ -563,6 +563,7 @@ export function MainApp() {
 
     if (isNewRoom) setActiveRoomId(targetRoomId);
 
+    try {
     // Phase 4.16 / L-2: 先行起動したカード抽選(QRNG)をここで受ける。UI 更新中に裏で
     // 取得が進むため体感負荷はほぼなく、失敗時は crypto で確定する（必ず引ける）。
     const { cards: drawnCards } = await drawPromise;
@@ -582,7 +583,6 @@ export function MainApp() {
 
     const aiMsgId = genId();
 
-    try {
       // 受信中の表示(本文が来るまでは空のバブル＋カーソル)。dots は streaming 中は出さない。
       setStreaming({ roomId: targetRoomId, msgId: aiMsgId, persona, mode, drawnCards, target: '', done: false, reduceMotion });
 

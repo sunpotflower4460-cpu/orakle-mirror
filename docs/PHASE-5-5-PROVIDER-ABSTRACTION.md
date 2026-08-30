@@ -60,5 +60,5 @@ Phase 5.5 完了後、フロントエンドは BFF への `POST {VITE_BACKEND_UR
 ## エラー境界の正規化（5.5c の一部）
 
 - 検証失敗の公開コードは `INVALID_REQUEST` / `INVALID_STAGE` / `INVALID_JSON` / `BODY_TOO_LARGE` に揃える。
-- OpenAI 呼び出しは 40 秒で打ち切り、プロバイダ失敗の HTTP ステータスは 502 に正規化する。
+- OpenAI 呼び出しは 40 秒で打ち切り、タイムアウトは再試行しない。プロバイダ失敗の HTTP ステータスは 502 に正規化する。
 - プロバイダ切替そのものは 5.5d 以降。

@@ -111,7 +111,7 @@ function isAbortError(error: unknown): boolean {
   return error instanceof Error && error.name === 'AbortError';
 }
 
-async function fetchOpenAI(payload: OpenAIPayload, env: Env, parentSignal?: AbortSignal): Promise<Response> {
+async function fetchOpenAI(payload: OpenAIPayload, env: Env, parentSignal?: AbortSignal): Promise<{ res: Response; dispose: () => void }> {
   if (parentSignal?.aborted) {
     throw new DOMException('Aborted', 'AbortError');
   }
@@ -120,7 +120,7 @@ async function fetchOpenAI(payload: OpenAIPayload, env: Env, parentSignal?: Abor
   const onParentAbort = (): void => { controller.abort(); };
   parentSignal?.addEventListener('abort', onParentAbort);
   try {
-    return await fetch(OPENAI_API_URL, {
+    const res = await fetch(OPENAI_API_URL, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -129,9 +129,17 @@ async function fetchOpenAI(payload: OpenAIPayload, env: Env, parentSignal?: Abor
       body: JSON.stringify(payload),
       signal: controller.signal,
     });
-  } finally {
+    return {
+      res,
+      dispose: () => {
+        clearTimeout(timer);
+        parentSignal?.removeEventListener('abort', onParentAbort);
+      },
+    };
+  } catch (e) {
     clearTimeout(timer);
     parentSignal?.removeEventListener('abort', onParentAbort);
+    throw e;
   }
 }
 
@@ -147,8 +155,11 @@ async function callOpenAI(
   let lastError: ProviderCallError | null = null;
 
   for (let attempt = 0; attempt < RETRY_DELAYS_MS.length + 1; attempt++) {
+    let dispose: (() => void) | undefined;
     try {
-      const res = await fetchOpenAI(payload, env);
+      const fetched = await fetchOpenAI(payload, env);
+      dispose = fetched.dispose;
+      const res = fetched.res;
 
       if (res.ok) {
         const data = (await res.json()) as OpenAIResponse;
@@ -184,6 +195,10 @@ async function callOpenAI(
         code: aborted ? 'OPENAI_TIMEOUT' : 'OPENAI_NETWORK_ERROR',
         message: e instanceof Error ? e.message : 'Network error',
       };
+      // 40s タイムアウト後に同じ長さの再試行はしない(最大 4×40s を避ける)。
+      if (aborted) return lastError;
+    } finally {
+      dispose?.();
     }
 
     if (attempt < RETRY_DELAYS_MS.length) {
@@ -220,8 +235,11 @@ export async function callOpenAIStream(
   const payload: OpenAIPayload = { ...buildPayload(messages, sampling, model, stage), stream: true };
 
   let res: Response;
+  let dispose: (() => void) | undefined;
   try {
-    res = await fetchOpenAI(payload, env, signal);
+    const fetched = await fetchOpenAI(payload, env, signal);
+    dispose = fetched.dispose;
+    res = fetched.res;
   } catch (e) {
     const aborted = isAbortError(e);
     return {
@@ -232,74 +250,78 @@ export async function callOpenAIStream(
     };
   }
 
-  if (!res.ok) {
-    const errJson = (await res.json().catch(() => ({} as OpenAIResponse))) as OpenAIResponse;
-    return { ok: false, status: res.status, code: `OPENAI_HTTP_${res.status}`, message: errJson.error?.message ?? `HTTP ${res.status}` };
-  }
-  if (!res.body) {
-    return { ok: false, status: 502, code: 'OPENAI_NO_STREAM_BODY', message: 'OpenAI returned no stream body' };
-  }
-
-  const reader = res.body.getReader();
-  const decoder = new TextDecoder();
-  let buffer = '';
-  let full = '';
-
   try {
-    for (;;) {
-      if (signal?.aborted) {
-        return { ok: false, status: 504, code: 'OPENAI_TIMEOUT', message: 'OpenAI stream aborted' };
-      }
-      const { done, value } = await reader.read();
-      if (done) break;
-      buffer += decoder.decode(value, { stream: true });
+    if (!res.ok) {
+      const errJson = (await res.json().catch(() => ({} as OpenAIResponse))) as OpenAIResponse;
+      return { ok: false, status: res.status, code: `OPENAI_HTTP_${res.status}`, message: errJson.error?.message ?? `HTTP ${res.status}` };
+    }
+    if (!res.body) {
+      return { ok: false, status: 502, code: 'OPENAI_NO_STREAM_BODY', message: 'OpenAI returned no stream body' };
+    }
 
-      // SSE イベントは空行(\n\n)区切り。完結したイベントだけを処理する。
-      let sep: number;
-      while ((sep = buffer.indexOf('\n\n')) !== -1) {
-        const rawEvent = buffer.slice(0, sep);
-        buffer = buffer.slice(sep + 2);
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+    let full = '';
 
-        for (const line of rawEvent.split('\n')) {
-          const trimmed = line.trimStart();
-          if (!trimmed.startsWith('data:')) continue;
-          const dataStr = trimmed.slice(5).trim();
-          if (!dataStr || dataStr === '[DONE]') continue;
+    try {
+      for (;;) {
+        if (signal?.aborted) {
+          return { ok: false, status: 504, code: 'OPENAI_TIMEOUT', message: 'OpenAI stream aborted' };
+        }
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
 
-          let evt: { type?: string; delta?: unknown; response?: { error?: { message?: string } }; error?: { message?: string } };
-          try {
-            evt = JSON.parse(dataStr);
-          } catch {
-            continue;
-          }
+        // SSE イベントは空行(\n\n)区切り。完結したイベントだけを処理する。
+        let sep: number;
+        while ((sep = buffer.indexOf('\n\n')) !== -1) {
+          const rawEvent = buffer.slice(0, sep);
+          buffer = buffer.slice(sep + 2);
 
-          if (evt.type === 'response.output_text.delta' && typeof evt.delta === 'string') {
-            full += evt.delta;
-            onDelta(evt.delta);
-          } else if (evt.type === 'response.failed' || evt.type === 'response.error' || evt.type === 'error') {
-            const message = evt.response?.error?.message ?? evt.error?.message ?? 'OpenAI stream error';
-            return { ok: false, status: 502, code: 'OPENAI_STREAM_ERROR', message };
+          for (const line of rawEvent.split('\n')) {
+            const trimmed = line.trimStart();
+            if (!trimmed.startsWith('data:')) continue;
+            const dataStr = trimmed.slice(5).trim();
+            if (!dataStr || dataStr === '[DONE]') continue;
+
+            let evt: { type?: string; delta?: unknown; response?: { error?: { message?: string } }; error?: { message?: string } };
+            try {
+              evt = JSON.parse(dataStr);
+            } catch {
+              continue;
+            }
+
+            if (evt.type === 'response.output_text.delta' && typeof evt.delta === 'string') {
+              full += evt.delta;
+              onDelta(evt.delta);
+            } else if (evt.type === 'response.failed' || evt.type === 'response.error' || evt.type === 'error') {
+              const message = evt.response?.error?.message ?? evt.error?.message ?? 'OpenAI stream error';
+              return { ok: false, status: 502, code: 'OPENAI_STREAM_ERROR', message };
+            }
           }
         }
       }
+      buffer += decoder.decode();
+    } catch (e) {
+      const aborted = isAbortError(e) || Boolean(signal?.aborted);
+      return {
+        ok: false,
+        status: aborted ? 504 : 502,
+        code: aborted ? 'OPENAI_TIMEOUT' : 'OPENAI_STREAM_READ_ERROR',
+        message: e instanceof Error ? e.message : 'Stream read error',
+      };
+    } finally {
+      try { await reader.cancel(); } catch { /* already closed */ }
     }
-    buffer += decoder.decode();
-  } catch (e) {
-    const aborted = isAbortError(e) || Boolean(signal?.aborted);
-    return {
-      ok: false,
-      status: aborted ? 504 : 502,
-      code: aborted ? 'OPENAI_TIMEOUT' : 'OPENAI_STREAM_READ_ERROR',
-      message: e instanceof Error ? e.message : 'Stream read error',
-    };
-  } finally {
-    try { await reader.cancel(); } catch { /* already closed */ }
-  }
 
-  if (full.length === 0) {
-    return { ok: false, status: 502, code: 'NO_OUTPUT_TEXT', message: 'OpenAI stream produced no text' };
+    if (full.length === 0) {
+      return { ok: false, status: 502, code: 'NO_OUTPUT_TEXT', message: 'OpenAI stream produced no text' };
+    }
+    return { ok: true, text: full };
+  } finally {
+    dispose?.();
   }
-  return { ok: true, text: full };
 }
 
 export const openaiProvider: LLMProvider = {
