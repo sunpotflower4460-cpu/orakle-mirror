@@ -5,6 +5,8 @@ const OPENAI_API_URL = 'https://api.openai.com/v1/responses';
 const RETRY_DELAYS_MS = [800, 2000, 5000];
 const RETRYABLE_STATUSES = new Set([429, 500, 502, 503, 504]);
 const MAX_OUTPUT_TOKENS = 900;
+// フロントの 1 試行 45s より先に切る。ハングした upstream を Worker が握り続けない。
+const OPENAI_FETCH_TIMEOUT_MS = 40_000;
 
 /**
  * Stage 1 (reception / 純粋受信) 用の最小 instruction。
@@ -105,6 +107,34 @@ function extractText(data: OpenAIResponse): string | null {
   return null;
 }
 
+function isAbortError(error: unknown): boolean {
+  return error instanceof Error && error.name === 'AbortError';
+}
+
+async function fetchOpenAI(payload: OpenAIPayload, env: Env, parentSignal?: AbortSignal): Promise<Response> {
+  if (parentSignal?.aborted) {
+    throw new DOMException('Aborted', 'AbortError');
+  }
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), OPENAI_FETCH_TIMEOUT_MS);
+  const onParentAbort = (): void => { controller.abort(); };
+  parentSignal?.addEventListener('abort', onParentAbort);
+  try {
+    return await fetch(OPENAI_API_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: 'Bearer ' + env.OPENAI_API_KEY,
+      },
+      body: JSON.stringify(payload),
+      signal: controller.signal,
+    });
+  } finally {
+    clearTimeout(timer);
+    parentSignal?.removeEventListener('abort', onParentAbort);
+  }
+}
+
 async function callOpenAI(
   messages: ChatMessage[],
   sampling: SamplingParams,
@@ -118,14 +148,7 @@ async function callOpenAI(
 
   for (let attempt = 0; attempt < RETRY_DELAYS_MS.length + 1; attempt++) {
     try {
-      const res = await fetch(OPENAI_API_URL, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: 'Bearer ' + env.OPENAI_API_KEY,
-        },
-        body: JSON.stringify(payload),
-      });
+      const res = await fetchOpenAI(payload, env);
 
       if (res.ok) {
         const data = (await res.json()) as OpenAIResponse;
@@ -154,10 +177,11 @@ async function callOpenAI(
         return lastError;
       }
     } catch (e) {
+      const aborted = isAbortError(e);
       lastError = {
         ok: false,
-        status: 502,
-        code: 'OPENAI_NETWORK_ERROR',
+        status: aborted ? 504 : 502,
+        code: aborted ? 'OPENAI_TIMEOUT' : 'OPENAI_NETWORK_ERROR',
         message: e instanceof Error ? e.message : 'Network error',
       };
     }
@@ -190,22 +214,22 @@ export async function callOpenAIStream(
   stage: Stage,
   env: Env,
   onDelta: OnDelta,
+  signal?: AbortSignal,
 ): Promise<ProviderResult> {
   const model = env.OPENAI_MODEL || 'gpt-5.5';
   const payload: OpenAIPayload = { ...buildPayload(messages, sampling, model, stage), stream: true };
 
   let res: Response;
   try {
-    res = await fetch(OPENAI_API_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: 'Bearer ' + env.OPENAI_API_KEY,
-      },
-      body: JSON.stringify(payload),
-    });
+    res = await fetchOpenAI(payload, env, signal);
   } catch (e) {
-    return { ok: false, status: 502, code: 'OPENAI_NETWORK_ERROR', message: e instanceof Error ? e.message : 'Network error' };
+    const aborted = isAbortError(e);
+    return {
+      ok: false,
+      status: aborted ? 504 : 502,
+      code: aborted ? 'OPENAI_TIMEOUT' : 'OPENAI_NETWORK_ERROR',
+      message: e instanceof Error ? e.message : 'Network error',
+    };
   }
 
   if (!res.ok) {
@@ -223,6 +247,9 @@ export async function callOpenAIStream(
 
   try {
     for (;;) {
+      if (signal?.aborted) {
+        return { ok: false, status: 504, code: 'OPENAI_TIMEOUT', message: 'OpenAI stream aborted' };
+      }
       const { done, value } = await reader.read();
       if (done) break;
       buffer += decoder.decode(value, { stream: true });
@@ -256,8 +283,17 @@ export async function callOpenAIStream(
         }
       }
     }
+    buffer += decoder.decode();
   } catch (e) {
-    return { ok: false, status: 502, code: 'OPENAI_STREAM_READ_ERROR', message: e instanceof Error ? e.message : 'Stream read error' };
+    const aborted = isAbortError(e) || Boolean(signal?.aborted);
+    return {
+      ok: false,
+      status: aborted ? 504 : 502,
+      code: aborted ? 'OPENAI_TIMEOUT' : 'OPENAI_STREAM_READ_ERROR',
+      message: e instanceof Error ? e.message : 'Stream read error',
+    };
+  } finally {
+    try { await reader.cancel(); } catch { /* already closed */ }
   }
 
   if (full.length === 0) {

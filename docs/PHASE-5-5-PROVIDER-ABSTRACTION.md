@@ -56,3 +56,9 @@ bff/src/providers/
 ## Phase 5.5 の到達点
 
 Phase 5.5 完了後、フロントエンドは BFF への `POST {VITE_BACKEND_URL}` のみを行う。LLM プロバイダ知識は BFF 側に隔離され、フロントは UI とプロンプト構築に専念する。
+
+## エラー境界の正規化（5.5c の一部）
+
+- 検証失敗の公開コードは `INVALID_REQUEST` / `INVALID_STAGE` / `INVALID_JSON` / `BODY_TOO_LARGE` に揃える。
+- OpenAI 呼び出しは 40 秒で打ち切り、プロバイダ失敗の HTTP ステータスは 502 に正規化する。
+- プロバイダ切替そのものは 5.5d 以降。

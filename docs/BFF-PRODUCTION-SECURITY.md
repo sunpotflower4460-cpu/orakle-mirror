@@ -23,8 +23,9 @@
 
 - Add `X-Oracle-App-Version` header check on the BFF to reject requests from very old app versions.
 - Log anomalous consecutive access patterns (e.g., >100 requests/minute from a single IP).
-- Restrict accepted `Content-Type` to `application/json`.
+- Restrict accepted `Content-Type` to `application/json` (media type exact match, not substring).
 - Validate request body size to prevent abuse with oversized payloads.
+- `/oracle` rate limiting runs before the body is read so invalid JSON cannot bypass the limiter.
 
 ## References
 

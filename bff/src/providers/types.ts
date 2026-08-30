@@ -40,5 +40,6 @@ export interface LLMProvider {
     stage: Stage,
     env: Env,
     onDelta: OnDelta,
+    signal?: AbortSignal,
   ): Promise<ProviderResult>;
 }

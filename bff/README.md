@@ -44,7 +44,8 @@ curl -X POST http://localhost:8787/oracle \
       { "role": "system", "content": "あなたは静かな鏡である。" },
       { "role": "user", "content": "今日の私に必要な響きを置いてください。" }
     ],
-    "sampling": { "temperature": 1.0, "topP": 0.95 }
+    "sampling": { "temperature": 1.0, "topP": 0.95 },
+    "stage": "reception"
   }'
 ```
 
