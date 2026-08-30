@@ -468,38 +468,60 @@ export const GLOBAL_STYLES: string = `
       align-items: flex-start !important;
       flex-wrap: wrap !important;
     }
+    /* 下端シートにすると言語トグルが画面中央へ沈む。画面いっぱいに伸ばして上を使う。 */
     .onboarding-overlay {
-      align-items: flex-end !important;
-      padding: 12px !important;
-      padding-top: calc(12px + var(--sat)) !important;
-      padding-bottom: calc(12px + var(--sab)) !important;
+      align-items: stretch !important;
+      padding: 10px !important;
+      padding-top: calc(6px + var(--sat)) !important;
+      padding-bottom: calc(8px + var(--sab)) !important;
     }
     .onboarding-card {
-      border-radius: 24px !important;
-      padding: 22px 18px !important;
-      max-height: min(100%, 820px) !important;
+      flex: 1 1 auto !important;
+      height: 100% !important;
+      max-height: 100% !important;
+      max-width: 100% !important;
+      border-radius: 28px !important;
+      padding: 12px 18px 16px !important;
+    }
+    .onboarding-header {
+      margin-bottom: 4px !important;
     }
     .onboarding-step {
-      min-height: auto !important;
+      min-height: 0 !important;
+    }
+    .onboarding-hero {
+      padding-top: 12px !important;
+      justify-content: flex-start !important;
     }
     .onboarding-heading {
-      font-size: 20px !important;
+      font-size: 22px !important;
       line-height: 1.45 !important;
     }
     .onboarding-body {
       font-size: 14px !important;
       line-height: 1.85 !important;
     }
+    .onboarding-progress {
+      margin: 12px 0 !important;
+    }
     .onboarding-nav {
-      flex-wrap: wrap !important;
-      gap: 8px !important;
+      flex-wrap: nowrap !important;
+      gap: 10px !important;
     }
     .onboarding-nav-spacer {
       display: none !important;
     }
-    .onboarding-secondary,
+    .onboarding-secondary {
+      flex: 0 0 auto !important;
+      width: auto !important;
+      min-width: 104px !important;
+      min-height: 52px !important;
+      justify-content: center !important;
+    }
     .onboarding-primary {
-      width: 100% !important;
+      flex: 1 1 0 !important;
+      width: auto !important;
+      min-height: 52px !important;
       justify-content: center !important;
     }
   }
