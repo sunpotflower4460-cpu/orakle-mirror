@@ -382,6 +382,85 @@ export const GLOBAL_STYLES: string = `
   }
   .empty-state > * { position: relative; z-index: 1; }
 
+  /* オンボーディング: 全画面サイズで同じ骨格
+     ヘッダー(言語)は上、本文ブロックは残り領域の中央、ナビは下。 */
+  .onboarding-overlay {
+    align-items: stretch !important;
+    justify-content: center !important;
+    padding: clamp(8px, 1.8vmin, 24px) !important;
+    padding-top: max(clamp(6px, 1.4vmin, 20px), calc(6px + var(--sat))) !important;
+    padding-bottom: max(clamp(8px, 1.6vmin, 20px), calc(8px + var(--sab))) !important;
+  }
+  .onboarding-card {
+    flex: 1 1 auto !important;
+    height: 100% !important;
+    max-height: 100% !important;
+    width: min(100%, 480px) !important;
+    max-width: min(100%, 480px) !important;
+    padding: clamp(12px, 2.8vmin, 28px) clamp(16px, 3.2vmin, 32px) clamp(14px, 2.4vmin, 24px) !important;
+    border-radius: clamp(22px, 4vmin, 38px) !important;
+  }
+  .onboarding-header {
+    margin-bottom: clamp(4px, 1vmin, 10px) !important;
+  }
+  .onboarding-step {
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+  }
+  .onboarding-hero {
+    flex: 1 1 auto !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+    text-align: center;
+  }
+  .onboarding-brand {
+    font-size: clamp(0.85rem, 1.5vh + 0.5rem, 1.25rem) !important;
+    letter-spacing: 0.28em !important;
+  }
+  .onboarding-heading {
+    font-size: clamp(1.2rem, 2.2vh + 0.7rem, 1.85rem) !important;
+    line-height: 1.45 !important;
+  }
+  .onboarding-body {
+    font-size: clamp(0.8125rem, 1.1vh + 0.62rem, 0.95rem) !important;
+    max-width: 36em;
+  }
+  .onboarding-progress {
+    margin: clamp(8px, 1.6vmin, 18px) 0 !important;
+  }
+  .onboarding-nav {
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    align-items: center !important;
+    gap: 10px !important;
+  }
+  .onboarding-nav-spacer { flex: 1 1 auto; }
+  .onboarding-secondary {
+    flex: 0 1 auto !important;
+    min-width: 104px !important;
+    min-height: 52px !important;
+    justify-content: center !important;
+  }
+  .onboarding-primary {
+    flex: 1 1 auto !important;
+    min-height: 52px !important;
+    justify-content: center !important;
+  }
+  @media (max-width: 360px) {
+    .onboarding-nav { flex-wrap: wrap !important; }
+    .onboarding-secondary,
+    .onboarding-primary { width: 100% !important; }
+  }
+  @media (max-height: 520px) {
+    .onboarding-hero { justify-content: flex-start !important; }
+  }
+
   @media (max-width:600px) {
     .oracle-bubble .bubble-actions { opacity:1; }
     .room-row .room-del { opacity:1; }
@@ -467,40 +546,6 @@ export const GLOBAL_STYLES: string = `
       gap: 8px !important;
       align-items: flex-start !important;
       flex-wrap: wrap !important;
-    }
-    .onboarding-overlay {
-      align-items: flex-end !important;
-      padding: 12px !important;
-      padding-top: calc(12px + var(--sat)) !important;
-      padding-bottom: calc(12px + var(--sab)) !important;
-    }
-    .onboarding-card {
-      border-radius: 24px !important;
-      padding: 22px 18px !important;
-      max-height: min(100%, 820px) !important;
-    }
-    .onboarding-step {
-      min-height: auto !important;
-    }
-    .onboarding-heading {
-      font-size: 20px !important;
-      line-height: 1.45 !important;
-    }
-    .onboarding-body {
-      font-size: 14px !important;
-      line-height: 1.85 !important;
-    }
-    .onboarding-nav {
-      flex-wrap: wrap !important;
-      gap: 8px !important;
-    }
-    .onboarding-nav-spacer {
-      display: none !important;
-    }
-    .onboarding-secondary,
-    .onboarding-primary {
-      width: 100% !important;
-      justify-content: center !important;
     }
   }
 

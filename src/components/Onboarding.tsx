@@ -66,31 +66,32 @@ export function Onboarding({ onComplete }: OnboardingProps) {
         linear-gradient(180deg, #fffefd 0%, #fff9fb 45%, #f8f2f8 100%)
       `,
       backdropFilter: 'blur(4px)', WebkitBackdropFilter: 'blur(4px)',
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      display: 'flex', alignItems: 'stretch', justifyContent: 'center',
       padding: '16px', paddingTop: 'calc(16px + var(--sat))', paddingBottom: 'calc(16px + var(--sab))',
       overflow: 'hidden', overscrollBehavior: 'contain', outline: 'none',
       animation: 'fadeIn 0.3s ease'
     }}>
       <div className="onboarding-card" style={{
         background: 'linear-gradient(140deg, rgba(255,255,255,0.76), rgba(255,246,251,0.68), rgba(240,246,255,0.56))',
-        maxWidth: 440, width: '100%', maxHeight: '100%', minHeight: 0,
+        maxWidth: 480, width: '100%', height: '100%', maxHeight: '100%', minHeight: 0, flex: '1 1 auto',
         borderRadius: 38, boxShadow: 'var(--om-shadow-soft)', border: '1px solid rgba(214,224,245,0.38)',
-        overflow: 'hidden', overscrollBehavior: 'contain', padding: 32, display: 'flex', flexDirection: 'column',
+        overflow: 'hidden', overscrollBehavior: 'contain', padding: '18px 28px 24px', display: 'flex', flexDirection: 'column',
         animation: 'modalReveal 0.45s cubic-bezier(0.16,1,0.3,1)'
       }}>
-        {/* 言語切替(タイトルの時点で日本語／英語を選べる) */}
-        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 12, flexShrink: 0 }}>
+        {/* 言語は最上段。オーブと本文はヘッダー〜フッター間の中央。 */}
+        <div className="onboarding-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 8, flexShrink: 0, minHeight: 44 }}>
+          <span style={{ fontSize: 10, letterSpacing: '0.28em', color: '#aab2bf', textTransform: 'uppercase', fontWeight: 700 }}>{t('help.language')}</span>
           <LanguageToggle />
         </div>
 
         {/* Step content(切替時に、鏡に像が結ぶように現れる) */}
         <div className="onboarding-step" key={step} style={{ flex: 1, minHeight: 0, overflowY: 'auto', animation: 'stepReveal 0.5s cubic-bezier(0.16,1,0.3,1)', display: 'flex', flexDirection: 'column' }}>
           {step === 0 && (
-            <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flex: 1, gap: 0 }}>
+            <div className="onboarding-hero">
               <div style={{ marginBottom: 12 }}>
                 <OracleOrb size={116} variant="diamond" />
               </div>
-              <div style={{ fontSize: 20, letterSpacing: '0.32em', color: '#2a3c63', textTransform: 'uppercase', fontWeight: 500, marginBottom: 10, fontFamily: "'Garamond', 'Times New Roman', serif" }}>ORACLE MIRROR</div>
+              <div className="onboarding-brand" style={{ letterSpacing: '0.32em', color: '#2a3c63', textTransform: 'uppercase', fontWeight: 500, marginBottom: 10, fontFamily: "'Garamond', 'Times New Roman', serif" }}>ORACLE MIRROR</div>
               <h2 className="onboarding-heading" id={titleId} style={headingStyle}>{t('onboarding.concept.title')}</h2>
               <p className="onboarding-body" style={bodyStyle}><MultiLine text={t('onboarding.concept.body')} /></p>
             </div>
@@ -144,7 +145,7 @@ export function Onboarding({ onComplete }: OnboardingProps) {
           )}
 
           {step === 3 && (
-            <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flex: 1, gap: 10 }}>
+            <div className="onboarding-hero" style={{ gap: 10 }}>
               <div style={{ position: 'relative', width: 96, height: 108, display: 'flex', alignItems: 'flex-start', justifyContent: 'center', marginBottom: 16 }}>
                 <div style={{ position: 'absolute', inset: -20, top: -16, bottom: 8, background: `radial-gradient(circle, ${accent}22 0%, transparent 70%)`, animation: 'pulse 3s ease-in-out infinite', borderRadius: '50%' }} />
                 <div style={{
@@ -168,8 +169,8 @@ export function Onboarding({ onComplete }: OnboardingProps) {
         </div>
 
         {/* Progress dots */}
-        <div role="status" aria-label={t('onboarding.progress', { current: step + 1, total: TOTAL_STEPS })}
-          style={{ display: 'flex', gap: 8, justifyContent: 'center', margin: '22px 0', flexShrink: 0 }}>
+        <div className="onboarding-progress" role="status" aria-label={t('onboarding.progress', { current: step + 1, total: TOTAL_STEPS })}
+          style={{ display: 'flex', gap: 8, justifyContent: 'center', margin: '18px 0', flexShrink: 0 }}>
           {Array.from({ length: TOTAL_STEPS }, (_, i) => (
             <span key={i} style={{
               width: i === step ? 14 : 10,
@@ -191,13 +192,13 @@ export function Onboarding({ onComplete }: OnboardingProps) {
         <div className="onboarding-nav" style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
           {step > 0 ? (
             <button type="button" className="onboarding-secondary om-glass-btn" onClick={back} aria-label={t('onboarding.back')} style={{
-              minWidth: 44, minHeight: 58, padding: '0 20px',
+              minWidth: 104, minHeight: 52, padding: '0 18px',
               borderRadius: 999, fontSize: 12, fontWeight: 600,
               display: 'flex', alignItems: 'center', gap: 6
             }}><ArrowLeft size={14} /> {t('onboarding.back')}</button>
           ) : (
             <button type="button" className="onboarding-secondary om-glass-btn" onClick={() => onComplete()} style={{
-              minHeight: 58, padding: '0 20px',
+              minWidth: 104, minHeight: 52, padding: '0 18px',
               borderRadius: 999, fontSize: 11, fontWeight: 600, letterSpacing: '0.1em'
             }}>{t('onboarding.skip')}</button>
           )}
@@ -205,7 +206,7 @@ export function Onboarding({ onComplete }: OnboardingProps) {
           <div className="onboarding-nav-spacer" style={{ flex: 1 }} />
 
           <button type="button" className="onboarding-primary om-cta" onClick={isLast ? () => onComplete(selectedPersona) : next} style={{
-            minHeight: 66, padding: '0 30px',
+            minHeight: 52, padding: '0 24px',
             borderRadius: 999, fontSize: 11,
             letterSpacing: '0.2em', textTransform: 'uppercase',
             display: 'flex', alignItems: 'center', gap: 8,
