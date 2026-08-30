@@ -68,6 +68,8 @@ console.log('streamText self-test');
   check('uppercase open/close', extractFinalForDisplay('<FINAL>本文</FINAL>') === '本文');
   check('mixed case', extractFinalForDisplay('<Final>本文</Final>') === '本文');
   check('partial close is case-insensitive', extractFinalForDisplay('<FINAL>本文</FI') === '本文');
+  // toLowerCase() で İ が i + combining dot になり、slice 位置が 1 ずれる回帰
+  check('Turkish İ does not leak close tag', extractFinalForDisplay('<FINAL>İstanbul</FINAL>') === 'İstanbul');
 }
 
 if (failures > 0) { console.error(`\n${failures} check(s) failed`); process.exit(1); }

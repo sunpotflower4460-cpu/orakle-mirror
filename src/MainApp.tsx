@@ -448,13 +448,11 @@ export function MainApp() {
     el.style.height = Math.min(el.scrollHeight, 120) + 'px';
   }, [input]);
 
-  useEffect(() => {
-    setStreaming((s) => {
-      if (!s) return s;
-      if (appView !== 'oracle' || activeRoomId !== s.roomId) return null;
-      return s;
-    });
-  }, [activeRoomId, appView]);
+  // 部屋切替や Self Reading へ移っても streaming は残す。
+  // 消すと in-flight の onText が setStreaming(s => s ? … : s) で再作成できず、
+  // 元の部屋に戻ったときに待機点だけが出て本文が最後に一気に落ちる。
+  // 吹き出しは streaming.roomId === activeRoomId のときだけ描画する。
+
   // Q-3: サイドバーを Escape で閉じられるようにする（モーダル群と同じ作法）。
   // 開いているときだけ listener を張り、cleanup で必ず外す。
   useEffect(() => {

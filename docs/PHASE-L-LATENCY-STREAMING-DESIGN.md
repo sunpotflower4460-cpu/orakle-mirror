@@ -164,8 +164,9 @@ Stage 1 のプロンプトを組む（直列）。①の数百 ms が遅れる�
    `fetchOracleTwoStageStreaming(receptionMsgs, discernmentBuilder, onToken)`。
    Stage 1 は従来どおり（`callLLMWithSampling` を流用）。Stage 2 をストリームで呼び、受信した増分
    テキストを `onToken(delta)` コールバックで UI に渡す。
-2. `<final>` タグ抽出を避ける（タイプ途中の半端な抽出をしない）。完了後に `extractTag` で整える、
-   またはインクリメンタル抽出を安全に行う。
+2. `<final>` タグ抽出は `extractFinalForDisplay` がインクリメンタルに行う。大小無視は
+   `toLowerCase()` の index を original に当てず、元文字列へ `/<final>/i` を当てる
+   （`İ` が `i̇` になり UTF-16 長がずれて `</final>` が漏れるのを防ぐ）。
 3. リトライ（429/5xx）は「前は確定」or「やり直し」を選ぶ（UX 安定 + ボタン）。
 4. 既存の `RECEPTION_SAMPLING` / `DISCERNMENT_SAMPLING` を使う。
 
@@ -180,7 +181,10 @@ Stage 1 のプロンプトを組む（直列）。①の数百 ms が遅れる�
 3. `prefers-reduced-motion` の尊重: reduce なら既存の motion 方針に従い、即時表示寄りに。
 4. フォールバック: ストリーム不可 / 失敗時は従来の `fetchOracleTwoStage`（非ストリーム）に落ちて、
    それでも必ず答えが出ることを保証。
-5. カーソル / 中インジケータ: 控えめなカーソル（点滅する ▌等）は要判断。鏡の静けさを壊さない。
+5. 部屋切替: `streaming` state は部屋や Self Reading へ移っても残す。消すと in-flight の
+   `onText` が再作成できず、元の部屋に戻ったときに待機点だけが出て本文が最後に一気に落ちる。
+   吹き出しは `streaming.roomId === activeRoomId` のときだけ描画する。
+6. カーソル / 中インジケータ: 控えめなカーソル（点滅する ▌等）は要判断。鏡の静けさを壊さない。
    コピー対象は**確定テキスト**（タイプ途中の半端なものをコピーさせない）。
 
 ### 5.6 L-3 の PR 分割
