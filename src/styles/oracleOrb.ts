@@ -137,7 +137,7 @@ export const ORACLE_ORB_STYLES: string = `
     pointer-events: none;
   }
   .oracle-orb__inner--live {
-    animation: orbInnerSpin 48s linear infinite;
+    animation: orbInnerSpin 36s linear infinite;
     will-change: transform;
   }
 
@@ -170,7 +170,7 @@ export const ORACLE_ORB_STYLES: string = `
     );
     mix-blend-mode: overlay;
     opacity: 0.85;
-    animation: orbInnerSpinReverse 64s linear infinite;
+    animation: orbInnerSpinReverse 48s linear infinite;
   }
 
   .oracle-orb__cosmos {
@@ -178,12 +178,24 @@ export const ORACLE_ORB_STYLES: string = `
     inset: 18%;
     border-radius: 50%;
     background:
-      radial-gradient(circle at 22% 34%, rgba(255,255,255,0.95) 0 1.6%, transparent 2.8%),
-      radial-gradient(circle at 78% 28%, rgba(255,236,200,0.90) 0 1.2%, transparent 2.4%),
-      radial-gradient(circle at 64% 72%, rgba(210,230,255,0.92) 0 1.4%, transparent 2.6%),
-      radial-gradient(circle at 36% 76%, rgba(255,210,230,0.88) 0 1.1%, transparent 2.2%),
-      radial-gradient(circle at 52% 18%, rgba(255,255,255,0.80) 0 0.9%, transparent 1.8%),
-      radial-gradient(circle at 14% 62%, rgba(220,200,255,0.78) 0 1.0%, transparent 2.0%);
+      radial-gradient(circle at 22% 32%, rgba(255,255,255,0.96) 0 5%, rgba(255,236,210,0.55) 9%, transparent 16%),
+      radial-gradient(circle at 78% 58%, rgba(186,220,255,0.92) 0 4%, rgba(170,200,255,0.35) 8%, transparent 14%),
+      radial-gradient(circle at 58% 18%, rgba(255,210,230,0.88) 0 3.2%, transparent 9%),
+      radial-gradient(circle at 34% 78%, rgba(255,236,200,0.80) 0 2.6%, transparent 7%),
+      radial-gradient(circle at 12% 54%, rgba(220,200,255,0.70) 0 2.2%, transparent 6%);
+  }
+
+  /* 軌道が目で追える、ひと粒の光 */
+  .oracle-orb__pearl {
+    position: absolute;
+    top: 10%;
+    left: 50%;
+    width: 11%;
+    height: 11%;
+    margin-left: -5.5%;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(255,255,255,1) 0%, rgba(255,236,210,0.70) 38%, transparent 72%);
+    box-shadow: 0 0 12px rgba(255,244,220,0.90), 0 0 22px rgba(186,210,255,0.45);
   }
 
   .oracle-orb__glass {
