@@ -47,8 +47,8 @@ window.__oracleMirrorDiagnostics
 
 ## 3. 理想モックとの差分（ネイティブ基準で記入）
 
-- [ ] 背景の霧 / 桃色の空気感
-- [x] 中央オーブの宝石感 / 水面反射（`OracleOrb` で Home / Onboarding / Sidebar empty state を共通化）
+- [x] 背景の霧 / 桃色の空気感（金の光源・水色・マゼンタ・ラベンダーの虹彩層。タイトル / ホームで共通の `om-celestial-sky`）
+- [x] 中央オーブの宝石感 / 水面反射（`OracleOrb` で Home / Onboarding / Sidebar empty state を共通化。ひし形／コンパスは中央に残し、内側の星霞がゆっくり回転する神秘の水晶玉。浮遊はゆったり滑らか）
 - [x] モードセグメントのネイビー質感（`--om-cta-shadow` のリムライト／ローズグローで霧に馴染ませた）
 - [x] ペルソナカードの存在感 / 余白（カード / ヘッダー / ペルソナチップの影を `--om-shadow-*` 系へ寄せ始めた）
 - [ ] アーカイブ空状態の神殿感 / 水面感（要承認Bのため未着手）
@@ -60,7 +60,7 @@ window.__oracleMirrorDiagnostics
 
 | 差分 | 触る予定のファイル / class / component | 変更方針 | 優先度 | 承認要否 |
 |---|---|---|---|---|
-| 環境差（workers.dev ブラウザバー） | `index.html`, 配布手順 | CSS改修より先に表示器差を切り分ける | P0 | 不要 |
+| 背景の霧 / 虹彩の空 | `src/styles/celestialSky.ts`, `src/styles/globals.ts`, `src/MainApp.tsx`, `src/components/Onboarding.tsx` | 桃色だけでなく金の光源・水色・マゼンタ・ラベンダーの層を重ね、ゆっくり渦を描く。本文コントラストは明るいパール基調で維持 | P0 | 不要 |
 | `backdrop-filter` 弱い環境のフォールバック | `src/styles/globals.ts` | `@supports not` でヘッダー / 入力欄 / モーダルに補助不透明度のみ追加 | P1 | 実施済み |
 | CTA / モードインジケータのリムライト | `src/styles/globals.ts` `.om-cta` | 濃紺縦グラデ + 白リム + 極薄ローズグロー。色そのものは不変 | P1 | 実施済み |
 | 言語トグルの発光カプセル | `src/components/LanguageToggle.tsx` | Onboarding / Help で溝の中を滑る共通トグル。Help では sticky header に固定し、フッター CTA と重ならない | P2 | 実施済み |
@@ -68,7 +68,7 @@ window.__oracleMirrorDiagnostics
 | Self Reading の「引く」が iPhone 幅で画面外 | `src/features/selfReading/SelfReadingView.tsx` | セットアップはシート型。本文スクロール、引く CTA は常時画面下 | P1 | 実施済み |
 | オンボーディングが下端シートで上が空く | `src/styles/globals.ts` `.onboarding-overlay` | 全サイズでカードを画面の高さに合わせる。言語は上、オーブ/本文はヘッダー〜フッター間の中央、ナビは下。文字は clamp | P1 | 実施済み |
 | safe-area 差分 | `src/styles/globals.ts`, `src/MainApp.tsx`, `capacitor.config.ts` | 実機値を見て不足分のみ調整 | P0 | 不要 |
-| 中央オーブの統一（Onboarding/Home/Sidebar） | `src/components/OracleOrb.tsx`, `src/components/Onboarding.tsx`, `src/MainApp.tsx` | 既存表現を共通化し、グロウ / ハイライト / 鏡像反射 / 白エッジ / 控えめな虹揺れを追加 | P0 | 不要 |
+| 中央オーブの統一（Onboarding/Home/Sidebar） | `src/components/OracleOrb.tsx`, `src/styles/oracleOrb.ts`, `src/components/Onboarding.tsx`, `src/MainApp.tsx` | 既存表現を共通化し、水晶玉の体積陰影 / 内部の霞 / コースティクス / ハイライト / 接地影 / 静かな浮遊を追加。`prefers-reduced-motion` では静止画の立体感のみ残す | P0 | 不要 |
 | 影の純度調整（カード / ヘッダー / ペルソナチップ） | `src/MainApp.tsx`, `src/components/Onboarding.tsx`, `src/styles/globals.ts` | `--om-shadow-soft` / `--om-shadow-card` ベースへ寄せ、黒影を増やさない | P0 | 不要 |
 | ペルソナ配置変更 | `src/MainApp.tsx` | 情報設計変更のため提案のみ | P1 | **要承認A** |
 | アーカイブ空状態の水面化 | `src/MainApp.tsx` | 大きな見た目変更のため提案のみ | P1 | **要承認B** |

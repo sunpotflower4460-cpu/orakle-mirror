@@ -1,3 +1,5 @@
+import { ORACLE_ORB_STYLES } from './oracleOrb';
+import { CELESTIAL_AURORA, CELESTIAL_SKY_BACKGROUND, CELESTIAL_SKY_STYLES } from './celestialSky';
 
 // ─── Constants & Database ────────────────────────────────────────────────────
 
@@ -9,9 +11,9 @@ export const GLOBAL_STYLES: string = `
     --sal: env(safe-area-inset-left, 0px);
 
     /* ── Oracle Mirror design tokens ─────────────────────────── */
-    --om-bg-top: #fffdfd;
-    --om-bg-mid: #fff8fa;
-    --om-bg-bottom: #fdf2f5;
+    --om-bg-top: #eaf3ff;
+    --om-bg-mid: #fff7ee;
+    --om-bg-bottom: #e8f4f8;
 
     --om-surface: rgba(255,255,255,0.78);
     --om-surface-strong: rgba(255,255,255,0.92);
@@ -53,7 +55,7 @@ export const GLOBAL_STYLES: string = `
   body {
     overscroll-behavior: contain;
     -webkit-overflow-scrolling: touch;
-    background: #fffdfd;
+    background: #eef4fb;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
@@ -69,8 +71,10 @@ export const GLOBAL_STYLES: string = `
     pointer-events: none;
     z-index: 1;
     background:
-      radial-gradient(140% 70% at 50% -22%, rgba(255,236,214,0.30), rgba(255,228,242,0.10) 34%, transparent 60%),
-      radial-gradient(120% 55% at 50% 122%, rgba(228,222,255,0.10), transparent 62%);
+      radial-gradient(90% 52% at 50% -10%, rgba(255,248,220,0.55), rgba(255,228,186,0.20) 30%, transparent 62%),
+      radial-gradient(70% 42% at 12% 0%, rgba(140,210,255,0.28), transparent 52%),
+      radial-gradient(70% 42% at 88% 0%, rgba(196,176,255,0.22), transparent 52%),
+      radial-gradient(120% 55% at 50% 122%, rgba(255,186,214,0.16), rgba(170,220,230,0.10) 40%, transparent 62%);
     animation: haloBreathe 9.5s ease-in-out infinite;
   }
   /* 空間を漂う霊的な光の粒子(精霊のあかり・星屑のような微光) */
@@ -81,18 +85,19 @@ export const GLOBAL_STYLES: string = `
     pointer-events: none;
     z-index: 2;
     background-image:
-      radial-gradient(2px 2px at 12% 18%, rgba(255,255,255,0.92), transparent 66%),
-      radial-gradient(5px 5px at 28% 72%, rgba(255,224,182,0.46), transparent 72%),
-      radial-gradient(2px 2px at 47% 35%, rgba(255,255,255,0.85), transparent 66%),
-      radial-gradient(6px 6px at 63% 58%, rgba(212,216,255,0.42), transparent 74%),
-      radial-gradient(2px 2px at 78% 22%, rgba(255,255,255,0.9), transparent 66%),
-      radial-gradient(5px 5px at 88% 67%, rgba(255,210,228,0.42), transparent 74%),
-      radial-gradient(2px 2px at 38% 90%, rgba(255,255,255,0.82), transparent 66%),
-      radial-gradient(4px 4px at 7% 52%, rgba(226,224,255,0.46), transparent 74%),
-      radial-gradient(2px 2px at 56% 12%, rgba(255,255,255,0.8), transparent 66%);
-    background-size: 300px 300px;
+      radial-gradient(2px 2px at 12% 18%, rgba(255,255,255,0.96), transparent 66%),
+      radial-gradient(5px 5px at 28% 72%, rgba(255,224,170,0.62), transparent 72%),
+      radial-gradient(2px 2px at 47% 35%, rgba(255,255,255,0.90), transparent 66%),
+      radial-gradient(6px 6px at 63% 58%, rgba(170,220,255,0.58), transparent 74%),
+      radial-gradient(2px 2px at 78% 22%, rgba(255,255,255,0.94), transparent 66%),
+      radial-gradient(5px 5px at 88% 67%, rgba(255,186,220,0.52), transparent 74%),
+      radial-gradient(2px 2px at 38% 90%, rgba(255,255,255,0.88), transparent 66%),
+      radial-gradient(4px 4px at 7% 52%, rgba(186,230,230,0.56), transparent 74%),
+      radial-gradient(2px 2px at 56% 12%, rgba(255,244,210,0.86), transparent 66%),
+      radial-gradient(3px 3px at 70% 8%, rgba(220,200,255,0.70), transparent 70%);
+    background-size: 280px 280px;
     background-repeat: repeat;
-    opacity: 0.55;
+    opacity: 0.70;
     will-change: transform, opacity;
     animation: motesFloat 46s ease-in-out infinite, twinkleField 7.5s ease-in-out infinite;
   }
@@ -103,32 +108,31 @@ export const GLOBAL_STYLES: string = `
     font-family:inherit; 
     font-size: 16px; 
   }
-  .app-shell { height: 100vh; height: 100dvh; position: relative; }
-  /* Pearl-white rose-mist background with subtle paper texture */
+  .app-shell {
+    height: 100vh; height: 100dvh; position: relative;
+    background: ${CELESTIAL_SKY_BACKGROUND};
+  }
+  /* ごく薄い紙の粒。虹彩の空の上に乗せて、ベタ塗り感を消す */
   .app-shell::before {
     content: '';
     position: fixed;
     inset: 0;
     pointer-events: none;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='1'/%3E%3C/svg%3E");
-    opacity: 0.032;
+    opacity: 0.028;
     mix-blend-mode: multiply;
     z-index: 0;
   }
   .app-shell::after {
     content: '';
     position: fixed;
-    inset: -15%;
+    inset: -18%;
     pointer-events: none;
-    background:
-      radial-gradient(circle at 20% 28%, rgba(255,206,226,0.22), transparent 36%),
-      radial-gradient(circle at 78% 18%, rgba(176,205,255,0.20), transparent 34%),
-      radial-gradient(circle at 62% 60%, rgba(255,240,210,0.15), transparent 40%),
-      radial-gradient(circle at 50% 80%, rgba(232,214,255,0.16), transparent 44%);
-    mix-blend-mode: screen;
-    animation: auroraDrift 19s ease-in-out infinite;
+    background: ${CELESTIAL_AURORA};
+    animation: celestialSwirl 24s ease-in-out infinite;
     z-index: 0;
   }
+  .app-shell > * { position: relative; z-index: 1; }
   
   .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border-width: 0; }
   
@@ -375,7 +379,8 @@ export const GLOBAL_STYLES: string = `
     width: min(440px, 92%);
     height: 440px;
     pointer-events: none;
-    background: radial-gradient(circle, rgba(255,244,250,0.50) 0%, rgba(226,234,255,0.22) 38%, transparent 70%);
+    background:
+      radial-gradient(circle at 50% 38%, rgba(255,248,220,0.62) 0%, rgba(255,214,196,0.22) 28%, rgba(186,214,255,0.20) 50%, rgba(255,196,220,0.12) 68%, transparent 76%);
     filter: blur(10px);
     z-index: 0;
     animation: haloBreathe 8.5s ease-in-out infinite;
@@ -390,6 +395,7 @@ export const GLOBAL_STYLES: string = `
     padding: clamp(8px, 1.8vmin, 24px) !important;
     padding-top: max(clamp(6px, 1.4vmin, 20px), calc(6px + var(--sat))) !important;
     padding-bottom: max(clamp(8px, 1.6vmin, 20px), calc(8px + var(--sab))) !important;
+    background: ${CELESTIAL_SKY_BACKGROUND} !important;
   }
   .onboarding-card {
     flex: 1 1 auto !important;
@@ -399,6 +405,12 @@ export const GLOBAL_STYLES: string = `
     max-width: min(100%, 480px) !important;
     padding: clamp(12px, 2.8vmin, 28px) clamp(16px, 3.2vmin, 32px) clamp(14px, 2.4vmin, 24px) !important;
     border-radius: clamp(22px, 4vmin, 38px) !important;
+    background: linear-gradient(148deg,
+      rgba(255,255,255,0.50) 0%,
+      rgba(255,248,236,0.38) 28%,
+      rgba(255,244,250,0.34) 54%,
+      rgba(232,244,255,0.40) 100%) !important;
+    border: 1px solid rgba(210,220,245,0.46) !important;
   }
   .onboarding-header {
     margin-bottom: clamp(4px, 1vmin, 10px) !important;
@@ -562,6 +574,7 @@ export const GLOBAL_STYLES: string = `
     }
   }
 
+` + ORACLE_ORB_STYLES + CELESTIAL_SKY_STYLES + `
   /* OS の「視差効果を減らす／動きを減らす」設定を尊重する */
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after {
