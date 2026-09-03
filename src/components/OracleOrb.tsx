@@ -45,7 +45,7 @@ export function OracleOrb({ size, variant, iconColor, strokeWidth }: OracleOrbPr
       color: symbolColor,
       animation: !live || ghost
         ? 'none'
-        : (variant === 'compass' ? 'spinSlow 48s linear infinite' : 'iridescentShift 14s ease-in-out infinite'),
+        : (variant === 'compass' ? 'spinSlow 64s linear infinite' : 'iridescentShift 14s ease-in-out infinite'),
     };
 
     if (variant === 'diamond') {

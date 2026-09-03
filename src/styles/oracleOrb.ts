@@ -133,7 +133,7 @@ export const ORACLE_ORB_STYLES: string = `
     pointer-events: none;
   }
   .oracle-orb__inner--live {
-    animation: orbInnerSpin 36s linear infinite;
+    animation: orbInnerSpin 48s linear infinite;
     will-change: transform;
   }
 
@@ -144,7 +144,7 @@ export const ORACLE_ORB_STYLES: string = `
     z-index: 3;
   }
   .oracle-orb__orbit--live {
-    animation: orbInnerSpin 20s linear infinite;
+    animation: orbInnerSpin 28s linear infinite;
     will-change: transform;
   }
 
@@ -203,7 +203,7 @@ export const ORACLE_ORB_STYLES: string = `
     );
     mix-blend-mode: overlay;
     opacity: 0.85;
-    animation: orbInnerSpinReverse 48s linear infinite;
+    animation: orbInnerSpinReverse 64s linear infinite;
   }
 
   .oracle-orb__cosmos {
