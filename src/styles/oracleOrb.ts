@@ -5,7 +5,7 @@ export const ORACLE_ORB_STYLES: string = `
   /* ── Crystal orb (OracleOrb) ───────────────────────────────── */
   @keyframes orbFloat {
     0%, 100% { transform: translate3d(0, 0, 0); }
-    50% { transform: translate3d(0, -5%, 0); }
+    50% { transform: translate3d(0, -7%, 0); }
   }
   @keyframes orbShadowBreathe {
     0%, 100% { transform: translateX(-50%) scale(1); opacity: 0.55; }
@@ -80,20 +80,26 @@ export const ORACLE_ORB_STYLES: string = `
     position: relative;
     overflow: hidden;
     isolation: isolate;
-    border: 0.5px solid rgba(255,255,255,0.86);
+    border: 1px solid rgba(198,176,198,0.42);
     background:
-      radial-gradient(ellipse 48% 36% at 30% 22%, rgba(255,255,255,0.98) 0%, rgba(255,255,255,0.42) 38%, transparent 70%),
-      radial-gradient(circle at 50% 44%, rgba(255,250,252,0.72) 0%, rgba(255,232,240,0.40) 26%, rgba(226,236,255,0.34) 52%, rgba(236,214,230,0.42) 76%, rgba(168,148,186,0.30) 100%),
-      linear-gradient(158deg, rgba(255,255,255,0.92) 0%, rgba(255,236,244,0.58) 42%, rgba(214,228,255,0.52) 100%);
+      radial-gradient(ellipse 56% 42% at 28% 18%, rgba(255,255,255,1) 0%, rgba(255,255,255,0.62) 22%, transparent 58%),
+      radial-gradient(circle at 46% 38%,
+        rgba(255,248,252,0.92) 0%,
+        rgba(255,214,228,0.62) 26%,
+        rgba(214,226,255,0.50) 52%,
+        rgba(198,158,188,0.48) 76%,
+        rgba(132,112,162,0.42) 100%),
+      linear-gradient(165deg, #fff8fb 0%, #f0d0e0 46%, #cfd9f4 100%);
     box-shadow:
       var(--om-glow-rose),
       var(--om-glow-rose-wide),
-      0 14px 28px rgba(150,100,120,0.10),
-      inset 0 1.5px 0 rgba(255,255,255,0.96),
-      inset 10px 12px 18px rgba(255,255,255,0.28),
-      inset -12px -18px 28px rgba(170,130,160,0.16),
-      inset 0 -22px 34px rgba(217,111,140,0.18),
-      inset 0 -36px 42px rgba(160,196,255,0.20);
+      0 16px 30px rgba(140,90,120,0.16),
+      0 0 0 1px rgba(255,255,255,0.55),
+      inset 0 2px 0 rgba(255,255,255,0.95),
+      inset 12px 14px 22px rgba(255,255,255,0.42),
+      inset -14px -22px 32px rgba(120,88,130,0.24),
+      inset 0 -26px 38px rgba(217,111,140,0.24),
+      inset 0 -40px 46px rgba(140,176,230,0.26);
     animation: iridescentShift 8.8s ease-in-out infinite;
   }
 
@@ -102,7 +108,7 @@ export const ORACLE_ORB_STYLES: string = `
     position: absolute;
     inset: 0;
     border-radius: 50%;
-    background: radial-gradient(circle at 50% 46%, transparent 38%, rgba(150,120,150,0.08) 68%, rgba(90,80,130,0.18) 100%);
+    background: radial-gradient(circle at 42% 36%, transparent 28%, rgba(130,100,145,0.14) 64%, rgba(68,58,110,0.32) 100%);
     pointer-events: none;
   }
 
@@ -111,10 +117,10 @@ export const ORACLE_ORB_STYLES: string = `
     position: absolute;
     left: 50%;
     top: 52%;
-    width: 54%;
-    height: 54%;
+    width: 58%;
+    height: 58%;
     border-radius: 50%;
-    background: radial-gradient(circle, rgba(217,111,140,0.34) 0%, rgba(255,220,232,0.16) 42%, rgba(210,222,255,0.08) 68%, transparent 78%);
+    background: radial-gradient(circle, rgba(217,111,140,0.48) 0%, rgba(255,196,216,0.22) 38%, rgba(196,214,255,0.14) 64%, transparent 78%);
     pointer-events: none;
     animation: orbCoreBreathe 5.8s ease-in-out infinite;
   }
@@ -124,9 +130,9 @@ export const ORACLE_ORB_STYLES: string = `
     position: absolute;
     inset: -18%;
     background:
-      radial-gradient(ellipse 42% 34% at 34% 40%, rgba(255,186,210,0.42), transparent 68%),
-      radial-gradient(ellipse 38% 32% at 68% 58%, rgba(186,208,255,0.36), transparent 70%),
-      radial-gradient(ellipse 30% 26% at 52% 32%, rgba(255,236,214,0.28), transparent 68%);
+      radial-gradient(ellipse 42% 34% at 34% 40%, rgba(255,168,198,0.55), transparent 68%),
+      radial-gradient(ellipse 38% 32% at 68% 58%, rgba(168,196,255,0.48), transparent 70%),
+      radial-gradient(ellipse 30% 26% at 52% 32%, rgba(255,228,196,0.36), transparent 68%);
     pointer-events: none;
     animation: orbMistDrift 22s linear infinite;
   }
@@ -151,8 +157,8 @@ export const ORACLE_ORB_STYLES: string = `
       rgba(255,255,255,0.08) 340deg,
       transparent 360deg
     );
-    mix-blend-mode: soft-light;
-    opacity: 0.85;
+    mix-blend-mode: overlay;
+    opacity: 0.9;
     pointer-events: none;
     animation: orbCausticSpin 28s linear infinite;
   }
@@ -176,36 +182,36 @@ export const ORACLE_ORB_STYLES: string = `
   /* 内側のガラス膜(厚み) */
   .oracle-orb__glass {
     position: absolute;
-    inset: 7%;
+    inset: 8%;
     border-radius: 50%;
-    border: 0.5px solid rgba(255,255,255,0.32);
+    border: 1px solid rgba(255,255,255,0.58);
     box-shadow:
-      inset 0 0 10px rgba(255,255,255,0.20),
-      0 0 0 0.5px rgba(255,255,255,0.10);
+      inset 0 0 14px rgba(255,255,255,0.28),
+      0 0 0 1px rgba(150,130,170,0.12);
     pointer-events: none;
   }
 
   /* 主ハイライト(三日月) */
   .oracle-orb__spec {
     position: absolute;
-    left: 14%;
-    top: 11%;
-    width: 42%;
-    height: 24%;
+    left: 12%;
+    top: 9%;
+    width: 46%;
+    height: 26%;
     border-radius: 50%;
-    background: linear-gradient(180deg, rgba(255,255,255,0.92) 0%, rgba(255,255,255,0.28) 48%, transparent 100%);
+    background: linear-gradient(180deg, rgba(255,255,255,1) 0%, rgba(255,255,255,0.55) 42%, transparent 100%);
     transform: rotate(-22deg);
     pointer-events: none;
   }
   .oracle-orb__spec-dot {
     position: absolute;
-    left: 24%;
-    top: 18%;
-    width: 10%;
-    height: 10%;
+    left: 22%;
+    top: 16%;
+    width: 12%;
+    height: 12%;
     border-radius: 50%;
-    background: radial-gradient(circle, rgba(255,255,255,1) 0%, rgba(255,255,255,0.35) 55%, transparent 72%);
-    box-shadow: 0 0 14px rgba(255,255,255,0.72);
+    background: radial-gradient(circle, rgba(255,255,255,1) 0%, rgba(255,255,255,0.45) 48%, transparent 72%);
+    box-shadow: 0 0 18px rgba(255,255,255,0.88);
     pointer-events: none;
     animation: orbSparkle 4.4s ease-in-out infinite;
   }
@@ -239,8 +245,8 @@ export const ORACLE_ORB_STYLES: string = `
     inset: 0;
     border-radius: 50%;
     box-shadow:
-      inset 0 0 0 0.5px rgba(255,255,255,0.62),
-      inset 0 0 8px rgba(255,255,255,0.28);
+      inset 0 0 0 1px rgba(255,255,255,0.72),
+      inset 0 0 10px rgba(255,255,255,0.32);
     pointer-events: none;
   }
 
@@ -250,7 +256,7 @@ export const ORACLE_ORB_STYLES: string = `
     left: -30%;
     width: 52%;
     height: 180%;
-    background: linear-gradient(100deg, transparent, rgba(255,255,255,0.62), transparent);
+    background: linear-gradient(100deg, transparent, rgba(255,255,255,0.82), transparent);
     pointer-events: none;
     animation: orbSheen 7.2s ease-in-out infinite;
   }
@@ -265,9 +271,9 @@ export const ORACLE_ORB_STYLES: string = `
     inset: 0;
     border-radius: 50%;
     background:
-      radial-gradient(circle at 30% 64%, rgba(255,255,255,0.95) 0 1.15px, transparent 2.1px),
-      radial-gradient(circle at 70% 40%, rgba(255,236,214,0.88) 0 0.95px, transparent 2px),
-      radial-gradient(circle at 56% 74%, rgba(220,230,255,0.9) 0 1px, transparent 2.1px);
+      radial-gradient(circle at 30% 64%, rgba(255,255,255,0.95) 0 2.4%, transparent 3.6%),
+      radial-gradient(circle at 70% 40%, rgba(255,236,214,0.92) 0 1.8%, transparent 3.2%),
+      radial-gradient(circle at 56% 74%, rgba(220,230,255,0.94) 0 2%, transparent 3.4%);
     pointer-events: none;
     animation: twinkleField 4.6s ease-in-out infinite;
   }
@@ -296,7 +302,7 @@ export const ORACLE_ORB_STYLES: string = `
     width: 58%;
     height: 11%;
     border-radius: 50%;
-    background: radial-gradient(ellipse, rgba(150,100,130,0.28) 0%, transparent 70%);
+    background: radial-gradient(ellipse, rgba(130,80,110,0.38) 0%, transparent 70%);
     transform: translateX(-50%);
     pointer-events: none;
     z-index: 0;
