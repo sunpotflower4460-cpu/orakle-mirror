@@ -52,10 +52,6 @@ export function OracleOrb({ size }: OracleOrbProps) {
             <div className="oracle-orb__swirl" />
             <div className="oracle-orb__cosmos" />
           </div>
-          <div className={`oracle-orb__orbit${live ? ' oracle-orb__orbit--live' : ''}`}>
-            <span className="oracle-orb__pearl" />
-            <span className="oracle-orb__pearl oracle-orb__pearl--far" />
-          </div>
 
           <div className="oracle-orb__glass" />
           <div className="oracle-orb__spec" />
@@ -73,6 +69,10 @@ export function OracleOrb({ size }: OracleOrbProps) {
               <div className="oracle-orb__sheen oracle-orb__sheen--cool" />
             </>
           )}
+          <div className={`oracle-orb__orbit${live ? ' oracle-orb__orbit--live' : ''}`}>
+            <span className="oracle-orb__pearl" />
+            <span className="oracle-orb__pearl oracle-orb__pearl--far" />
+          </div>
         </div>
       </div>
 

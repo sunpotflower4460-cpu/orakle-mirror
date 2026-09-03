@@ -143,36 +143,37 @@ export const ORACLE_ORB_STYLES: string = `
 
   .oracle-orb__orbit {
     position: absolute;
-    inset: 20%;
+    inset: 18%;
     pointer-events: none;
-    z-index: 2;
+    z-index: 4;
   }
   .oracle-orb__orbit--live {
     animation: orbInnerSpin 20s linear infinite;
     will-change: transform;
   }
 
-  /* 軌道が目で追える、ひと粒の光 */
+  /* 軌道が目で追える、ひと粒の光。上のハイライトを避けて横から回す */
   .oracle-orb__pearl {
     position: absolute;
-    top: 0;
-    left: 50%;
-    width: 16%;
-    height: 16%;
-    margin-left: -8%;
+    top: 42%;
+    left: auto;
+    right: -2%;
+    width: 22%;
+    height: 22%;
+    margin-left: 0;
     border-radius: 50%;
-    background: radial-gradient(circle, rgba(255,255,255,1) 0%, rgba(255,236,210,0.75) 36%, transparent 70%);
-    box-shadow: 0 0 10px rgba(255,244,220,0.95), 0 0 18px rgba(186,210,255,0.50);
+    background: radial-gradient(circle, rgba(255,255,255,1) 0%, rgba(255,236,210,0.80) 32%, rgba(255,255,255,0) 70%);
+    box-shadow: 0 0 12px rgba(255,244,220,1), 0 0 22px rgba(186,210,255,0.65);
   }
   .oracle-orb__pearl--far {
     top: auto;
-    bottom: 18%;
-    left: 12%;
-    margin-left: 0;
-    width: 9%;
-    height: 9%;
-    background: radial-gradient(circle, rgba(220,235,255,0.95) 0%, rgba(186,210,255,0.45) 40%, transparent 72%);
-    box-shadow: 0 0 8px rgba(200,220,255,0.80);
+    right: auto;
+    bottom: 12%;
+    left: 8%;
+    width: 12%;
+    height: 12%;
+    background: radial-gradient(circle, rgba(230,240,255,1) 0%, rgba(186,210,255,0.55) 40%, transparent 72%);
+    box-shadow: 0 0 10px rgba(200,220,255,0.90);
   }
 
   .oracle-orb__mist {
