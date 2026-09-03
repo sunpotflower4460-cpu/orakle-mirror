@@ -51,7 +51,10 @@ export function OracleOrb({ size }: OracleOrbProps) {
             <div className="oracle-orb__mist" />
             <div className="oracle-orb__swirl" />
             <div className="oracle-orb__cosmos" />
-            <div className="oracle-orb__pearl" />
+          </div>
+          <div className={`oracle-orb__orbit${live ? ' oracle-orb__orbit--live' : ''}`}>
+            <span className="oracle-orb__pearl" />
+            <span className="oracle-orb__pearl oracle-orb__pearl--far" />
           </div>
 
           <div className="oracle-orb__glass" />
