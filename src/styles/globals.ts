@@ -1,3 +1,4 @@
+import { ORACLE_ORB_STYLES } from './oracleOrb';
 
 // ─── Constants & Database ────────────────────────────────────────────────────
 
@@ -562,6 +563,7 @@ export const GLOBAL_STYLES: string = `
     }
   }
 
+` + ORACLE_ORB_STYLES + `
   /* OS の「視差効果を減らす／動きを減らす」設定を尊重する */
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after {
