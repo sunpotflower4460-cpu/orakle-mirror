@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { Compass, Diamond } from 'lucide-react';
 
 type OrbVariant = 'compass' | 'diamond';
 
@@ -9,7 +10,7 @@ interface OracleOrbProps {
   strokeWidth?: number;
 }
 
-export function OracleOrb({ size }: OracleOrbProps) {
+export function OracleOrb({ size, variant, iconColor, strokeWidth }: OracleOrbProps) {
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
 
   useEffect(() => {
@@ -29,8 +30,30 @@ export function OracleOrb({ size }: OracleOrbProps) {
   }, []);
 
   const containerHeight = useMemo(() => Math.round(size * 1.20), [size]);
+  const symbolSize = useMemo(
+    () => Math.round(size * (variant === 'compass' ? 0.48 : 0.34)),
+    [size, variant],
+  );
+  const symbolColor = iconColor ?? (variant === 'compass' ? 'rgba(210,110,140,0.72)' : 'rgba(39,59,106,0.82)');
+  const symbolStrokeWidth = strokeWidth ?? (variant === 'compass' ? 0.68 : 1.12);
   const isCompact = size < 72;
+  const showGhost = !isCompact && size >= 88;
   const live = !prefersReducedMotion;
+
+  const renderSymbol = (ghost: boolean) => {
+    const style: React.CSSProperties = {
+      color: symbolColor,
+      animation: !live || ghost
+        ? 'none'
+        : (variant === 'compass' ? 'spinSlow 48s linear infinite' : 'iridescentShift 14s ease-in-out infinite'),
+    };
+
+    if (variant === 'diamond') {
+      return <Diamond size={symbolSize} strokeWidth={symbolStrokeWidth} style={style} />;
+    }
+
+    return <Compass size={symbolSize} strokeWidth={symbolStrokeWidth} style={style} />;
+  };
 
   return (
     <div
@@ -59,10 +82,6 @@ export function OracleOrb({ size }: OracleOrbProps) {
           <div className="oracle-orb__spec-sec" />
           <div className="oracle-orb__bottom" />
           <div className="oracle-orb__rim" />
-          <div className="oracle-orb__sigil">
-            <div className="oracle-orb__sigil-ring" />
-            <div className="oracle-orb__sigil-star" />
-          </div>
           {live && (
             <>
               <div className="oracle-orb__sheen" />
@@ -72,6 +91,14 @@ export function OracleOrb({ size }: OracleOrbProps) {
           <div className={`oracle-orb__orbit${live ? ' oracle-orb__orbit--live' : ''}`}>
             <div className="oracle-orb__pearl" />
             <div className="oracle-orb__pearl oracle-orb__pearl--far" />
+          </div>
+          {showGhost && (
+            <div className="oracle-orb__symbol oracle-orb__symbol--ghost">
+              {renderSymbol(true)}
+            </div>
+          )}
+          <div className="oracle-orb__symbol">
+            {renderSymbol(false)}
           </div>
         </div>
       </div>

@@ -1,5 +1,5 @@
 // OracleOrb 専用スタイル。globals.ts 末尾に連結する。
-// 神秘の水晶玉: 内側の星霞がゆっくり回転し、玉そのものはゆったり浮かぶ。
+// 神秘の水晶玉: 中央にひし形／コンパス、内側の星霞がゆっくり回転し、玉はゆったり浮かぶ。
 // ハイライトは光源側に固定し、回転は内部だけにかける。
 
 export const ORACLE_ORB_STYLES: string = `
@@ -34,10 +34,6 @@ export const ORACLE_ORB_STYLES: string = `
     22% { opacity: 0.42; }
     55% { transform: translateX(240%) rotate(-12deg); opacity: 0; }
     100% { transform: translateX(240%) rotate(-12deg); opacity: 0; }
-  }
-  @keyframes orbSigilPulse {
-    0%, 100% { opacity: 0.72; transform: scale(1); }
-    50% { opacity: 1; transform: scale(1.06); }
   }
 
   .oracle-orb {
@@ -145,7 +141,7 @@ export const ORACLE_ORB_STYLES: string = `
     position: absolute;
     inset: 18%;
     pointer-events: none;
-    z-index: 4;
+    z-index: 3;
   }
   .oracle-orb__orbit--live {
     animation: orbInnerSpin 20s linear infinite;
@@ -290,34 +286,22 @@ export const ORACLE_ORB_STYLES: string = `
     pointer-events: none;
   }
 
-  /* 中心の星核。ダイヤモンドの輪郭ではなく、遠い光 */
-  .oracle-orb__sigil {
+  /* 中央のひし形 / コンパス。光の粒より手前に置いて記号を守る */
+  .oracle-orb__symbol {
     position: absolute;
     inset: 0;
     display: flex;
     align-items: center;
     justify-content: center;
-    z-index: 2;
+    z-index: 5;
     pointer-events: none;
+    filter: drop-shadow(0 0 8px rgba(255,255,255,0.45));
   }
-  .oracle-orb__sigil-ring {
-    display: block;
-    position: absolute;
-    width: 28%;
-    height: 28%;
-    border-radius: 50%;
-    border: 1px solid rgba(255,255,255,0.42);
-    box-shadow: 0 0 12px rgba(255,236,214,0.35), inset 0 0 8px rgba(210,190,255,0.28);
-    animation: orbSigilPulse 12s ease-in-out infinite;
-  }
-  .oracle-orb__sigil-star {
-    display: block;
-    width: 7%;
-    height: 7%;
-    border-radius: 50%;
-    background: radial-gradient(circle, rgba(255,255,255,0.98) 0%, rgba(255,236,210,0.80) 38%, rgba(210,180,255,0.0) 72%);
-    box-shadow: 0 0 14px rgba(255,244,220,0.85), 0 0 28px rgba(186,170,255,0.40);
-    animation: orbSigilPulse 12s ease-in-out infinite;
+  .oracle-orb__symbol--ghost {
+    z-index: 4;
+    opacity: 0.28;
+    filter: blur(2.4px);
+    transform: translate(3%, 6%) scale(1.12);
   }
 
   .oracle-orb__sheen {
