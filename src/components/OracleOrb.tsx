@@ -60,8 +60,8 @@ export function OracleOrb({ size }: OracleOrbProps) {
           <div className="oracle-orb__bottom" />
           <div className="oracle-orb__rim" />
           <div className="oracle-orb__sigil">
-            <span className="oracle-orb__sigil-ring" />
-            <span className="oracle-orb__sigil-star" />
+            <div className="oracle-orb__sigil-ring" />
+            <div className="oracle-orb__sigil-star" />
           </div>
           {live && (
             <>
@@ -70,8 +70,8 @@ export function OracleOrb({ size }: OracleOrbProps) {
             </>
           )}
           <div className={`oracle-orb__orbit${live ? ' oracle-orb__orbit--live' : ''}`}>
-            <span className="oracle-orb__pearl" />
-            <span className="oracle-orb__pearl oracle-orb__pearl--far" />
+            <div className="oracle-orb__pearl" />
+            <div className="oracle-orb__pearl oracle-orb__pearl--far" />
           </div>
         </div>
       </div>

@@ -154,6 +154,7 @@ export const ORACLE_ORB_STYLES: string = `
 
   /* 軌道が目で追える、ひと粒の光。上のハイライトを避けて横から回す */
   .oracle-orb__pearl {
+    display: block;
     position: absolute;
     top: 42%;
     left: auto;
@@ -166,6 +167,7 @@ export const ORACLE_ORB_STYLES: string = `
     box-shadow: 0 0 12px rgba(255,244,220,1), 0 0 22px rgba(186,210,255,0.65);
   }
   .oracle-orb__pearl--far {
+    display: block;
     top: auto;
     right: auto;
     bottom: 12%;
@@ -299,6 +301,7 @@ export const ORACLE_ORB_STYLES: string = `
     pointer-events: none;
   }
   .oracle-orb__sigil-ring {
+    display: block;
     position: absolute;
     width: 28%;
     height: 28%;
@@ -308,6 +311,7 @@ export const ORACLE_ORB_STYLES: string = `
     animation: orbSigilPulse 12s ease-in-out infinite;
   }
   .oracle-orb__sigil-star {
+    display: block;
     width: 7%;
     height: 7%;
     border-radius: 50%;
