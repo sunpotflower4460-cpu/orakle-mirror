@@ -1,42 +1,43 @@
 // OracleOrb 専用スタイル。globals.ts 末尾に連結する。
-// 立体の水晶玉: 体積陰影・内部の霞・屈折・ハイライト・静かな浮遊。
+// 神秘の水晶玉: 内側の星霞がゆっくり回転し、玉そのものはゆったり浮かぶ。
+// ハイライトは光源側に固定し、回転は内部だけにかける。
 
 export const ORACLE_ORB_STYLES: string = `
-  /* ── Crystal orb (OracleOrb) ───────────────────────────────── */
   @keyframes orbFloat {
     0%, 100% { transform: translate3d(0, 0, 0); }
-    50% { transform: translate3d(0, -7%, 0); }
+    50% { transform: translate3d(0, -3.2%, 0); }
   }
   @keyframes orbShadowBreathe {
-    0%, 100% { transform: translateX(-50%) scale(1); opacity: 0.55; }
-    50% { transform: translateX(-50%) scale(0.78); opacity: 0.32; }
+    0%, 100% { transform: translateX(-50%) scale(1); opacity: 0.48; }
+    50% { transform: translateX(-50%) scale(0.88); opacity: 0.30; }
   }
-  @keyframes orbMistDrift {
-    0% { transform: rotate(0deg) scale(1); }
-    50% { transform: rotate(180deg) scale(1.08); }
-    100% { transform: rotate(360deg) scale(1); }
-  }
-  @keyframes orbCausticSpin {
+  @keyframes orbInnerSpin {
     to { transform: rotate(360deg); }
   }
+  @keyframes orbInnerSpinReverse {
+    to { transform: rotate(-360deg); }
+  }
   @keyframes orbSparkle {
-    0%, 100% { opacity: 0.58; transform: scale(1); }
-    42% { opacity: 1; transform: scale(1.22); }
-    68% { opacity: 0.4; transform: scale(0.9); }
+    0%, 100% { opacity: 0.52; transform: scale(1); }
+    50% { opacity: 0.92; transform: scale(1.08); }
   }
   @keyframes orbCoreBreathe {
-    0%, 100% { opacity: 0.78; transform: translate(-50%, -50%) scale(0.96); }
-    50% { opacity: 1; transform: translate(-50%, -50%) scale(1.08); }
+    0%, 100% { opacity: 0.78; transform: translate(-50%, -50%) scale(0.98); }
+    50% { opacity: 1; transform: translate(-50%, -50%) scale(1.04); }
   }
   @keyframes orbAuraCool {
-    0%, 100% { opacity: 0.55; }
-    50% { opacity: 0.95; }
+    0%, 100% { opacity: 0.58; }
+    50% { opacity: 0.9; }
   }
   @keyframes orbSheenCool {
     0% { transform: translateX(-70%) rotate(-12deg); opacity: 0; }
-    22% { opacity: 0.55; }
+    22% { opacity: 0.42; }
     55% { transform: translateX(240%) rotate(-12deg); opacity: 0; }
     100% { transform: translateX(240%) rotate(-12deg); opacity: 0; }
+  }
+  @keyframes orbSigilPulse {
+    0%, 100% { opacity: 0.72; transform: scale(1); }
+    50% { opacity: 1; transform: scale(1.06); }
   }
 
   .oracle-orb {
@@ -55,17 +56,17 @@ export const ORACLE_ORB_STYLES: string = `
   .oracle-orb__aura--gold {
     inset: -6% -12% 20% -12%;
     background: radial-gradient(circle, rgba(255,236,186,0.58) 0%, rgba(255,248,220,0.16) 46%, transparent 74%);
-    animation: haloBreathe 6.8s ease-in-out infinite;
+    animation: haloBreathe 11s ease-in-out infinite;
   }
   .oracle-orb__aura--rose {
     inset: -22% -22% 10% -22%;
     background: radial-gradient(circle, rgba(245,199,214,0.46) 0%, rgba(255,233,240,0.18) 40%, transparent 74%);
-    animation: pulse 4.8s ease-in-out infinite;
+    animation: pulse 10s ease-in-out infinite;
   }
   .oracle-orb__aura--cool {
     inset: -8% -16% 18% -16%;
     background: radial-gradient(circle, rgba(150,210,255,0.48) 0%, rgba(186,230,255,0.14) 50%, transparent 76%);
-    animation: orbAuraCool 7.6s ease-in-out infinite;
+    animation: orbAuraCool 13s ease-in-out infinite;
   }
 
   .oracle-orb__float {
@@ -75,7 +76,8 @@ export const ORACLE_ORB_STYLES: string = `
     z-index: 1;
   }
   .oracle-orb__float--live {
-    animation: orbFloat 6.6s ease-in-out infinite;
+    animation: orbFloat 16s cubic-bezier(0.37, 0, 0.63, 1) infinite;
+    will-change: transform;
   }
 
   .oracle-orb__sphere {
@@ -89,12 +91,12 @@ export const ORACLE_ORB_STYLES: string = `
     background:
       radial-gradient(ellipse 56% 42% at 28% 18%, rgba(255,255,255,1) 0%, rgba(255,255,255,0.62) 22%, transparent 58%),
       radial-gradient(circle at 46% 38%,
-        rgba(255,248,252,0.92) 0%,
-        rgba(255,214,228,0.62) 26%,
-        rgba(214,226,255,0.50) 52%,
-        rgba(198,158,188,0.48) 76%,
-        rgba(132,112,162,0.42) 100%),
-      linear-gradient(165deg, #fff8fb 0%, #f0d0e0 46%, #cfd9f4 100%);
+        rgba(255,248,252,0.88) 0%,
+        rgba(232,210,240,0.52) 28%,
+        rgba(186,210,255,0.48) 52%,
+        rgba(168,140,196,0.42) 76%,
+        rgba(92,84,148,0.38) 100%),
+      linear-gradient(165deg, #fff8fb 0%, #e8d4ee 46%, #c8d4f4 100%);
     box-shadow:
       var(--om-glow-rose),
       var(--om-glow-rose-wide),
@@ -103,12 +105,11 @@ export const ORACLE_ORB_STYLES: string = `
       inset 0 2px 0 rgba(255,255,255,0.95),
       inset 12px 14px 22px rgba(255,255,255,0.42),
       inset -14px -22px 32px rgba(120,88,130,0.24),
-      inset 0 -26px 38px rgba(217,111,140,0.24),
-      inset 0 -40px 46px rgba(140,176,230,0.26);
-    animation: iridescentShift 8.8s ease-in-out infinite;
+      inset 0 -26px 38px rgba(217,111,140,0.20),
+      inset 0 -40px 46px rgba(120,150,220,0.28);
+    animation: iridescentShift 18s ease-in-out infinite;
   }
 
-  /* 縁が厚く見えるガラスの体積(フレネル) */
   .oracle-orb__volume {
     position: absolute;
     inset: 0;
@@ -117,7 +118,6 @@ export const ORACLE_ORB_STYLES: string = `
     pointer-events: none;
   }
 
-  /* 内部に溜まるローズクォーツの核 */
   .oracle-orb__core {
     position: absolute;
     left: 50%;
@@ -125,78 +125,78 @@ export const ORACLE_ORB_STYLES: string = `
     width: 58%;
     height: 58%;
     border-radius: 50%;
-    background: radial-gradient(circle, rgba(217,111,140,0.48) 0%, rgba(255,196,216,0.22) 38%, rgba(196,214,255,0.14) 64%, transparent 78%);
+    background: radial-gradient(circle, rgba(255,236,210,0.42) 0%, rgba(217,140,190,0.28) 34%, rgba(150,170,230,0.18) 62%, transparent 78%);
     pointer-events: none;
-    animation: orbCoreBreathe 5.8s ease-in-out infinite;
+    animation: orbCoreBreathe 14s ease-in-out infinite;
   }
 
-  /* 玉の中をゆっくり回る霞 */
+  /* 内側だけが回る。光源ハイライトは外に残す */
+  .oracle-orb__inner {
+    position: absolute;
+    inset: -22%;
+    pointer-events: none;
+  }
+  .oracle-orb__inner--live {
+    animation: orbInnerSpin 48s linear infinite;
+    will-change: transform;
+  }
+
   .oracle-orb__mist {
     position: absolute;
-    inset: -18%;
+    inset: 8%;
     background:
-      radial-gradient(ellipse 42% 34% at 34% 40%, rgba(255,168,198,0.55), transparent 68%),
-      radial-gradient(ellipse 38% 32% at 68% 58%, rgba(168,196,255,0.48), transparent 70%),
-      radial-gradient(ellipse 30% 26% at 52% 32%, rgba(255,228,196,0.36), transparent 68%);
-    pointer-events: none;
-    animation: orbMistDrift 22s linear infinite;
+      radial-gradient(ellipse 42% 34% at 30% 36%, rgba(255,168,198,0.50), transparent 68%),
+      radial-gradient(ellipse 38% 32% at 72% 62%, rgba(150,196,255,0.46), transparent 70%),
+      radial-gradient(ellipse 30% 26% at 54% 28%, rgba(255,228,186,0.34), transparent 68%);
   }
 
-  /* 内部の光の筋(コースティクス) */
-  .oracle-orb__caustic {
+  /* 非対称の渦。回っていることが一目でわかる */
+  .oracle-orb__swirl {
     position: absolute;
-    inset: -8%;
+    inset: 12%;
     border-radius: 50%;
     background: conic-gradient(
-      from 18deg,
+      from 0deg,
       transparent 0deg,
-      rgba(255,255,255,0.16) 24deg,
-      rgba(210,180,255,0.10) 48deg,
-      transparent 78deg,
-      rgba(255,220,232,0.18) 118deg,
-      rgba(196,220,255,0.12) 150deg,
-      transparent 188deg,
-      rgba(255,255,255,0.14) 228deg,
-      rgba(255,214,226,0.10) 268deg,
-      transparent 310deg,
-      rgba(255,255,255,0.08) 340deg,
+      rgba(255,210,230,0.00) 28deg,
+      rgba(255,186,214,0.34) 58deg,
+      rgba(210,196,255,0.22) 88deg,
+      transparent 128deg,
+      rgba(170,220,255,0.28) 168deg,
+      rgba(255,236,200,0.24) 208deg,
+      transparent 248deg,
+      rgba(255,200,220,0.20) 300deg,
       transparent 360deg
     );
     mix-blend-mode: overlay;
-    opacity: 0.9;
-    pointer-events: none;
-    animation: orbCausticSpin 28s linear infinite;
+    opacity: 0.85;
+    animation: orbInnerSpinReverse 64s linear infinite;
   }
 
-  /* ごく薄い結晶の面 */
-  .oracle-orb__facets {
+  .oracle-orb__cosmos {
     position: absolute;
-    inset: 10%;
+    inset: 18%;
     border-radius: 50%;
-    background: repeating-conic-gradient(
-      from 12deg,
-      rgba(255,255,255,0.00) 0deg 18deg,
-      rgba(255,255,255,0.07) 18deg 22deg,
-      rgba(210,190,230,0.04) 22deg 28deg
-    );
-    opacity: 0.55;
-    pointer-events: none;
-    mix-blend-mode: overlay;
+    background:
+      radial-gradient(circle at 22% 34%, rgba(255,255,255,0.95) 0 1.6%, transparent 2.8%),
+      radial-gradient(circle at 78% 28%, rgba(255,236,200,0.90) 0 1.2%, transparent 2.4%),
+      radial-gradient(circle at 64% 72%, rgba(210,230,255,0.92) 0 1.4%, transparent 2.6%),
+      radial-gradient(circle at 36% 76%, rgba(255,210,230,0.88) 0 1.1%, transparent 2.2%),
+      radial-gradient(circle at 52% 18%, rgba(255,255,255,0.80) 0 0.9%, transparent 1.8%),
+      radial-gradient(circle at 14% 62%, rgba(220,200,255,0.78) 0 1.0%, transparent 2.0%);
   }
 
-  /* 内側のガラス膜(厚み) */
   .oracle-orb__glass {
     position: absolute;
     inset: 8%;
     border-radius: 50%;
-    border: 1px solid rgba(255,255,255,0.58);
+    border: 1px solid rgba(255,255,255,0.50);
     box-shadow:
-      inset 0 0 14px rgba(255,255,255,0.28),
-      0 0 0 1px rgba(150,130,170,0.12);
+      inset 0 0 14px rgba(255,255,255,0.24),
+      0 0 0 1px rgba(150,130,170,0.10);
     pointer-events: none;
   }
 
-  /* 主ハイライト(三日月) */
   .oracle-orb__spec {
     position: absolute;
     left: 12%;
@@ -218,7 +218,7 @@ export const ORACLE_ORB_STYLES: string = `
     background: radial-gradient(circle, rgba(255,255,255,1) 0%, rgba(255,255,255,0.45) 48%, transparent 72%);
     box-shadow: 0 0 18px rgba(255,255,255,0.88);
     pointer-events: none;
-    animation: orbSparkle 4.4s ease-in-out infinite;
+    animation: orbSparkle 10s ease-in-out infinite;
   }
   .oracle-orb__spec-sec {
     position: absolute;
@@ -233,7 +233,6 @@ export const ORACLE_ORB_STYLES: string = `
     opacity: 0.7;
   }
 
-  /* 底面の内部反射 */
   .oracle-orb__bottom {
     position: absolute;
     left: 16%;
@@ -255,51 +254,50 @@ export const ORACLE_ORB_STYLES: string = `
     pointer-events: none;
   }
 
-  .oracle-orb__sheen {
-    position: absolute;
-    top: -40%;
-    left: -30%;
-    width: 52%;
-    height: 180%;
-    background: linear-gradient(100deg, transparent, rgba(255,255,255,0.82), transparent);
-    pointer-events: none;
-    animation: orbSheen 7.2s ease-in-out infinite;
-  }
-  .oracle-orb__sheen--cool {
-    width: 36%;
-    background: linear-gradient(108deg, transparent, rgba(210,228,255,0.42), transparent);
-    animation: orbSheenCool 11.4s ease-in-out 2.4s infinite;
-  }
-
-  .oracle-orb__motes {
-    position: absolute;
-    inset: 0;
-    border-radius: 50%;
-    background:
-      radial-gradient(circle at 30% 64%, rgba(255,255,255,0.95) 0 2.4%, transparent 3.6%),
-      radial-gradient(circle at 70% 40%, rgba(255,236,214,0.92) 0 1.8%, transparent 3.2%),
-      radial-gradient(circle at 56% 74%, rgba(220,230,255,0.94) 0 2%, transparent 3.4%);
-    pointer-events: none;
-    animation: twinkleField 4.6s ease-in-out infinite;
-  }
-
-  .oracle-orb__symbol {
+  /* 中心の星核。ダイヤモンドの輪郭ではなく、遠い光 */
+  .oracle-orb__sigil {
     position: absolute;
     inset: 0;
     display: flex;
     align-items: center;
     justify-content: center;
     z-index: 2;
-    filter: drop-shadow(0 0 8px rgba(255,255,255,0.45));
+    pointer-events: none;
   }
-  .oracle-orb__symbol--ghost {
-    z-index: 1;
-    opacity: 0.28;
-    filter: blur(2.4px);
-    transform: translate(3%, 6%) scale(1.12);
+  .oracle-orb__sigil-ring {
+    position: absolute;
+    width: 28%;
+    height: 28%;
+    border-radius: 50%;
+    border: 1px solid rgba(255,255,255,0.42);
+    box-shadow: 0 0 12px rgba(255,236,214,0.35), inset 0 0 8px rgba(210,190,255,0.28);
+    animation: orbSigilPulse 12s ease-in-out infinite;
+  }
+  .oracle-orb__sigil-star {
+    width: 7%;
+    height: 7%;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(255,255,255,0.98) 0%, rgba(255,236,210,0.80) 38%, rgba(210,180,255,0.0) 72%);
+    box-shadow: 0 0 14px rgba(255,244,220,0.85), 0 0 28px rgba(186,170,255,0.40);
+    animation: orbSigilPulse 12s ease-in-out infinite;
   }
 
-  /* 玉の下に落ちる接地影。浮遊と逆位相で、立体が地面を持つ */
+  .oracle-orb__sheen {
+    position: absolute;
+    top: -40%;
+    left: -30%;
+    width: 52%;
+    height: 180%;
+    background: linear-gradient(100deg, transparent, rgba(255,255,255,0.70), transparent);
+    pointer-events: none;
+    animation: orbSheen 18s ease-in-out infinite;
+  }
+  .oracle-orb__sheen--cool {
+    width: 36%;
+    background: linear-gradient(108deg, transparent, rgba(210,228,255,0.36), transparent);
+    animation: orbSheenCool 26s ease-in-out 6s infinite;
+  }
+
   .oracle-orb__shadow {
     position: absolute;
     left: 50%;
@@ -313,13 +311,11 @@ export const ORACLE_ORB_STYLES: string = `
     z-index: 0;
   }
   .oracle-orb__shadow--live {
-    animation: orbShadowBreathe 6.6s ease-in-out infinite;
+    animation: orbShadowBreathe 16s cubic-bezier(0.37, 0, 0.63, 1) infinite;
   }
 
-  .oracle-orb--compact .oracle-orb__motes,
   .oracle-orb--compact .oracle-orb__sheen--cool,
-  .oracle-orb--compact .oracle-orb__symbol--ghost,
-  .oracle-orb--compact .oracle-orb__facets {
+  .oracle-orb--compact .oracle-orb__swirl {
     display: none;
   }
 `;
