@@ -52,6 +52,11 @@ export const ORACLE_ORB_STYLES: string = `
     border-radius: 50%;
     pointer-events: none;
   }
+  .oracle-orb__aura--gold {
+    inset: -6% -12% 20% -12%;
+    background: radial-gradient(circle, rgba(255,236,186,0.58) 0%, rgba(255,248,220,0.16) 46%, transparent 74%);
+    animation: haloBreathe 6.8s ease-in-out infinite;
+  }
   .oracle-orb__aura--rose {
     inset: -22% -22% 10% -22%;
     background: radial-gradient(circle, rgba(245,199,214,0.46) 0%, rgba(255,233,240,0.18) 40%, transparent 74%);
@@ -59,7 +64,7 @@ export const ORACLE_ORB_STYLES: string = `
   }
   .oracle-orb__aura--cool {
     inset: -8% -16% 18% -16%;
-    background: radial-gradient(circle, rgba(196,216,255,0.42) 0%, rgba(231,241,255,0.12) 50%, transparent 76%);
+    background: radial-gradient(circle, rgba(150,210,255,0.48) 0%, rgba(186,230,255,0.14) 50%, transparent 76%);
     animation: orbAuraCool 7.6s ease-in-out infinite;
   }
 

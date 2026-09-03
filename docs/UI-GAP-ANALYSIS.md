@@ -47,7 +47,7 @@ window.__oracleMirrorDiagnostics
 
 ## 3. 理想モックとの差分（ネイティブ基準で記入）
 
-- [ ] 背景の霧 / 桃色の空気感
+- [x] 背景の霧 / 桃色の空気感（金の光源・水色・マゼンタ・ラベンダーの虹彩層。タイトル / ホームで共通の `om-celestial-sky`）
 - [x] 中央オーブの宝石感 / 水面反射（`OracleOrb` で Home / Onboarding / Sidebar empty state を共通化。水晶玉として体積陰影・内部の霞・コースティクス・浮遊アニメを追加）
 - [x] モードセグメントのネイビー質感（`--om-cta-shadow` のリムライト／ローズグローで霧に馴染ませた）
 - [x] ペルソナカードの存在感 / 余白（カード / ヘッダー / ペルソナチップの影を `--om-shadow-*` 系へ寄せ始めた）
@@ -60,7 +60,7 @@ window.__oracleMirrorDiagnostics
 
 | 差分 | 触る予定のファイル / class / component | 変更方針 | 優先度 | 承認要否 |
 |---|---|---|---|---|
-| 環境差（workers.dev ブラウザバー） | `index.html`, 配布手順 | CSS改修より先に表示器差を切り分ける | P0 | 不要 |
+| 背景の霧 / 虹彩の空 | `src/styles/celestialSky.ts`, `src/styles/globals.ts`, `src/MainApp.tsx`, `src/components/Onboarding.tsx` | 桃色だけでなく金の光源・水色・マゼンタ・ラベンダーの層を重ね、ゆっくり渦を描く。本文コントラストは明るいパール基調で維持 | P0 | 不要 |
 | `backdrop-filter` 弱い環境のフォールバック | `src/styles/globals.ts` | `@supports not` でヘッダー / 入力欄 / モーダルに補助不透明度のみ追加 | P1 | 実施済み |
 | CTA / モードインジケータのリムライト | `src/styles/globals.ts` `.om-cta` | 濃紺縦グラデ + 白リム + 極薄ローズグロー。色そのものは不変 | P1 | 実施済み |
 | 言語トグルの発光カプセル | `src/components/LanguageToggle.tsx` | Onboarding / Help で溝の中を滑る共通トグル。Help では sticky header に固定し、フッター CTA と重ならない | P2 | 実施済み |

@@ -52,19 +52,13 @@ export function Onboarding({ onComplete }: OnboardingProps) {
   return (
     <div
       ref={dialogRef}
-      className="onboarding-overlay"
+      className="onboarding-overlay om-celestial-sky"
       role="dialog"
       aria-modal="true"
       aria-labelledby={titleId}
       tabIndex={-1}
       style={{
       position: 'fixed', inset: 0, zIndex: 1100,
-      background: `
-        radial-gradient(circle at 15% 22%, rgba(255,255,255,0.70), transparent 30%),
-        radial-gradient(circle at 78% 18%, rgba(209,226,255,0.18), transparent 36%),
-        radial-gradient(circle at 50% 68%, rgba(245,201,214,0.28), transparent 42%),
-        linear-gradient(180deg, #fffefd 0%, #fff9fb 45%, #f8f2f8 100%)
-      `,
       backdropFilter: 'blur(4px)', WebkitBackdropFilter: 'blur(4px)',
       display: 'flex', alignItems: 'stretch', justifyContent: 'center',
       padding: '16px', paddingTop: 'calc(16px + var(--sat))', paddingBottom: 'calc(16px + var(--sab))',
@@ -72,9 +66,8 @@ export function Onboarding({ onComplete }: OnboardingProps) {
       animation: 'fadeIn 0.3s ease'
     }}>
       <div className="onboarding-card" style={{
-        background: 'linear-gradient(140deg, rgba(255,255,255,0.76), rgba(255,246,251,0.68), rgba(240,246,255,0.56))',
         maxWidth: 480, width: '100%', height: '100%', maxHeight: '100%', minHeight: 0, flex: '1 1 auto',
-        borderRadius: 38, boxShadow: 'var(--om-shadow-soft)', border: '1px solid rgba(214,224,245,0.38)',
+        borderRadius: 38, boxShadow: 'var(--om-shadow-soft)',
         overflow: 'hidden', overscrollBehavior: 'contain', padding: '18px 28px 24px', display: 'flex', flexDirection: 'column',
         animation: 'modalReveal 0.45s cubic-bezier(0.16,1,0.3,1)'
       }}>

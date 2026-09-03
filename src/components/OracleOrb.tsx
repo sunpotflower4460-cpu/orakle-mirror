@@ -62,6 +62,7 @@ export function OracleOrb({ size, variant, iconColor, strokeWidth }: OracleOrbPr
       className={`oracle-orb${isCompact ? ' oracle-orb--compact' : ''}`}
       style={{ width: size, height: containerHeight }}
     >
+      <div className="oracle-orb__aura oracle-orb__aura--gold" />
       <div className="oracle-orb__aura oracle-orb__aura--rose" />
       <div className="oracle-orb__aura oracle-orb__aura--cool" />
 

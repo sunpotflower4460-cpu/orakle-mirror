@@ -843,16 +843,9 @@ export function MainApp() {
   const activeModeIndex = modeEntries.findIndex(m => m.id === mode.id);
 
   return (
-    <div className="app-shell" style={{
+    <div className="app-shell om-celestial-sky" style={{
       display: 'flex',
       fontFamily: "'Hiragino Mincho ProN', 'Yu Mincho', 'Noto Serif JP', serif",
-      background: `
-        radial-gradient(circle at 18% 22%, rgba(255,255,255,0.78), transparent 32%),
-        radial-gradient(circle at 74% 14%, rgba(205,224,255,0.18), transparent 36%),
-        radial-gradient(circle at 50% 72%, rgba(255,220,236,0.35), transparent 38%),
-        linear-gradient(180deg, #fffefc 0%, #fff9fc 45%, #f8f3f9 100%)
-      `,
-      backgroundSize: '100% 100%, 100% 100%, 100% 100%, 100% 100%',
       overflow: 'hidden', color: '#263044', position: 'relative'
     }}>
       <style>{GLOBAL_STYLES}</style>
